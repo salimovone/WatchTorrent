@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage
+    x:Class="WatchTorrent.Views.DiscoverPage"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:vm="clr-namespace:WatchTorrent.ViewModels"
+    x:DataType="vm:DiscoverViewModel"
+    Title="WatchTorrent">
+
+    <Grid RowDefinitions="Auto,Auto,*">
+        <CollectionView
+            Margin="16,12,0,0"
+            HeightRequest="36"
+            ItemsSource="{Binding Categories}"
+            SelectedItem="{Binding SelectedCategory, Mode=TwoWay}"
+            SelectionMode="Single"
+            ItemTemplate="{StaticResource ChipTemplate}"
+            HorizontalScrollBarVisibility="Never">
+            <CollectionView.ItemsLayout>
+                <LinearItemsLayout Orientation="Horizontal" ItemSpacing="8" />
+            </CollectionView.ItemsLayout>
+        </CollectionView>
+
+        <CollectionView
+            Grid.Row="1"
+            Margin="16,10,0,0"
+            HeightRequest="36"
+            IsVisible="{Binding ShowRanges}"
+            ItemsSource="{Binding Ranges}"
+            SelectedItem="{Binding SelectedRange, Mode=TwoWay}"
+            SelectionMode="Single"
+            ItemTemplate="{StaticResource ChipTemplate}"
+            HorizontalScrollBarVisibility="Never">
+            <CollectionView.ItemsLayout>
+                <LinearItemsLayout Orientation="Horizontal" ItemSpacing="8" />
+            </CollectionView.ItemsLayout>
+        </CollectionView>
+
+        <RefreshView
+            Grid.Row="2"
+            Margin="0,8,0,0"
+            IsRefreshing="{Binding IsRefreshing, Mode=TwoWay}"
+            Command="{Binding RefreshCommand}">
+            <CollectionView
+                ItemsSource="{Binding Items}"
+                ItemTemplate="{StaticResource TorrentRowTemplate}"
+                SelectionMode="Single"
+                SelectionChanged="OnTorrentSelected" />
+        </RefreshView>
+
+        <ActivityIndicator
+            Grid.Row="2"
+            IsRunning="{Binding IsBusy}"
+            IsVisible="{Binding IsBusy}"
+            HorizontalOptions="Center"
+            VerticalOptions="Center" />
+
+        <VerticalStackLayout
+            Grid.Row="2"
+            Padding="32"
+            Spacing="14"
+            IsVisible="{Binding HasError}"
+            VerticalOptions="Center">
+            <Label
+                Text="{Binding ErrorMessage}"
+                TextColor="{StaticResource TextMuted}"
+                HorizontalTextAlignment="Center" />
+            <Button
+                Text="Qayta urinish"
+                Command="{Binding RefreshCommand}"
+                HorizontalOptions="Center" />
+        </VerticalStackLayout>
+    </Grid>
+
+</ContentPage>

@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<ResourceDictionary
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:controls="clr-namespace:WatchTorrent.Controls"
+    xmlns:converters="clr-namespace:WatchTorrent.Converters"
+    xmlns:models="clr-namespace:TorrentReader.Search.Models;assembly=TorrentReader"
+    xmlns:vm="clr-namespace:WatchTorrent.ViewModels">
+
+    <converters:HtmlDecodeConverter x:Key="HtmlDecode" />
+
+    <!-- Bosh sahifa va qidiruvdagi torrent qatori -->
+    <DataTemplate x:Key="TorrentRowTemplate" x:DataType="models:SearchResultItem">
+        <Grid Padding="16,5">
+            <Border Style="{StaticResource Card}" Padding="10">
+                <Grid ColumnDefinitions="Auto,*" ColumnSpacing="14">
+                    <!-- Poster: topilguncha (yoki topilmasa) film ikonkasi ko'rinadi -->
+                    <Border
+                        WidthRequest="64"
+                        HeightRequest="96"
+                        StrokeThickness="0"
+                        StrokeShape="RoundRectangle 8"
+                        BackgroundColor="{StaticResource Surface2}"
+                        VerticalOptions="Center">
+                        <Grid>
+                            <Image Source="ic_film.png" WidthRequest="24" HeightRequest="24" Opacity="0.35" />
+                            <controls:PosterImage TorrentName="{Binding Name}" Aspect="AspectFill" />
+                        </Grid>
+                    </Border>
+
+                    <VerticalStackLayout Grid.Column="1" Spacing="8" VerticalOptions="Center">
+                        <Label
+                            Text="{Binding Name, Converter={StaticResource HtmlDecode}}"
+                            FontFamily="OpenSansSemibold"
+                            FontSize="15"
+                            MaxLines="2"
+                            LineBreakMode="TailTruncation" />
+
+                        <HorizontalStackLayout Spacing="14">
+                            <Border Style="{StaticResource Pill}">
+                                <Label Text="{Binding Size}" Style="{StaticResource PillText}" />
+                            </Border>
+                            <Label
+                                Text="{Binding AmountSeeders, StringFormat='▲ {0:N0}'}"
+                                TextColor="{StaticResource Seed}"
+                                FontSize="13"
+                                VerticalOptions="Center" />
+                            <Label
+                                Text="{Binding AmountLeechers, StringFormat='▼ {0:N0}'}"
+                                TextColor="{StaticResource Leech}"
+                                FontSize="13"
+                                VerticalOptions="Center" />
+                        </HorizontalStackLayout>
+
+                        <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12">
+                            <Label
+                                Text="{Binding UploaderName, Converter={StaticResource HtmlDecode}}"
+                                Style="{StaticResource Muted}"
+                                LineBreakMode="TailTruncation" />
+                            <Label
+                                Grid.Column="1"
+                                Text="{Binding UploadedOn, StringFormat='{0:dd.MM.yyyy}'}"
+                                Style="{StaticResource Muted}" />
+                        </Grid>
+                    </VerticalStackLayout>
+                </Grid>
+            </Border>
+        </Grid>
+    </DataTemplate>
+
+    <!--
+        Gorizontal tanlov "chip"lari. CollectionView SelectedItem'ga mos elementning ildiziga
+        Selected holatini beradi, shuning uchun ildiz aynan Border (oraliq ItemSpacing orqali).
+    -->
+    <DataTemplate x:Key="ChipTemplate" x:DataType="vm:ChipOption">
+        <Border
+            Padding="14,7"
+            StrokeThickness="0"
+            StrokeShape="RoundRectangle 16"
+            BackgroundColor="{StaticResource Surface2}">
+            <VisualStateManager.VisualStateGroups>
+                <VisualStateGroupList>
+                    <VisualStateGroup x:Name="CommonStates">
+                        <VisualState x:Name="Normal" />
+                        <VisualState x:Name="Selected">
+                            <VisualState.Setters>
+                                <Setter Property="BackgroundColor" Value="{StaticResource Accent}" />
+                            </VisualState.Setters>
+                        </VisualState>
+                    </VisualStateGroup>
+                </VisualStateGroupList>
+            </VisualStateManager.VisualStateGroups>
+            <Label Text="{Binding Title}" FontFamily="OpenSansSemibold" FontSize="13" VerticalOptions="Center" />
+        </Border>
+    </DataTemplate>
+
+</ResourceDictionary>

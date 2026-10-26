@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage
+    x:Class="WatchTorrent.Views.ImageViewerPage"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    BackgroundColor="Black"
+    Shell.NavBarIsVisible="False"
+    Shell.TabBarIsVisible="False">
+
+    <Shell.BackButtonBehavior>
+        <BackButtonBehavior IsVisible="False" IsEnabled="False" />
+    </Shell.BackButtonBehavior>
+
+    <Grid BackgroundColor="Black">
+        <!-- Ikki barmoq — kattalashtirish, sudrash — surish, ikki marta bosish — 1x / 2.5x -->
+        <Grid x:Name="ZoomHost" BackgroundColor="Black">
+            <Grid.GestureRecognizers>
+                <PinchGestureRecognizer PinchUpdated="OnPinchUpdated" />
+                <PanGestureRecognizer PanUpdated="OnPanUpdated" />
+                <TapGestureRecognizer NumberOfTapsRequired="2" Tapped="OnDoubleTapped" />
+            </Grid.GestureRecognizers>
+
+            <Image x:Name="Picture" Aspect="AspectFit" />
+        </Grid>
+
+        <ActivityIndicator
+            x:Name="Loader"
+            Color="White"
+            HorizontalOptions="Center"
+            VerticalOptions="Center"
+            InputTransparent="True" />
+
+        <Grid Padding="8,8,16,24" ColumnDefinitions="Auto,*" ColumnSpacing="4" VerticalOptions="Start">
+            <Grid.Background>
+                <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                    <GradientStop Color="#99000000" Offset="0" />
+                    <GradientStop Color="#00000000" Offset="1" />
+                </LinearGradientBrush>
+            </Grid.Background>
+
+            <ImageButton Source="ic_close.png" Style="{StaticResource PlayerIconButton}" Clicked="OnCloseClicked" />
+            <Label
+                x:Name="TitleLabel"
+                Grid.Column="1"
+                TextColor="White"
+                FontFamily="OpenSansSemibold"
+                FontSize="15"
+                LineBreakMode="TailTruncation"
+                VerticalOptions="Center" />
+        </Grid>
+    </Grid>
+
+</ContentPage>

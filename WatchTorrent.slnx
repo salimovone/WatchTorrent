@@ -1,0 +1,6 @@
+<Solution>
+  <Project Path="TorrentReader/TorrentReader.csproj" />
+  <Project Path="WatchTorrent/WatchTorrent.csproj">
+    <Deploy Solution="Debug|*" />
+  </Project>
+</Solution>

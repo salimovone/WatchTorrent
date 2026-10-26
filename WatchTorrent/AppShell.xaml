@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<Shell
+    x:Class="WatchTorrent.AppShell"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:views="clr-namespace:WatchTorrent.Views"
+    Title="WatchTorrent"
+    Shell.FlyoutBehavior="Disabled">
+
+    <TabBar>
+        <ShellContent
+            Title="Asosiy"
+            Icon="tab_home.png"
+            Route="discover"
+            ContentTemplate="{DataTemplate views:DiscoverPage}" />
+
+        <ShellContent
+            Title="Qidiruv"
+            Icon="tab_search.png"
+            Route="search"
+            ContentTemplate="{DataTemplate views:SearchPage}" />
+
+        <ShellContent
+            Title="Yuklamalar"
+            Icon="tab_downloads.png"
+            Route="downloads"
+            ContentTemplate="{DataTemplate views:DownloadsPage}" />
+    </TabBar>
+
+</Shell>

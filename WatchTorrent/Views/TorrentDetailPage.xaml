@@ -1,0 +1,224 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage
+    x:Class="WatchTorrent.Views.TorrentDetailPage"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:vm="clr-namespace:WatchTorrent.ViewModels"
+    x:DataType="vm:TorrentDetailViewModel"
+    Title="Torrent">
+
+    <ScrollView>
+        <VerticalStackLayout Padding="16,12,16,28" Spacing="16">
+
+            <!-- Sarlavha: poster + nom + teglar -->
+            <Grid ColumnDefinitions="Auto,*" ColumnSpacing="14">
+                <!-- Bosilganda poster to'liq ekranda ochiladi -->
+                <Border
+                    WidthRequest="120"
+                    HeightRequest="178"
+                    StrokeThickness="0"
+                    StrokeShape="RoundRectangle 10"
+                    BackgroundColor="{StaticResource Surface2}"
+                    VerticalOptions="Start"
+                    IsVisible="{Binding HasPoster}">
+                    <Border.GestureRecognizers>
+                        <TapGestureRecognizer Command="{Binding OpenPosterCommand}" />
+                    </Border.GestureRecognizers>
+                    <Image Source="{Binding PosterUrl}" Aspect="AspectFill" />
+                </Border>
+
+                <VerticalStackLayout Grid.Column="1" Spacing="10" VerticalOptions="Start">
+                    <Label
+                        Text="{Binding Title}"
+                        FontFamily="OpenSansSemibold"
+                        FontSize="18" />
+                    <FlexLayout Wrap="Wrap" BindableLayout.ItemsSource="{Binding Detail.Tags}">
+                        <BindableLayout.ItemTemplate>
+                            <DataTemplate x:DataType="x:String">
+                                <Border Style="{StaticResource Pill}" Margin="0,0,6,6" FlexLayout.Shrink="0">
+                                    <Label Text="{Binding .}" Style="{StaticResource PillText}" />
+                                </Border>
+                            </DataTemplate>
+                        </BindableLayout.ItemTemplate>
+                    </FlexLayout>
+                </VerticalStackLayout>
+            </Grid>
+
+            <!-- Asosiy ko'rsatkichlar -->
+            <Grid ColumnDefinitions="*,*,*" ColumnSpacing="8">
+                <Border Style="{StaticResource Card}" Padding="12,10">
+                    <VerticalStackLayout Spacing="2">
+                        <Label Text="Hajmi" Style="{StaticResource Muted}" />
+                        <Label Text="{Binding Size}" FontFamily="OpenSansSemibold" FontSize="15" />
+                    </VerticalStackLayout>
+                </Border>
+                <Border Grid.Column="1" Style="{StaticResource Card}" Padding="12,10">
+                    <VerticalStackLayout Spacing="2">
+                        <Label Text="Seed" Style="{StaticResource Muted}" />
+                        <Label
+                            Text="{Binding Seeders, StringFormat='{0:N0}'}"
+                            TextColor="{StaticResource Seed}"
+                            FontFamily="OpenSansSemibold"
+                            FontSize="15" />
+                    </VerticalStackLayout>
+                </Border>
+                <Border Grid.Column="2" Style="{StaticResource Card}" Padding="12,10">
+                    <VerticalStackLayout Spacing="2">
+                        <Label Text="Leech" Style="{StaticResource Muted}" />
+                        <Label
+                            Text="{Binding Leechers, StringFormat='{0:N0}'}"
+                            TextColor="{StaticResource Leech}"
+                            FontFamily="OpenSansSemibold"
+                            FontSize="15" />
+                    </VerticalStackLayout>
+                </Border>
+            </Grid>
+
+            <ActivityIndicator
+                HeightRequest="32"
+                IsRunning="{Binding IsLoading}"
+                IsVisible="{Binding IsLoading}" />
+
+            <Border Style="{StaticResource Card}" IsVisible="{Binding HasError}">
+                <VerticalStackLayout Spacing="12">
+                    <Label Text="{Binding ErrorMessage}" TextColor="{StaticResource TextMuted}" />
+                    <Button
+                        Text="Qayta urinish"
+                        Command="{Binding RetryCommand}"
+                        HorizontalOptions="Start" />
+                </VerticalStackLayout>
+            </Border>
+
+            <!-- Torrent sahifasi yuklangach ko'rinadigan qism -->
+            <VerticalStackLayout Spacing="16" IsVisible="{Binding IsLoaded}">
+
+                <VerticalStackLayout Spacing="8">
+                    <Grid ColumnDefinitions="*,*" ColumnSpacing="8">
+                        <Button
+                            Text="▶  Ko'rish"
+                            Command="{Binding WatchCommand}"
+                            FontFamily="OpenSansSemibold"
+                            FontSize="16"
+                            HeightRequest="50" />
+                        <Button
+                            Grid.Column="1"
+                            Text="{Binding DownloadButtonText}"
+                            Command="{Binding DownloadCommand}"
+                            Style="{StaticResource GhostButton}"
+                            FontFamily="OpenSansSemibold"
+                            FontSize="15"
+                            HeightRequest="50" />
+                    </Grid>
+                    <Grid ColumnDefinitions="*,*" ColumnSpacing="8">
+                        <Button
+                            Text="{Binding CopyMagnetText}"
+                            Command="{Binding CopyMagnetCommand}"
+                            Style="{StaticResource GhostButton}"
+                            FontSize="13" />
+                        <Button
+                            Grid.Column="1"
+                            Text="Boshqa ilovada ochish"
+                            Command="{Binding OpenExternalCommand}"
+                            Style="{StaticResource GhostButton}"
+                            FontSize="13" />
+                    </Grid>
+                </VerticalStackLayout>
+
+                <Border Style="{StaticResource Card}">
+                    <Grid
+                        ColumnDefinitions="Auto,*"
+                        RowDefinitions="Auto,Auto,Auto,Auto,Auto"
+                        ColumnSpacing="16"
+                        RowSpacing="8">
+                        <Label Text="Yuklagan" Style="{StaticResource Muted}" />
+                        <Label Grid.Column="1" Text="{Binding Detail.UploadedBy}" FontSize="13" />
+
+                        <Label Grid.Row="1" Text="Qo'shilgan" Style="{StaticResource Muted}" />
+                        <Label Grid.Row="1" Grid.Column="1" Text="{Binding Detail.DateUploaded}" FontSize="13" />
+
+                        <Label Grid.Row="2" Text="Tekshirilgan" Style="{StaticResource Muted}" />
+                        <Label Grid.Row="2" Grid.Column="1" Text="{Binding Detail.DateLastChecked}" FontSize="13" />
+
+                        <Label Grid.Row="3" Text="Yuklab olingan" Style="{StaticResource Muted}" />
+                        <Label Grid.Row="3" Grid.Column="1" Text="{Binding Detail.Downloads, StringFormat='{0:N0} marta'}" FontSize="13" />
+
+                        <Label Grid.Row="4" Text="Info hash" Style="{StaticResource Muted}" />
+                        <Label
+                            Grid.Row="4"
+                            Grid.Column="1"
+                            Text="{Binding Detail.InfoHash}"
+                            FontSize="12"
+                            LineBreakMode="CharacterWrap" />
+                    </Grid>
+                </Border>
+
+                <Button
+                    Text="Tavsifni ko'rish"
+                    Command="{Binding ShowDescriptionCommand}"
+                    Style="{StaticResource GhostButton}"
+                    IsVisible="{Binding Detail.HasDescription, FallbackValue=False}" />
+
+                <!-- Fayllar -->
+                <Label Text="{Binding FilesHeader}" Style="{StaticResource SectionTitle}" />
+                <Border Style="{StaticResource Card}" Padding="14,4">
+                    <VerticalStackLayout BindableLayout.ItemsSource="{Binding VisibleFiles}">
+                        <BindableLayout.ItemTemplate>
+                            <DataTemplate x:DataType="x:String">
+                                <Label
+                                    Text="{Binding .}"
+                                    Padding="0,8"
+                                    FontSize="13"
+                                    LineBreakMode="CharacterWrap" />
+                            </DataTemplate>
+                        </BindableLayout.ItemTemplate>
+                    </VerticalStackLayout>
+                </Border>
+                <Button
+                    Text="{Binding ShowAllFilesText}"
+                    Command="{Binding ShowAllFilesCommand}"
+                    Style="{StaticResource GhostButton}"
+                    IsVisible="{Binding CanShowAllFiles}" />
+
+                <!-- Izohlar -->
+                <Label
+                    Text="{Binding Detail.CommentsHeader}"
+                    Style="{StaticResource SectionTitle}"
+                    IsVisible="{Binding Detail.HasComments, FallbackValue=False}" />
+                <VerticalStackLayout Spacing="8" BindableLayout.ItemsSource="{Binding Detail.Comments}">
+                    <BindableLayout.ItemTemplate>
+                        <DataTemplate x:DataType="vm:CommentItem">
+                            <Border Style="{StaticResource Card}">
+                                <Grid
+                                    ColumnDefinitions="Auto,*"
+                                    RowDefinitions="Auto,Auto"
+                                    ColumnSpacing="12"
+                                    RowSpacing="4">
+                                    <Border
+                                        Grid.RowSpan="2"
+                                        WidthRequest="34"
+                                        HeightRequest="34"
+                                        StrokeThickness="0"
+                                        StrokeShape="RoundRectangle 17"
+                                        BackgroundColor="{StaticResource AccentSoft}"
+                                        VerticalOptions="Start">
+                                        <Label
+                                            Text="{Binding Initial}"
+                                            FontFamily="OpenSansSemibold"
+                                            HorizontalOptions="Center"
+                                            VerticalOptions="Center" />
+                                    </Border>
+                                    <HorizontalStackLayout Grid.Column="1" Spacing="8">
+                                        <Label Text="{Binding Username}" FontFamily="OpenSansSemibold" FontSize="13" />
+                                        <Label Text="{Binding Posted}" Style="{StaticResource Muted}" VerticalOptions="Center" />
+                                    </HorizontalStackLayout>
+                                    <Label Grid.Row="1" Grid.Column="1" Text="{Binding Text}" FontSize="13" />
+                                </Grid>
+                            </Border>
+                        </DataTemplate>
+                    </BindableLayout.ItemTemplate>
+                </VerticalStackLayout>
+            </VerticalStackLayout>
+        </VerticalStackLayout>
+    </ScrollView>
+
+</ContentPage>

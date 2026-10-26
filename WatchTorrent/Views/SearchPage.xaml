@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage
+    x:Class="WatchTorrent.Views.SearchPage"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:vm="clr-namespace:WatchTorrent.ViewModels"
+    x:DataType="vm:SearchViewModel"
+    Title="Qidiruv">
+
+    <Grid RowDefinitions="Auto,Auto,Auto,*">
+        <Border
+            Margin="16,12,16,0"
+            Padding="4,0"
+            StrokeThickness="0"
+            StrokeShape="RoundRectangle 12"
+            BackgroundColor="{StaticResource Surface2}">
+            <SearchBar
+                x:Name="SearchInput"
+                Text="{Binding Query}"
+                Placeholder="Film, serial, o'yin…"
+                SearchButtonPressed="OnSearchPressed" />
+        </Border>
+
+        <CollectionView
+            Grid.Row="1"
+            Margin="16,12,0,0"
+            HeightRequest="36"
+            ItemsSource="{Binding SortOptions}"
+            SelectedItem="{Binding SelectedSort, Mode=TwoWay}"
+            SelectionMode="Single"
+            ItemTemplate="{StaticResource ChipTemplate}"
+            HorizontalScrollBarVisibility="Never">
+            <CollectionView.ItemsLayout>
+                <LinearItemsLayout Orientation="Horizontal" ItemSpacing="8" />
+            </CollectionView.ItemsLayout>
+        </CollectionView>
+
+        <Label
+            Grid.Row="2"
+            Margin="16,10,16,0"
+            Text="{Binding Summary}"
+            Style="{StaticResource Muted}" />
+
+        <CollectionView
+            Grid.Row="3"
+            Margin="0,4,0,0"
+            ItemsSource="{Binding Items}"
+            ItemTemplate="{StaticResource TorrentRowTemplate}"
+            SelectionMode="Single"
+            SelectionChanged="OnTorrentSelected"
+            RemainingItemsThreshold="5"
+            RemainingItemsThresholdReachedCommand="{Binding LoadMoreCommand}">
+            <CollectionView.Footer>
+                <Grid Padding="0,8,0,20">
+                    <ActivityIndicator
+                        HeightRequest="28"
+                        IsRunning="{Binding IsLoadingMore}"
+                        IsVisible="{Binding IsLoadingMore}" />
+                </Grid>
+            </CollectionView.Footer>
+        </CollectionView>
+
+        <ActivityIndicator
+            Grid.Row="3"
+            IsRunning="{Binding IsBusy}"
+            IsVisible="{Binding IsBusy}"
+            HorizontalOptions="Center"
+            VerticalOptions="Center" />
+
+        <VerticalStackLayout
+            Grid.Row="3"
+            Padding="32"
+            Spacing="8"
+            IsVisible="{Binding ShowHint}"
+            VerticalOptions="Center">
+            <Label
+                Text="Nima ko'ramiz?"
+                FontFamily="OpenSansSemibold"
+                FontSize="18"
+                HorizontalTextAlignment="Center" />
+            <Label
+                Text="Film, serial yoki o'yin nomini yozib qidiring."
+                TextColor="{StaticResource TextMuted}"
+                HorizontalTextAlignment="Center" />
+        </VerticalStackLayout>
+
+        <VerticalStackLayout
+            Grid.Row="3"
+            Padding="32"
+            Spacing="14"
+            IsVisible="{Binding HasError}"
+            VerticalOptions="Center">
+            <Label
+                Text="{Binding ErrorMessage}"
+                TextColor="{StaticResource TextMuted}"
+                HorizontalTextAlignment="Center" />
+            <Button
+                Text="Qayta urinish"
+                Command="{Binding RetryCommand}"
+                HorizontalOptions="Center" />
+        </VerticalStackLayout>
+
+        <Label
+            Grid.Row="3"
+            Text="Hech narsa topilmadi"
+            TextColor="{StaticResource TextMuted}"
+            IsVisible="{Binding IsEmpty}"
+            HorizontalOptions="Center"
+            VerticalOptions="Center" />
+    </Grid>
+
+</ContentPage>

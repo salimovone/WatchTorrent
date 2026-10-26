@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage
+    x:Class="WatchTorrent.Views.CloudflarePage"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    Title="Xavfsizlik tekshiruvi">
+
+    <Grid RowDefinitions="Auto,Auto,*">
+        <Grid
+            Padding="16,14"
+            ColumnDefinitions="*,Auto"
+            ColumnSpacing="12"
+            BackgroundColor="{StaticResource Surface}">
+            <VerticalStackLayout Spacing="4" VerticalOptions="Center">
+                <Label
+                    Text="Xavfsizlik tekshiruvi"
+                    FontFamily="OpenSansSemibold"
+                    FontSize="16" />
+                <Label
+                    Text="Sayt Cloudflare tekshiruvini so'rayapti. Kerak bo'lsa katakchani belgilang — tekshiruv tugagach oyna o'zi yopiladi."
+                    Style="{StaticResource Muted}" />
+            </VerticalStackLayout>
+            <Button
+                Grid.Column="1"
+                Text="Bekor qilish"
+                Style="{StaticResource SmallButton}"
+                VerticalOptions="Center"
+                Clicked="OnCancelClicked" />
+        </Grid>
+
+        <!-- Tekshiruv uzoq cho'zilsa: sabablar va qayta urinish -->
+        <Border
+            x:Name="HelpPanel"
+            Grid.Row="1"
+            Margin="12,8"
+            Style="{StaticResource Card}"
+            IsVisible="False">
+            <VerticalStackLayout Spacing="8">
+                <Label
+                    Text="Tekshiruv uzoq davom etyapti"
+                    FontFamily="OpenSansSemibold"
+                    FontSize="14" />
+                <Label
+                    Style="{StaticResource Muted}"
+                    Text="Odatda sababi: eskirgan Android System WebView (Play Market'da uni va Chrome'ni yangilang), VPN, Private DNS yoki reklama bloklovchi (challenges.cloudflare.com ni to'sib qo'yadi), telefon vaqti noto'g'ri. Boshqa tarmoqda (Wi-Fi ↔ mobil internet) ham urinib ko'ring." />
+                <Label x:Name="EngineLabel" Style="{StaticResource Muted}" IsVisible="False" />
+                <FlexLayout Wrap="Wrap" JustifyContent="End">
+                    <Button
+                        Text="Qayta yuklash"
+                        Style="{StaticResource SmallButton}"
+                        Margin="0,0,8,0"
+                        Clicked="OnReloadClicked" />
+                    <Button
+                        Text="Tozalab qayta urinish"
+                        Style="{StaticResource SmallButton}"
+                        Clicked="OnResetClicked" />
+                </FlexLayout>
+            </VerticalStackLayout>
+        </Border>
+
+        <WebView x:Name="Browser" Grid.Row="2" />
+    </Grid>
+
+</ContentPage>

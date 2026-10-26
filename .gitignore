@@ -1,0 +1,26 @@
+# Build natijalari (ikkala loyiha uchun)
+[Bb]in/
+[Oo]bj/
+
+# Visual Studio
+.vs/
+*.user
+*.suo
+*.rsuser
+*.userprefs
+
+# Rider / VS Code
+.idea/
+.vscode/
+
+# NuGet
+*.nupkg
+packages/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Tayyor build fayllari (APK, Windows ZIP)
+dist/
+artifacts/

@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage
+    x:Class="WatchTorrent.Views.DownloadsPage"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:services="clr-namespace:WatchTorrent.Services"
+    xmlns:vm="clr-namespace:WatchTorrent.ViewModels"
+    x:DataType="vm:DownloadsViewModel"
+    Title="Yuklamalar">
+
+    <Grid RowDefinitions="Auto,*">
+        <Label
+            Margin="16,12,16,4"
+            Text="{Binding DownloadDirectory, StringFormat='Papka: {0}'}"
+            Style="{StaticResource Muted}"
+            LineBreakMode="MiddleTruncation" />
+
+        <CollectionView
+            Grid.Row="1"
+            ItemsSource="{Binding Items}"
+            SelectionMode="None">
+            <CollectionView.ItemTemplate>
+                <DataTemplate x:DataType="services:DownloadItem">
+                    <Grid Padding="16,5">
+                        <Border Style="{StaticResource Card}">
+                            <VerticalStackLayout Spacing="10">
+                                <Label
+                                    Text="{Binding Name}"
+                                    FontFamily="OpenSansSemibold"
+                                    FontSize="15"
+                                    MaxLines="2"
+                                    LineBreakMode="TailTruncation" />
+
+                                <ProgressBar Progress="{Binding Progress}">
+                                    <ProgressBar.Triggers>
+                                        <DataTrigger TargetType="ProgressBar" Binding="{Binding IsComplete}" Value="True">
+                                            <Setter Property="ProgressColor" Value="{StaticResource Seed}" />
+                                        </DataTrigger>
+                                    </ProgressBar.Triggers>
+                                </ProgressBar>
+
+                                <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12">
+                                    <Label Text="{Binding StatusText}" FontSize="13" />
+                                    <Label
+                                        Grid.Column="1"
+                                        Text="{Binding ProgressText}"
+                                        FontFamily="OpenSansSemibold"
+                                        FontSize="13" />
+                                </Grid>
+
+                                <Label Text="{Binding SizeText}" Style="{StaticResource Muted}" />
+                                <Label
+                                    Text="{Binding TransferText}"
+                                    Style="{StaticResource Muted}"
+                                    IsVisible="{Binding IsRunning}" />
+
+                                <!-- Tor ekranda tugmalar keyingi qatorga o'tadi -->
+                                <FlexLayout Wrap="Wrap" JustifyContent="End">
+                                    <Button
+                                        Margin="8,6,0,0"
+                                        Text="▶ Ko'rish"
+                                        Style="{StaticResource SmallButton}"
+                                        BackgroundColor="{StaticResource Accent}"
+                                        Command="{Binding WatchCommand, Source={RelativeSource AncestorType={x:Type vm:DownloadsViewModel}}, x:DataType=vm:DownloadsViewModel}"
+                                        CommandParameter="{Binding .}" />
+                                    <Button
+                                        Margin="8,6,0,0"
+                                        Text="{Binding ToggleText}"
+                                        Style="{StaticResource SmallButton}"
+                                        IsVisible="{Binding CanToggle}"
+                                        Command="{Binding ToggleCommand, Source={RelativeSource AncestorType={x:Type vm:DownloadsViewModel}}, x:DataType=vm:DownloadsViewModel}"
+                                        CommandParameter="{Binding .}" />
+                                    <Button
+                                        Margin="8,6,0,0"
+                                        Text="Ochish"
+                                        Style="{StaticResource SmallButton}"
+                                        IsVisible="{Binding IsComplete}"
+                                        Command="{Binding OpenCommand, Source={RelativeSource AncestorType={x:Type vm:DownloadsViewModel}}, x:DataType=vm:DownloadsViewModel}"
+                                        CommandParameter="{Binding .}" />
+                                    <Button
+                                        Margin="8,6,0,0"
+                                        Text="O'chirish"
+                                        Style="{StaticResource DangerSmallButton}"
+                                        Command="{Binding RemoveCommand, Source={RelativeSource AncestorType={x:Type vm:DownloadsViewModel}}, x:DataType=vm:DownloadsViewModel}"
+                                        CommandParameter="{Binding .}" />
+                                </FlexLayout>
+                            </VerticalStackLayout>
+                        </Border>
+                    </Grid>
+                </DataTemplate>
+            </CollectionView.ItemTemplate>
+        </CollectionView>
+
+        <VerticalStackLayout
+            Grid.Row="1"
+            Padding="32"
+            Spacing="8"
+            IsVisible="{Binding IsEmpty}"
+            VerticalOptions="Center">
+            <Label
+                Text="Hozircha yuklamalar yo'q"
+                FontFamily="OpenSansSemibold"
+                FontSize="18"
+                HorizontalTextAlignment="Center" />
+            <Label
+                Text="Torrent sahifasida «Yuklab olish» tugmasini bosing."
+                TextColor="{StaticResource TextMuted}"
+                HorizontalTextAlignment="Center" />
+        </VerticalStackLayout>
+    </Grid>
+
+</ContentPage>
