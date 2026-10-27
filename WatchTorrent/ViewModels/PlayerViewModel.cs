@@ -1,6 +1,7 @@
 using System.Collections.ObjectModel;
 using System.Diagnostics;
 using LibVLCSharp.Shared;
+using LibVLCSharp.Shared.Structures;
 using MonoTorrent;
 using WatchTorrent.Services;
 
@@ -18,6 +19,12 @@ namespace WatchTorrent.ViewModels
         private static readonly string[] AspectModes = { "Asl o'lcham", "Ekranni to'ldirish", "Cho'zish", "16:9", "4:3" };
 
         private const string AspectModeKey = "player.aspect_mode";
+
+        // "Bosib turish" paytidagi tezlik (YouTube'dagi kabi).
+        private const float HoldRate = 2f;
+
+        // Saqlangan audio/subtitr tanlovi film ochilgandan keyin shuncha vaqt ichida qo'llanadi (tashqi subtitrlar kech qo'shiladi).
+        private static readonly TimeSpan TrackRestoreWindow = TimeSpan.FromSeconds(60);
 
         // Subtitrlar torrentdan o'zimiz qo'shamiz (Subs/ papkasidagilari ham) — VLC'ning avtomatik qidiruvi takrorlaydi.
         private static readonly string[] BaseOptions = { "--no-sub-autodetect-file" };
@@ -51,6 +58,10 @@ namespace WatchTorrent.ViewModels
         private int _aspectMode = Math.Clamp(Preferences.Default.Get(AspectModeKey, 0), 0, AspectModes.Length - 1);
         private double _screenWidth;
         private double _screenHeight;
+        private SavedTrack? _savedAudio;
+        private SavedTrack? _savedSubtitle;
+        private long _trackRestoreUntil;
+        private float? _rateBeforeHold;
 
         private string _title = string.Empty;
         private string _statusText = "Tayyorlanmoqda…";
@@ -220,6 +231,15 @@ namespace WatchTorrent.ViewModels
 
         private string ResumeKey => $"resume.{_item?.InfoHash}.{_fileIndex}";
 
+        // Tanlangan audio/subtitr shu fayl uchun, hamda torrent uchun (serialning keyingi qismlarida ham shu til bo'lsin).
+        private string AudioKey => $"audio.{_item?.InfoHash}.{_fileIndex}";
+
+        private string TorrentAudioKey => $"audio.{_item?.InfoHash}";
+
+        private string SubtitleKey => $"spu.{_item?.InfoHash}.{_fileIndex}";
+
+        private string TorrentSubtitleKey => $"spu.{_item?.InfoHash}";
+
         public void ApplyQueryAttributes(IDictionary<string, object> query)
         {
             _magnet = query.TryGetValue("Magnet", out var magnet) ? magnet as string : null;
@@ -274,7 +294,7 @@ namespace WatchTorrent.ViewModels
                     // Ro'yxatda bor torrent ham shu yo'ldan o'tadi — magnet'dagi web-seed manzillari tiklanadi.
                     created = _downloads.FindByMagnet(_magnet) == null;
                     StatusText = "Torrent qo'shilmoqda…";
-                    _item = await _downloads.AddAsync(_magnet, Title, forStreaming: true);
+                    _item = await _downloads.AddAsync(_magnet, Title);
                 }
 
                 StatusText = "Torrent ma'lumoti olinmoqda…";
@@ -349,6 +369,7 @@ namespace WatchTorrent.ViewModels
             }
 
             UpdateStreamBuffer(player);
+            RestoreTracks(player);
 
             // Bufer uchun avtomatik pauza foydalanuvchi uchun "o'ynamoqda" holati hisoblanadi.
             IsPlaying = player.IsPlaying || _bufferPaused;
@@ -477,9 +498,13 @@ namespace WatchTorrent.ViewModels
             var current = Player.AudioTrack;
             var index = await ChooseAsync("Audio yo'lak", tracks.Select(track => MarkCurrent(track.Name, track.Id == current)));
 
-            if (index >= 0)
+            if (index >= 0 && Player != null)
             {
                 Player.SetAudioTrack(tracks[index].Id);
+
+                // Foydalanuvchi o'zi tanladi — saqlangan tanlov endi ustiga yozilmasin.
+                _savedAudio = null;
+                SaveTrack(AudioKey, TorrentAudioKey, tracks[index].Id, tracks[index].Name);
             }
         }
 
@@ -503,9 +528,12 @@ namespace WatchTorrent.ViewModels
             var names = tracks.Select(track => MarkCurrent(track.Id == -1 ? "O'chirish" : track.Name, track.Id == current));
             var index = await ChooseAsync("Subtitr", names);
 
-            if (index >= 0)
+            if (index >= 0 && Player != null)
             {
                 Player.SetSpu(tracks[index].Id);
+
+                _savedSubtitle = null;
+                SaveTrack(SubtitleKey, TorrentSubtitleKey, tracks[index].Id, tracks[index].Name);
             }
         }
 
@@ -561,6 +589,30 @@ namespace WatchTorrent.ViewModels
             if (index >= 0)
             {
                 Player.SetRate(Speeds[index]);
+            }
+        }
+
+        /// <summary>Ekran bosib turilganda film vaqtincha 2x tezlikda o'ynaydi (faqat o'ynayotgan bo'lsa).</summary>
+        public bool BeginHoldSpeed()
+        {
+            if (Player is not { } player || !_hasStartedPlaying || !IsPlaying || _rateBeforeHold != null)
+            {
+                return false;
+            }
+
+            _rateBeforeHold = player.Rate;
+            player.SetRate(HoldRate);
+
+            return true;
+        }
+
+        /// <summary>Barmoq qo'yib yuborildi — oldingi tezlik qaytadi.</summary>
+        public void EndHoldSpeed()
+        {
+            if (_rateBeforeHold is { } rate)
+            {
+                _rateBeforeHold = null;
+                Player?.SetRate(rate);
             }
         }
 
@@ -747,6 +799,8 @@ namespace WatchTorrent.ViewModels
             // To'xtagan joydan davom: VLC media'ni o'sha joydan ochadi (0 dan o'ynab, keyin seek qilmaydi —
             // stream'da bu yuklanmagan joyga ikki marta sakrash va ba'zan seek'ning yo'qolishiga olib kelardi).
             _resumeMs = Preferences.Default.Get(ResumeKey, 0L);
+            _savedAudio = SavedTrack.Load(AudioKey, sameFile: true) ?? SavedTrack.Load(TorrentAudioKey, sameFile: false);
+            _savedSubtitle = SavedTrack.Load(SubtitleKey, sameFile: true) ?? SavedTrack.Load(TorrentSubtitleKey, sameFile: false);
 
             if (_resumeMs > 0)
             {
@@ -807,6 +861,7 @@ namespace WatchTorrent.ViewModels
             }
 
             _hasStartedPlaying = true;
+            _trackRestoreUntil = Environment.TickCount64 + (long)TrackRestoreWindow.TotalMilliseconds;
             IsLoading = false;
 
             ApplyAspectMode();
@@ -873,6 +928,54 @@ namespace WatchTorrent.ViewModels
             catch (OperationCanceledException)
             {
             }
+        }
+
+        /// <summary>
+        /// Shu fayl (yoki serialning oldingi qismi) uchun tanlangan audio/subtitr qayta qo'llanadi. Yo'laklar ro'yxati
+        /// film ochilgandan keyin to'ladi, torrentdagi tashqi subtitrlar esa yuklanib bo'lgach qo'shiladi — shuning
+        /// uchun topilguncha (ko'pi bilan <see cref="TrackRestoreWindow"/>) har tick'da qayta urinib ko'riladi.
+        /// </summary>
+        private void RestoreTracks(LibVLCSharp.Shared.MediaPlayer player)
+        {
+            if (_savedAudio == null && _savedSubtitle == null)
+            {
+                return;
+            }
+
+            if (Environment.TickCount64 > _trackRestoreUntil)
+            {
+                _savedAudio = _savedSubtitle = null;
+
+                return;
+            }
+
+            if (_savedAudio is { } audio && player.AudioTrackCount > 0 && audio.Find(player.AudioTrackDescription) is { } audioId)
+            {
+                _savedAudio = null;
+
+                if (player.AudioTrack != audioId)
+                {
+                    player.SetAudioTrack(audioId);
+                }
+            }
+
+            if (_savedSubtitle is { } subtitle && player.SpuCount > 0 && subtitle.Find(player.SpuDescription) is { } subtitleId)
+            {
+                _savedSubtitle = null;
+
+                if (player.Spu != subtitleId)
+                {
+                    player.SetSpu(subtitleId);
+                }
+            }
+        }
+
+        private static void SaveTrack(string fileKey, string torrentKey, int id, string name)
+        {
+            var value = SavedTrack.Format(id, name);
+
+            Preferences.Default.Set(fileKey, value);
+            Preferences.Default.Set(torrentKey, value);
         }
 
         /// <summary>
@@ -997,6 +1100,46 @@ namespace WatchTorrent.ViewModels
             OnPropertyChanged(nameof(HasError));
             OnPropertyChanged(nameof(ShowSpinner));
             OnPropertyChanged(nameof(ShowTransport));
+        }
+
+        /// <summary>Saqlangan audio/subtitr yo'lagi ("id|nom" ko'rinishida saqlanadi).</summary>
+        /// <param name="SameFile">Tanlov shu faylning o'zida qilingan (aks holda serialning boshqa qismidan olingan).</param>
+        private sealed record SavedTrack(int Id, string Name, bool SameFile)
+        {
+            public static string Format(int id, string name)
+            {
+                return $"{id}|{name}";
+            }
+
+            public static SavedTrack? Load(string key, bool sameFile)
+            {
+                var value = Preferences.Default.Get(key, string.Empty);
+                var separator = value.IndexOf('|');
+
+                return separator > 0 && int.TryParse(value[..separator], out var id)
+                    ? new SavedTrack(id, value[(separator + 1)..], sameFile)
+                    : null;
+            }
+
+            /// <summary>Ro'yxatdan mos yo'lak id'si; hali topilmasa null.</summary>
+            public int? Find(TrackDescription[] tracks)
+            {
+                if (SameFile && tracks.Any(track => track.Id == Id && track.Name == Name))
+                {
+                    return Id;
+                }
+
+                // Boshqa qismda yo'lak raqamlari farq qilishi mumkin — nom bo'yicha (shu nomli yo'lak bitta bo'lsa).
+                var byName = tracks.Where(track => track.Name == Name).ToArray();
+
+                if (byName.Length == 1)
+                {
+                    return byName[0].Id;
+                }
+
+                // "O'chirish" (-1) har faylda bor.
+                return Id == -1 && tracks.Any(track => track.Id == -1) ? -1 : null;
+            }
         }
     }
 }

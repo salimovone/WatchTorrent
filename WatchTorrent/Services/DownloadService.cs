@@ -17,9 +17,6 @@ namespace WatchTorrent.Services
         private const string PausedKey = "downloads.paused";
         private const string WebSeedsKeyPrefix = "downloads.webseeds.";
 
-        // Stream paytida o'qilayotgan joydan oldinda ustuvor yuklanadigan hajm (4K remux ~10 MB/s uchun ~6 soniya+).
-        private const int StreamBufferBytes = 64 * 1024 * 1024;
-
         private static readonly TimeSpan StopTimeout = TimeSpan.FromSeconds(5);
 
         // Rejim almashtirishda trackerlarga "stopped" xabari uchun uzoq kutilmaydi.
@@ -39,7 +36,12 @@ namespace WatchTorrent.Services
         public DownloadService()
         {
             DownloadDirectory = GetDefaultDownloadDirectory();
-            _factories = Factories.Default.WithDhtCreator(CreateDht);
+
+            // Hamma torrent bitta rejimda (PlaybackPieceRequester) — yuklab olish va ko'rish bir xil faylni, bir xil
+            // tartibda yuklaydi; player ochilganda rejim almashtirish uchun torrentni to'xtatish kerak bo'lmaydi.
+            _factories = Factories.Default
+                .WithDhtCreator(CreateDht)
+                .WithStreamingPieceRequesterCreator(() => new PlaybackPieceRequester());
 
             // Foydalanuvchi o'zi to'xtatgan torrentlar qayta ishga tushganda avtomatik boshlanmaydi.
             _paused = Preferences.Default.Get(PausedKey, string.Empty)
@@ -83,8 +85,7 @@ namespace WatchTorrent.Services
             return MagnetLink.TryParse(magnetUri, out var link) ? Find(link.InfoHashes.V1OrV2.ToHex()) : null;
         }
 
-        /// <param name="forStreaming">Torrent darhol ko'rish uchun qo'shiladi (stream rejimida, keyin qayta ishga tushirmaslik uchun).</param>
-        public async Task<DownloadItem> AddAsync(string magnetUri, string? name = null, bool forStreaming = false)
+        public async Task<DownloadItem> AddAsync(string magnetUri, string? name = null)
         {
             await InitializeAsync();
 
@@ -100,9 +101,7 @@ namespace WatchTorrent.Services
                 return existing;
             }
 
-            var manager = forStreaming
-                ? await _engine!.AddStreamingAsync(magnet, DownloadDirectory, CreateTorrentSettings())
-                : await _engine!.AddAsync(magnet, DownloadDirectory, CreateTorrentSettings());
+            var manager = await _engine!.AddStreamingAsync(magnet, DownloadDirectory, CreateTorrentSettings());
 
             RestoreWebSeeds(manager, webSeeds);
 
@@ -178,8 +177,8 @@ namespace WatchTorrent.Services
         }
 
         /// <summary>
-        /// Faylni yuklanish davomida o'qish uchun stream ochadi. Torrent stream rejimiga o'tadi: o'qilayotgan
-        /// joydan oldingi bo'laklar birinchi navbatda yuklanadi. <paramref name="onlyThisFile"/> bo'lsa
+        /// Faylni yuklanish davomida o'qish uchun stream ochadi: o'qilayotgan joydan keyingi bo'laklar birinchi
+        /// navbatda yuklanadi, allaqachon yuklangan qism diskdan o'qiladi. <paramref name="onlyThisFile"/> bo'lsa
         /// torrentdagi boshqa videolar yuklanmaydi — butun tezlik shu filmga ketadi.
         /// </summary>
         public async Task<Stream> OpenStreamAsync(DownloadItem item, ITorrentManagerFile file, bool onlyThisFile, CancellationToken token)
@@ -206,13 +205,10 @@ namespace WatchTorrent.Services
                 await manager.SetFilePriorityAsync(other, priority);
             }
 
-            if (manager.StreamProvider == null)
+            // Odatda hamma torrent PlaybackPieceRequester bilan qo'shiladi; bu faqat kutilmagan holat uchun (torrent to'xtatiladi).
+            if (GetPlaybackRequester(manager) == null)
             {
-                await ChangePickerAsync(manager, CreateStreamingRequester(manager));
-            }
-            else
-            {
-                TuneStreamingWindow(manager, GetStreamingRequester(manager));
+                await ChangePickerAsync(manager, _factories.CreateStreamingPieceRequester());
             }
 
             await ResumeAsync(item);
@@ -241,18 +237,10 @@ namespace WatchTorrent.Services
                 {
                     await manager.StopAsync(StopTimeout);
                 }
-                else if (manager.StreamProvider != null)
+                else
                 {
-                    // Qolgan qismni yuklab olishda standart (rarest-first) rejim ancha tez:
-                    // stream rejimi oynadan tashqaridagi bo'laklarni har peerdan atigi 2 tadan so'raydi.
-                    var wasRunning = manager.State is not (TorrentState.Stopped or TorrentState.Stopping or TorrentState.Error);
-
-                    await ChangePickerAsync(manager, _factories.CreatePieceRequester());
-
-                    if (wasRunning)
-                    {
-                        await manager.StartAsync();
-                    }
+                    // Torrent to'xtatilmaydi (peerlar uzilmaydi) — yuklash shunchaki boshidan ketma-ket tartibga qaytadi.
+                    GetPlaybackRequester(manager)?.StopStreaming();
                 }
             }
             catch (Exception ex)
@@ -305,10 +293,19 @@ namespace WatchTorrent.Services
 
             foreach (var manager in engine.Torrents)
             {
-                // Player yopilmay ilova o'chgan bo'lsa torrent stream rejimida qolgan — tez yuklash rejimiga qaytariladi.
-                if (manager.StreamProvider != null)
+                // Oldingi versiyalarda saqlangan torrentlar standart rejimda tiklanadi — umumiy rejimga o'tkaziladi
+                // (tiklangan torrent hali to'xtatilgan, rejimni faqat shunda almashtirish mumkin).
+                try
                 {
-                    await manager.ChangePickerAsync(_factories.CreatePieceRequester());
+                    if (GetPlaybackRequester(manager) == null)
+                    {
+                        await manager.ChangePickerAsync(_factories.CreateStreamingPieceRequester());
+                    }
+                }
+                catch (Exception ex)
+                {
+                    // Eski rejimda qolsa ham yuklanadi; ko'rish ochilganda OpenStreamAsync qayta urinadi.
+                    Debug.WriteLine($"[Downloads] {manager.Name} rejimi almashtirilmadi: {ex}");
                 }
 
                 Items.Insert(0, await PrepareAsync(manager, null));
@@ -408,40 +405,16 @@ namespace WatchTorrent.Services
             return dht;
         }
 
-        private static IPieceRequester CreateStreamingRequester(TorrentManager manager)
+        private static PlaybackPieceRequester? GetPlaybackRequester(TorrentManager manager)
         {
-            var requester = new StreamingPieceRequester();
-
-            TuneStreamingWindow(manager, requester);
-
-            return requester;
-        }
-
-        /// <summary>
-        /// MonoTorrent oldinga faqat 15 bo'lakni ustuvor yuklaydi (internal sozlama) — yuqori bitreytli video uchun
-        /// bu bir necha soniyalik bufer xolos, shuning uchun bo'lak hajmiga qarab ~64 MB ga kengaytiriladi.
-        /// </summary>
-        private static void TuneStreamingWindow(TorrentManager manager, IStreamingPieceRequester? requester)
-        {
-            var pieceLength = manager.Torrent?.PieceLength ?? 0;
-
-            if (requester is not StreamingPieceRequester streaming || pieceLength <= 0)
+            if (manager.StreamProvider == null)
             {
-                return;
+                return null;
             }
 
-            var count = Math.Clamp((int)Math.Ceiling((double)StreamBufferBytes / pieceLength), 15, 128);
-
-            typeof(StreamingPieceRequester)
-                .GetProperty("HighPriorityCount", BindingFlags.Instance | BindingFlags.NonPublic)?
-                .SetValue(streaming, count);
-        }
-
-        private static IStreamingPieceRequester? GetStreamingRequester(TorrentManager manager)
-        {
             return typeof(MonoTorrent.Streaming.StreamProvider)
                 .GetProperty("PieceRequester", BindingFlags.Instance | BindingFlags.NonPublic)?
-                .GetValue(manager.StreamProvider) as IStreamingPieceRequester;
+                .GetValue(manager.StreamProvider) as PlaybackPieceRequester;
         }
 
         private static Stream? GetActiveStream(TorrentManager manager)

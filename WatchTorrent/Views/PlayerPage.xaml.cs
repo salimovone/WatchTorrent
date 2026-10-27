@@ -31,6 +31,11 @@ namespace WatchTorrent.Views
             _viewModel.CloseRequested += async (_, _) => await LeaveAsync();
 
             FullScreenButton.IsVisible = PlayerWindow.CanToggleFullScreen;
+#if ANDROID
+            // Android'da bosish, bosib turish va surish bitta native touch handler'da ushlanadi (AttachTouch).
+            TouchLayer.GestureRecognizers.Clear();
+            TouchLayer.HandlerChanged += (_, _) => AttachTouch();
+#endif
 
             _timer = Dispatcher.CreateTimer();
             _timer.Interval = TimeSpan.FromMilliseconds(500);
@@ -74,6 +79,8 @@ namespace WatchTorrent.Views
             ShowControls();
 #if WINDOWS
             AttachKeyboard();
+#elif ANDROID
+            AttachTouch();
 #endif
 
             try
@@ -163,6 +170,8 @@ namespace WatchTorrent.Views
             _hideControls?.Cancel();
 #if WINDOWS
             DetachKeyboard();
+#elif ANDROID
+            DetachTouch();
 #endif
 
             // Tartib muhim: avval VLC to'xtatilib video sirtidan ajratiladi, keyin ekran yo'nalishi qaytariladi.
@@ -213,9 +222,13 @@ namespace WatchTorrent.Views
             _viewModel.Pause();
         }
 
-        private async void OnSurfaceTapped(object? sender, TappedEventArgs e)
+        private void OnSurfaceTapped(object? sender, TappedEventArgs e)
         {
-            var x = e.GetPosition(TouchLayer)?.X ?? TouchLayer.Width / 2;
+            HandleTap(e.GetPosition(TouchLayer)?.X ?? TouchLayer.Width / 2);
+        }
+
+        private async void HandleTap(double x)
+        {
             var now = Environment.TickCount64;
 
             if (now - _lastTapAt < DoubleTapMs && GetZone(x) == GetZone(_lastTapX))
@@ -515,6 +528,242 @@ namespace WatchTorrent.Views
             PlaylistOverlay.IsVisible = false;
             ShowControls();
         }
+
+#if ANDROID
+        // Barmoq shuncha bosib turilsa — 2x tezlik (YouTube'dagi kabi).
+        private const int LongPressMs = 500;
+
+        // Yuqori/pastki chetdan boshlangan surish tizim panellarini chiqarish uchun — yorug'lik/ovozga tegmaydi.
+        private const double SystemEdgeDip = 40;
+
+        // Ekran balandligining shuncha qismi bo'ylab surish darajani 0% dan 100% gacha o'zgartiradi.
+        private const double LevelSwipeHeight = 0.7;
+
+        private enum TouchMode
+        {
+            None,
+            Pending,
+            HoldSpeed,
+            Brightness,
+            Volume,
+            Ignored
+        }
+
+        private Android.Views.View? _touchView;
+        private TouchMode _touchMode;
+        private float _touchStartX;
+        private float _touchStartY;
+        private float _levelStartY;
+        private double _levelStart;
+        private string? _levelIcon;
+        private CancellationTokenSource? _longPress;
+        private CancellationTokenSource? _hideLevel;
+
+        /// <summary>
+        /// Android'da ekrandagi barcha barmoq harakatlari shu yerda: bosish va ikki marta bosish (avvalgidek),
+        /// bosib turish — 2x tezlik, chap yarmida tepaga/pastga surish — yorug'lik, o'ng yarmida — ovoz (VLC'dagi kabi).
+        /// </summary>
+        private void AttachTouch()
+        {
+            if (_isShutDown || TouchLayer.Handler?.PlatformView is not Android.Views.View view || view == _touchView)
+            {
+                return;
+            }
+
+            DetachTouch();
+
+            _touchView = view;
+            view.Touch += OnTouch;
+        }
+
+        private void DetachTouch()
+        {
+            _longPress?.Cancel();
+
+            if (_touchView == null)
+            {
+                return;
+            }
+
+            _touchView.Touch -= OnTouch;
+            _touchView = null;
+        }
+
+        private void OnTouch(object? sender, Android.Views.View.TouchEventArgs e)
+        {
+            e.Handled = true;
+
+            if (e.Event is not { } motion || _touchView is not { } view)
+            {
+                return;
+            }
+
+            switch (motion.ActionMasked)
+            {
+                case Android.Views.MotionEventActions.Down:
+                    _touchMode = TouchMode.Pending;
+                    _touchStartX = motion.GetX();
+                    _touchStartY = motion.GetY();
+                    _ = DetectLongPressAsync();
+                    break;
+                case Android.Views.MotionEventActions.Move:
+                    OnTouchMove(view, motion.GetX(), motion.GetY());
+                    break;
+                case Android.Views.MotionEventActions.PointerDown when _touchMode == TouchMode.Pending:
+                    // Ikkinchi barmoq — bu bosish ham, surish ham emas.
+                    _longPress?.Cancel();
+                    _touchMode = TouchMode.Ignored;
+                    break;
+                case Android.Views.MotionEventActions.Up:
+                    var density = view.Resources?.DisplayMetrics?.Density ?? 1;
+                    EndTouch(motion.GetX() / density);
+                    break;
+                case Android.Views.MotionEventActions.Cancel:
+                    EndTouch(null);
+                    break;
+            }
+        }
+
+        private void OnTouchMove(Android.Views.View view, float x, float y)
+        {
+            if (_touchMode == TouchMode.Pending)
+            {
+                var slop = view.Context is { } context ? Android.Views.ViewConfiguration.Get(context)?.ScaledTouchSlop ?? 16 : 16;
+                var dx = x - _touchStartX;
+                var dy = y - _touchStartY;
+
+                if (Math.Abs(dx) < slop && Math.Abs(dy) < slop)
+                {
+                    return;
+                }
+
+                _longPress?.Cancel();
+
+                var edge = SystemEdgeDip * (view.Resources?.DisplayMetrics?.Density ?? 1);
+                var nearEdge = _touchStartY < edge || _touchStartY > view.Height - edge;
+
+                if (!PlayerWindow.CanAdjustLevels || nearEdge || Math.Abs(dy) <= Math.Abs(dx))
+                {
+                    _touchMode = TouchMode.Ignored;
+
+                    return;
+                }
+
+                _touchMode = _touchStartX < view.Width / 2f ? TouchMode.Brightness : TouchMode.Volume;
+                _levelStart = _touchMode == TouchMode.Brightness ? PlayerWindow.Brightness : PlayerWindow.Volume;
+                _levelStartY = y;
+                HideControls();
+            }
+
+            if (_touchMode is not (TouchMode.Brightness or TouchMode.Volume) || view.Height <= 0)
+            {
+                return;
+            }
+
+            var level = Math.Clamp(_levelStart + (_levelStartY - y) / (view.Height * LevelSwipeHeight), 0, 1);
+
+            if (_touchMode == TouchMode.Brightness)
+            {
+                PlayerWindow.Brightness = level;
+                ShowLevel("ic_brightness.png", level);
+            }
+            else
+            {
+                // Tizim ovozi pog'onali (odatda 15 ta) — haqiqiy o'rnatilgan qiymat ko'rsatiladi.
+                PlayerWindow.Volume = level;
+
+                var volume = PlayerWindow.Volume;
+                ShowLevel(volume > 0 ? "ic_audio.png" : "ic_volume_off.png", volume);
+            }
+        }
+
+        private void EndTouch(double? tapX)
+        {
+            _longPress?.Cancel();
+
+            var mode = _touchMode;
+            _touchMode = TouchMode.None;
+
+            switch (mode)
+            {
+                case TouchMode.Pending when tapX is { } x:
+                    HandleTap(x);
+                    break;
+                case TouchMode.HoldSpeed:
+                    _viewModel.EndHoldSpeed();
+                    HoldSpeedBadge.IsVisible = false;
+                    break;
+                case TouchMode.Brightness or TouchMode.Volume:
+                    _ = HideLevelAsync();
+                    break;
+            }
+        }
+
+        private async Task DetectLongPressAsync()
+        {
+            _longPress?.Cancel();
+            var longPress = _longPress = new CancellationTokenSource();
+
+            try
+            {
+                await Task.Delay(LongPressMs, longPress.Token);
+            }
+            catch (TaskCanceledException)
+            {
+                return;
+            }
+
+            if (_touchMode != TouchMode.Pending)
+            {
+                return;
+            }
+
+            // Pauza yoki yuklanish paytida bosib turish hech narsa qilmaydi (qo'yib yuborilganda bosish ham hisoblanmaydi).
+            if (!_viewModel.BeginHoldSpeed())
+            {
+                _touchMode = TouchMode.Ignored;
+
+                return;
+            }
+
+            _touchMode = TouchMode.HoldSpeed;
+            _singleTap?.Cancel();
+            HideControls();
+            HoldSpeedBadge.IsVisible = true;
+            _touchView?.PerformHapticFeedback(Android.Views.FeedbackConstants.LongPress);
+        }
+
+        private void ShowLevel(string icon, double level)
+        {
+            _hideLevel?.Cancel();
+
+            // Rasm har harakatda qayta yuklanmasin.
+            if (_levelIcon != icon)
+            {
+                _levelIcon = icon;
+                LevelIcon.Source = icon;
+            }
+
+            LevelBar.Progress = level;
+            LevelText.Text = $"{level * 100:0}%";
+            LevelIndicator.Opacity = 1;
+        }
+
+        private async Task HideLevelAsync()
+        {
+            _hideLevel?.Cancel();
+            var hideLevel = _hideLevel = new CancellationTokenSource();
+
+            try
+            {
+                await Task.Delay(800, hideLevel.Token);
+                LevelIndicator.Opacity = 0;
+            }
+            catch (TaskCanceledException)
+            {
+            }
+        }
+#endif
 
 #if WINDOWS
         private Microsoft.UI.Xaml.UIElement? _keyboardRoot;
