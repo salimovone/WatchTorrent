@@ -58,10 +58,13 @@ namespace WatchTorrent.ViewModels
         private int _aspectMode = Math.Clamp(Preferences.Default.Get(AspectModeKey, 0), 0, AspectModes.Length - 1);
         private double _screenWidth;
         private double _screenHeight;
+        private (uint Width, uint Height) _videoSize;
+        private double _videoAspect = 16 / 9.0;
         private SavedTrack? _savedAudio;
         private SavedTrack? _savedSubtitle;
         private long _trackRestoreUntil;
         private float? _rateBeforeHold;
+        private int? _suspendedVideoTrack;
 
         private string _title = string.Empty;
         private string _statusText = "Tayyorlanmoqda…";
@@ -439,6 +442,45 @@ namespace WatchTorrent.ViewModels
             Player?.SetPause(true);
         }
 
+        /// <summary>
+        /// Ilova fonga o'tdi: Android video sirtini (Surface) yo'q qiladi, VLC esa qaytib kelganda yangisiga o'zi ulanmaydi —
+        /// video qora bo'lib qoladi. VLC'ning Android ilovasidagidek video treki vaqtincha o'chiriladi.
+        /// </summary>
+        public bool SuspendVideo()
+        {
+            if (Player is not { VideoTrack: not -1 } player || IsVideoSuspended)
+            {
+                return false;
+            }
+
+            _suspendedVideoTrack = player.VideoTrack;
+            player.SetVideoTrack(-1);
+
+            return true;
+        }
+
+        public bool IsVideoSuspended => _suspendedVideoTrack != null;
+
+        /// <summary>Ilova qaytib ochildi: video treki yoqiladi va VLC yangi sirtga chiza boshlaydi.</summary>
+        public void ResumeVideo()
+        {
+            if (_suspendedVideoTrack is not { } track || Player is not { } player)
+            {
+                return;
+            }
+
+            _suspendedVideoTrack = null;
+            player.SetVideoTrack(track);
+
+            // Yangi dekoder keyingi kalit kadrni kutadi (filmga qarab bir necha soniya qora ekran) — joyida seek qilinsa,
+            // VLC oldingi kalit kadrdan boshlab darhol chizadi. NextFrame() ishlatilmaydi: yangi dekoder hali pauza
+            // holatida bo'lmaydi va VLC assert bilan yiqiladi.
+            if (player.IsSeekable)
+            {
+                player.Time = player.Time;
+            }
+        }
+
         public void BeginSeek()
         {
             _isSeeking = true;
@@ -574,6 +616,56 @@ namespace WatchTorrent.ViewModels
                 4 => (null, "4:3"),
                 _ => ((string?)null, (string?)null)
             };
+        }
+
+        /// <summary>
+        /// Video ekranda qanday nisbatda (eni / bo'yi) ko'rinadi — kichik oyna (PiP) shu shaklda ochiladi.
+        /// Formatda 16:9 yoki 4:3 tanlangan bo'lsa o'sha; video hali ochilmagan bo'lsa 16:9.
+        /// </summary>
+        public double VideoAspectRatio
+        {
+            get
+            {
+                switch (_aspectMode)
+                {
+                    case 3:
+                        return 16 / 9.0;
+                    case 4:
+                        return 4 / 3.0;
+                }
+
+                uint width = 0, height = 0;
+
+                if (Player is not { } player || !player.Size(0, ref width, ref height) || width == 0 || height == 0)
+                {
+                    return _videoAspect;
+                }
+
+                // Treklar ro'yxati faqat video o'lchami o'zgarganda (yangi fayl) o'qiladi.
+                if ((width, height) != _videoSize)
+                {
+                    _videoSize = (width, height);
+                    _videoAspect = (double)width / height * GetSampleAspect(player);
+                }
+
+                return _videoAspect;
+            }
+        }
+
+        /// <summary>Anamorf videolarda (masalan DVD) piksel kvadrat emas — ekrandagi nisbat kadr o'lchamidan farq qiladi.</summary>
+        private double GetSampleAspect(LibVLCSharp.Shared.MediaPlayer player)
+        {
+            var videoTrack = player.VideoTrack;
+
+            foreach (var track in _media?.Tracks ?? Array.Empty<MediaTrack>())
+            {
+                if (track.TrackType == TrackType.Video && track.Id == videoTrack && track.Data.Video is { SarNum: > 0, SarDen: > 0 } video)
+                {
+                    return (double)video.SarNum / video.SarDen;
+                }
+            }
+
+            return 1;
         }
 
         public async Task ChooseSpeedAsync()

@@ -78,6 +78,8 @@ namespace WatchTorrent.Services
                 attributes.ScreenBrightness = WindowManagerLayoutParams.BrightnessOverrideNone;
                 window.Attributes = attributes;
             }
+
+            _brightnessBeforePictureInPicture = null;
 #elif WINDOWS
             SetFullScreen(false);
 #endif
@@ -161,6 +163,8 @@ namespace WatchTorrent.Services
         }
 
 #if ANDROID
+        private static float? _brightnessBeforePictureInPicture;
+
         private static AudioManager? Audio => Platform.AppContext.GetSystemService(Context.AudioService) as AudioManager;
 
         /// <summary>
@@ -173,6 +177,32 @@ namespace WatchTorrent.Services
             {
                 HideSystemBars(window);
             }
+        }
+
+        /// <summary>
+        /// Kichik oyna (PiP) boshqa ilovalar ustida turadi va player'da o'zgartirilgan yorug'lik butun ekranga ta'sir
+        /// qilib qoladi — kichik oynada tizimniki qaytariladi, katta ekranga qaytganda yana qo'yiladi.
+        /// </summary>
+        public static void OnPictureInPictureChanged(bool isActive)
+        {
+            if (!IsActive || Platform.CurrentActivity?.Window is not { Attributes: { } attributes } window)
+            {
+                return;
+            }
+
+            if (isActive)
+            {
+                _brightnessBeforePictureInPicture = attributes.ScreenBrightness;
+                attributes.ScreenBrightness = WindowManagerLayoutParams.BrightnessOverrideNone;
+            }
+            else
+            {
+                attributes.ScreenBrightness = _brightnessBeforePictureInPicture ?? WindowManagerLayoutParams.BrightnessOverrideNone;
+                _brightnessBeforePictureInPicture = null;
+                HideSystemBars(window);
+            }
+
+            window.Attributes = attributes;
         }
 
         private static void HideSystemBars(Android.Views.Window window)

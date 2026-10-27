@@ -74,6 +74,50 @@ namespace WatchTorrent.Services
             return null;
         }
 
+        /// <summary>Qurilmadagi WebView'ning Play Market sahifasini ochadi (yangilash uchun); Play Market bo'lmasa — brauzerda.</summary>
+        public static Task OpenStorePageAsync()
+        {
+#if ANDROID
+            var package = StorePackageName;
+
+            try
+            {
+                var intent = new Android.Content.Intent(Android.Content.Intent.ActionView, Android.Net.Uri.Parse($"market://details?id={package}"));
+                intent.SetPackage("com.android.vending");
+                intent.AddFlags(Android.Content.ActivityFlags.NewTask);
+                Platform.AppContext.StartActivity(intent);
+
+                return Task.CompletedTask;
+            }
+            catch (Android.Content.ActivityNotFoundException)
+            {
+                // Play Market o'rnatilmagan.
+            }
+
+            return Launcher.Default.OpenAsync($"https://play.google.com/store/apps/details?id={package}");
+#else
+            return Task.CompletedTask;
+#endif
+        }
+
+#if ANDROID
+        /// <summary>
+        /// Android 7–9 da WebView'ni ko'pincha Chrome ta'minlaydi — o'shaning sahifasi ochiladi. Play Market'da bo'lmagan
+        /// dvigatellarda (emulyator, Huawei) Google'ning "Android System WebView"i.
+        /// </summary>
+        private static string StorePackageName
+        {
+            get
+            {
+                var current = OperatingSystem.IsAndroidVersionAtLeast(26) ? Android.Webkit.WebView.CurrentWebViewPackage?.PackageName : null;
+
+                return current != null && (current.StartsWith("com.google.android.webview") || current.StartsWith("com.android.chrome") || current.StartsWith("com.chrome."))
+                    ? current
+                    : "com.google.android.webview";
+            }
+        }
+#endif
+
 #if WINDOWS
         private static async Task<string> GetWindowsAsync(WebView webView, Uri url)
         {

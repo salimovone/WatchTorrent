@@ -19,6 +19,14 @@
                 <Label
                     Text="Sayt Cloudflare tekshiruvini so'rayapti. Kerak bo'lsa katakchani belgilang — tekshiruv tugagach oyna o'zi yopiladi."
                     Style="{StaticResource Muted}" />
+                <!-- Eskirgan WebView — tekshiruv cheksiz aylanishining eng ko'p uchraydigan sababi -->
+                <Button
+                    Margin="0,6,0,0"
+                    Text="WebView'ni Play Market'da yangilash"
+                    Style="{StaticResource SmallButton}"
+                    HorizontalOptions="Start"
+                    IsVisible="{OnPlatform Android=True, Default=False}"
+                    Clicked="OnWebViewStoreClicked" />
             </VerticalStackLayout>
             <Button
                 Grid.Column="1"

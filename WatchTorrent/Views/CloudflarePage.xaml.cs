@@ -86,6 +86,18 @@ namespace WatchTorrent.Views
             Navigate();
         }
 
+        private async void OnWebViewStoreClicked(object? sender, EventArgs e)
+        {
+            try
+            {
+                await WebViewCookies.OpenStorePageAsync();
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"[Cloudflare] Play Market ochilmadi: {ex}");
+            }
+        }
+
         /// <summary>Eskirgan Cloudflare cookie'lari (boshqa tarmoq yoki WebView versiyasida olingan) tozalanadi.</summary>
         private async void OnResetClicked(object? sender, EventArgs e)
         {

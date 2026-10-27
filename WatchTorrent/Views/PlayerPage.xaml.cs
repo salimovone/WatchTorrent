@@ -31,6 +31,7 @@ namespace WatchTorrent.Views
             _viewModel.CloseRequested += async (_, _) => await LeaveAsync();
 
             FullScreenButton.IsVisible = PlayerWindow.CanToggleFullScreen;
+            PipButton.IsVisible = PictureInPicture.IsSupported;
 #if ANDROID
             // Android'da bosish, bosib turish va surish bitta native touch handler'da ushlanadi (AttachTouch).
             TouchLayer.GestureRecognizers.Clear();
@@ -43,6 +44,11 @@ namespace WatchTorrent.Views
             {
                 _viewModel.Tick();
                 UpdateSeekBar();
+
+                if (PictureInPicture.IsSupported)
+                {
+                    PictureInPicture.Update(_viewModel.IsPlaying, _viewModel.VideoAspectRatio);
+                }
 
                 if (PlaylistOverlay.IsVisible)
                 {
@@ -67,12 +73,18 @@ namespace WatchTorrent.Views
 
             PlayerWindow.Enter();
 
-            // Ilova fonga o'tsa film pauza qilinadi.
-            _window = Window;
+            PictureInPicture.Enable();
+            PictureInPicture.Changed += OnPictureInPictureChanged;
+            PictureInPicture.CommandReceived += OnPictureInPictureCommand;
+
+            // Ilova fonga o'tsa (kichik oyna yopilganda ham) film pauza qilinadi. Kichik oynaga o'tish "Stopped" emas.
+            // Shell orqali ochilgan sahifada Window bu paytda hali null bo'ladi — ilovaning yagona oynasi olinadi.
+            _window = Window ?? Application.Current?.Windows.FirstOrDefault();
 
             if (_window != null)
             {
                 _window.Stopped += OnWindowStopped;
+                _window.Activated += OnWindowActivated;
             }
 
             _timer.Start();
@@ -149,6 +161,10 @@ namespace WatchTorrent.Views
             _leaving = true;
 
             await ShutDownAsync();
+
+            // Film kichik oynada tugadi — oynada ilovaning oldingi sahifasi ochilib qolmasin.
+            PictureInPicture.Dismiss();
+
             await Shell.Current.GoToAsync("..");
         }
 
@@ -164,10 +180,15 @@ namespace WatchTorrent.Views
             if (_window != null)
             {
                 _window.Stopped -= OnWindowStopped;
+                _window.Activated -= OnWindowActivated;
             }
 
             _timer.Stop();
             _hideControls?.Cancel();
+
+            PictureInPicture.Changed -= OnPictureInPictureChanged;
+            PictureInPicture.CommandReceived -= OnPictureInPictureCommand;
+            PictureInPicture.Disable();
 #if WINDOWS
             DetachKeyboard();
 #elif ANDROID
@@ -220,6 +241,26 @@ namespace WatchTorrent.Views
         private void OnWindowStopped(object? sender, EventArgs e)
         {
             _viewModel.Pause();
+#if ANDROID
+            // Fonda Android video sirtini yo'q qiladi: VLC Android ilovasidagidek video o'chirilib, sirtdan ajratiladi.
+            if (_viewModel.SuspendVideo())
+            {
+                Video.MediaPlayer = null;
+            }
+#endif
+        }
+
+        private void OnWindowActivated(object? sender, EventArgs e)
+        {
+#if ANDROID
+            // Ilova qaytib ochildi — yangi sirtga qayta ulanadi.
+            if (_viewModel.IsVideoSuspended && !_isShutDown)
+            {
+                Video.MediaPlayer = _viewModel.Player;
+                ReportVideoSurfaceSize();
+                _viewModel.ResumeVideo();
+            }
+#endif
         }
 
         private void OnSurfaceTapped(object? sender, TappedEventArgs e)
@@ -408,6 +449,63 @@ namespace WatchTorrent.Views
         {
             ShowControls();
             PlayerWindow.ToggleFullScreen();
+        }
+
+        private async void OnPipClicked(object? sender, EventArgs e)
+        {
+            HideControls();
+
+            if (PictureInPicture.Enter())
+            {
+                return;
+            }
+
+            ShowControls();
+
+            var openSettings = await DisplayAlertAsync(
+                "Kichik oyna o'chirilgan",
+                "Telefon sozlamalarida WatchTorrent uchun «Picture-in-picture» (tasvir ichida tasvir) ruxsatini yoqing.",
+                "Sozlamalar",
+                "Bekor qilish");
+
+            if (openSettings)
+            {
+                AppInfo.Current.ShowSettingsUI();
+            }
+        }
+
+        /// <summary>Kichik oynada faqat video ko'rinadi; katta ekranga qaytganda boshqaruv ko'rsatiladi.</summary>
+        private void OnPictureInPictureChanged(object? sender, EventArgs e)
+        {
+            Overlay.IsVisible = !PictureInPicture.IsActive;
+
+            if (PictureInPicture.IsActive)
+            {
+                HideControls();
+            }
+            else
+            {
+                ShowControls();
+            }
+        }
+
+        private void OnPictureInPictureCommand(object? sender, PictureInPictureCommand command)
+        {
+            switch (command)
+            {
+                case PictureInPictureCommand.Rewind:
+                    _viewModel.SeekBy(-SeekStepSeconds);
+                    break;
+                case PictureInPictureCommand.Forward:
+                    _viewModel.SeekBy(SeekStepSeconds);
+                    break;
+                default:
+                    _viewModel.TogglePlay();
+                    break;
+            }
+
+            // Oynadagi pauza/davom tugmasi taymerni kutmay almashsin.
+            PictureInPicture.Update(_viewModel.IsPlaying, _viewModel.VideoAspectRatio);
         }
 
         private void OnRestartClicked(object? sender, EventArgs e)

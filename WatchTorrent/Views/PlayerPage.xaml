@@ -20,341 +20,350 @@
     <Grid BackgroundColor="Black" SafeAreaEdges="None">
         <vlc:VideoView x:Name="Video" />
 
-        <!--
-            Bosish: bir marta — boshqaruvni ko'rsatish/yashirish; ikki marta chap/o'ngda — 10 s orqaga/oldinga.
-            Android'da bular, bosib turish (2x) va yorug'lik/ovoz surishlari bilan birga kodda (AttachTouch) ushlanadi.
-        -->
-        <Grid x:Name="TouchLayer" BackgroundColor="Transparent">
-            <Grid.GestureRecognizers>
-                <TapGestureRecognizer Tapped="OnSurfaceTapped" />
-            </Grid.GestureRecognizers>
-        </Grid>
-
-        <Label
-            x:Name="SeekFeedback"
-            Margin="80,0"
-            Padding="18,10"
-            BackgroundColor="#99000000"
-            FontFamily="OpenSansSemibold"
-            FontSize="18"
-            TextColor="White"
-            VerticalOptions="Center"
-            Opacity="0"
-            InputTransparent="True" />
-
-        <!-- Qisqa holat xabari (masalan "Ekran formati: Cho'zish") -->
-        <Border
-            x:Name="Osd"
-            Margin="0,72,0,0"
-            Padding="18,9"
-            HorizontalOptions="Center"
-            VerticalOptions="Start"
-            StrokeThickness="0"
-            StrokeShape="RoundRectangle 18"
-            BackgroundColor="#B3000000"
-            Opacity="0"
-            InputTransparent="True">
-            <Label x:Name="OsdText" TextColor="White" FontFamily="OpenSansSemibold" FontSize="15" />
-        </Border>
-
-        <!-- Ekran bosib turilganda: vaqtincha 2x tezlik -->
-        <Border
-            x:Name="HoldSpeedBadge"
-            Margin="0,24,0,0"
-            Padding="16,7"
-            HorizontalOptions="Center"
-            VerticalOptions="Start"
-            StrokeThickness="0"
-            StrokeShape="RoundRectangle 16"
-            BackgroundColor="#99000000"
-            IsVisible="False"
-            InputTransparent="True">
-            <Label Text="2x  ▶▶" TextColor="White" FontFamily="OpenSansSemibold" FontSize="14" />
-        </Border>
-
-        <!-- Yorug'lik / ovoz: ekranning chap / o'ng yarmida tepaga-pastga surilganda -->
-        <Border
-            x:Name="LevelIndicator"
-            Margin="0,72,0,0"
-            Padding="16,10"
-            HorizontalOptions="Center"
-            VerticalOptions="Start"
-            StrokeThickness="0"
-            StrokeShape="RoundRectangle 20"
-            BackgroundColor="#B3000000"
-            Opacity="0"
-            InputTransparent="True">
-            <HorizontalStackLayout Spacing="12">
-                <Image x:Name="LevelIcon" WidthRequest="22" HeightRequest="22" VerticalOptions="Center" />
-                <ProgressBar
-                    x:Name="LevelBar"
-                    WidthRequest="160"
-                    ProgressColor="White"
-                    BackgroundColor="#4DFFFFFF"
-                    VerticalOptions="Center" />
-                <Label
-                    x:Name="LevelText"
-                    WidthRequest="44"
-                    TextColor="White"
-                    FontFamily="OpenSansSemibold"
-                    FontSize="14"
-                    HorizontalTextAlignment="End"
-                    VerticalOptions="Center" />
-            </HorizontalStackLayout>
-        </Border>
-
-        <Grid x:Name="Controls" RowDefinitions="Auto,*,Auto" SafeAreaEdges="Container">
-            <!-- Yuqori panel -->
-            <Grid Padding="8,8,12,24" ColumnDefinitions="Auto,*,Auto" ColumnSpacing="4">
-                <Grid.Background>
-                    <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
-                        <GradientStop Color="#CC000000" Offset="0" />
-                        <GradientStop Color="#00000000" Offset="1" />
-                    </LinearGradientBrush>
-                </Grid.Background>
-
-                <ImageButton Source="ic_back.png" Style="{StaticResource PlayerIconButton}" Clicked="OnBackClicked" />
-                <Label
-                    Grid.Column="1"
-                    Text="{Binding Title}"
-                    TextColor="White"
-                    FontFamily="OpenSansSemibold"
-                    FontSize="16"
-                    LineBreakMode="TailTruncation"
-                    VerticalOptions="Center" />
-                <HorizontalStackLayout Grid.Column="2" Spacing="2">
-                    <ImageButton
-                        Source="ic_playlist.png"
-                        Style="{StaticResource PlayerIconButton}"
-                        IsVisible="{Binding HasPlaylist}"
-                        Clicked="OnPlaylistClicked" />
-                    <HorizontalStackLayout Spacing="2" IsVisible="{Binding ShowTransport}">
-                        <ImageButton Source="ic_audio.png" Style="{StaticResource PlayerIconButton}" Clicked="OnAudioClicked" />
-                        <ImageButton Source="ic_subtitles.png" Style="{StaticResource PlayerIconButton}" Clicked="OnSubtitlesClicked" />
-                        <ImageButton Source="ic_aspect.png" Style="{StaticResource PlayerIconButton}" Clicked="OnAspectClicked" />
-                        <ImageButton Source="ic_speed.png" Style="{StaticResource PlayerIconButton}" Clicked="OnSpeedClicked" />
-                        <ImageButton
-                            x:Name="FullScreenButton"
-                            Source="ic_fullscreen.png"
-                            Style="{StaticResource PlayerIconButton}"
-                            Clicked="OnFullScreenClicked" />
-                    </HorizontalStackLayout>
-                </HorizontalStackLayout>
-            </Grid>
-
-            <!-- Markaz: orqaga / o'ynatish / oldinga -->
-            <HorizontalStackLayout
-                Grid.Row="1"
-                Spacing="40"
-                HorizontalOptions="Center"
-                VerticalOptions="Center"
-                IsVisible="{Binding ShowTransport}">
-                <ImageButton
-                    Source="ic_rewind.png"
-                    Style="{StaticResource PlayerTransportButton}"
-                    VerticalOptions="Center"
-                    Clicked="OnRewindClicked" />
-                <ImageButton
-                    Source="{Binding PlayPauseIcon}"
-                    Style="{StaticResource PlayerTransportButton}"
-                    WidthRequest="80"
-                    HeightRequest="80"
-                    CornerRadius="40"
-                    Padding="18"
-                    Clicked="OnPlayPauseClicked" />
-                <ImageButton
-                    Source="ic_forward.png"
-                    Style="{StaticResource PlayerTransportButton}"
-                    VerticalOptions="Center"
-                    Clicked="OnForwardClicked" />
-            </HorizontalStackLayout>
-
-            <!-- Pastki panel: vaqt, seek, stream holati -->
-            <Grid Grid.Row="2" Padding="20,28,20,14" RowDefinitions="Auto,Auto" RowSpacing="2" IsVisible="{Binding ShowTransport}">
-                <Grid.Background>
-                    <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
-                        <GradientStop Color="#00000000" Offset="0" />
-                        <GradientStop Color="#CC000000" Offset="1" />
-                    </LinearGradientBrush>
-                </Grid.Background>
-
-                <Grid ColumnDefinitions="Auto,*,Auto,Auto" ColumnSpacing="12">
-                    <Label
-                        Text="{Binding PositionText}"
-                        TextColor="White"
-                        FontSize="13"
-                        VerticalOptions="Center" />
-                    <Grid Grid.Column="1">
-                        <!-- Bufer: hozirgi joydan keyin yuklab bo'lingan qism -->
-                        <!-- Android Slider chizig'i chetlardan ~16dp ichkarida chiziladi -->
-                        <ProgressBar
-                            Margin="{OnPlatform Android='16,0', Default='0'}"
-                            Progress="{Binding BufferedFraction}"
-                            ProgressColor="#80FFFFFF"
-                            BackgroundColor="Transparent"
-                            VerticalOptions="Center"
-                            InputTransparent="True" />
-                        <!--
-                            Value/Maximum kod orqali yangilanadi: binding bilan Maximum o'zgarganda
-                            Slider Value'ni o'zi qayta o'rnatadi va OneWay binding uzilib qoladi.
-                        -->
-                        <Slider
-                            x:Name="SeekBar"
-                            Minimum="0"
-                            Maximum="1"
-                            MinimumTrackColor="{StaticResource Accent}"
-                            MaximumTrackColor="#33FFFFFF"
-                            ThumbColor="White"
-                            DragStarted="OnSeekDragStarted"
-                            DragCompleted="OnSeekDragCompleted"
-                            ValueChanged="OnSeekValueChanged" />
-                    </Grid>
-                    <Label
-                        Grid.Column="2"
-                        Text="{Binding DurationText}"
-                        TextColor="White"
-                        FontSize="13"
-                        VerticalOptions="Center" />
-                    <!-- Keyingi fayl (serialning keyingi qismi) -->
-                    <ImageButton
-                        Grid.Column="3"
-                        Source="ic_next.png"
-                        Style="{StaticResource PlayerIconButton}"
-                        IsVisible="{Binding HasNext}"
-                        Clicked="OnNextClicked" />
-                </Grid>
-
-                <Label
-                    Grid.Row="1"
-                    Text="{Binding StreamInfo}"
-                    TextColor="#B3FFFFFF"
-                    FontSize="12"
-                    IsVisible="{Binding HasStreamInfo}" />
-            </Grid>
-        </Grid>
-
-        <!-- Yuklanish / buferlanish -->
-        <VerticalStackLayout
-            Spacing="10"
-            HorizontalOptions="Center"
-            VerticalOptions="Center"
-            InputTransparent="True"
-            IsVisible="{Binding ShowSpinner}">
-            <ActivityIndicator IsRunning="{Binding ShowSpinner}" Color="White" HeightRequest="44" WidthRequest="44" />
-            <Label
-                Text="{Binding StatusText}"
-                TextColor="White"
-                FontFamily="OpenSansSemibold"
-                FontSize="15"
-                HorizontalTextAlignment="Center"
-                IsVisible="{Binding IsLoading}" />
-            <Label
-                Text="{Binding StreamInfo}"
-                TextColor="#B3FFFFFF"
-                FontSize="12"
-                HorizontalTextAlignment="Center" />
-        </VerticalStackLayout>
-
-        <!-- "12:34 dan davom etilmoqda" -->
-        <Border
-            Margin="20,0,0,96"
-            Padding="16,6,6,6"
-            HorizontalOptions="Start"
-            VerticalOptions="End"
-            StrokeThickness="0"
-            StrokeShape="RoundRectangle 10"
-            BackgroundColor="#CC171920"
-            IsVisible="{Binding HasResumeNotice}">
-            <HorizontalStackLayout Spacing="12">
-                <Label Text="{Binding ResumeNotice}" TextColor="White" FontSize="13" VerticalOptions="Center" />
-                <Button Text="Boshidan" Style="{StaticResource SmallButton}" Clicked="OnRestartClicked" />
-            </HorizontalStackLayout>
-        </Border>
-
-        <!-- Xato -->
-        <VerticalStackLayout
-            Padding="32"
-            Spacing="16"
-            HorizontalOptions="Center"
-            VerticalOptions="Center"
-            IsVisible="{Binding HasError}">
-            <Label
-                Text="{Binding ErrorMessage}"
-                TextColor="White"
-                FontSize="15"
-                HorizontalTextAlignment="Center" />
-            <Button Text="Orqaga" HorizontalOptions="Center" Clicked="OnBackClicked" />
-        </VerticalStackLayout>
-
-        <!-- Fayllar ro'yxati: player'dan chiqmasdan boshqa faylga o'tish -->
-        <Grid x:Name="PlaylistOverlay" IsVisible="False" ColumnDefinitions="*,Auto">
-            <Grid BackgroundColor="#80000000">
+        <!-- Kichik oynada (PiP) faqat video ko'rinadi: bu yerdagi hamma narsa yashiriladi -->
+        <Grid x:Name="Overlay" SafeAreaEdges="None">
+            <!--
+                Bosish: bir marta — boshqaruvni ko'rsatish/yashirish; ikki marta chap/o'ngda — 10 s orqaga/oldinga.
+                Android'da bular, bosib turish (2x) va yorug'lik/ovoz surishlari bilan birga kodda (AttachTouch) ushlanadi.
+            -->
+            <Grid x:Name="TouchLayer" BackgroundColor="Transparent">
                 <Grid.GestureRecognizers>
-                    <TapGestureRecognizer Tapped="OnPlaylistBackdropTapped" />
+                    <TapGestureRecognizer Tapped="OnSurfaceTapped" />
                 </Grid.GestureRecognizers>
             </Grid>
 
-            <Grid
-                Grid.Column="1"
-                WidthRequest="420"
-                RowDefinitions="Auto,*"
-                BackgroundColor="#F2171920"
-                SafeAreaEdges="Container">
-                <Grid Padding="20,12,8,8" ColumnDefinitions="*,Auto">
+            <Label
+                x:Name="SeekFeedback"
+                Margin="80,0"
+                Padding="18,10"
+                BackgroundColor="#99000000"
+                FontFamily="OpenSansSemibold"
+                FontSize="18"
+                TextColor="White"
+                VerticalOptions="Center"
+                Opacity="0"
+                InputTransparent="True" />
+
+            <!-- Qisqa holat xabari (masalan "Ekran formati: Cho'zish") -->
+            <Border
+                x:Name="Osd"
+                Margin="0,72,0,0"
+                Padding="18,9"
+                HorizontalOptions="Center"
+                VerticalOptions="Start"
+                StrokeThickness="0"
+                StrokeShape="RoundRectangle 18"
+                BackgroundColor="#B3000000"
+                Opacity="0"
+                InputTransparent="True">
+                <Label x:Name="OsdText" TextColor="White" FontFamily="OpenSansSemibold" FontSize="15" />
+            </Border>
+
+            <!-- Ekran bosib turilganda: vaqtincha 2x tezlik -->
+            <Border
+                x:Name="HoldSpeedBadge"
+                Margin="0,24,0,0"
+                Padding="16,7"
+                HorizontalOptions="Center"
+                VerticalOptions="Start"
+                StrokeThickness="0"
+                StrokeShape="RoundRectangle 16"
+                BackgroundColor="#99000000"
+                IsVisible="False"
+                InputTransparent="True">
+                <Label Text="2x  ▶▶" TextColor="White" FontFamily="OpenSansSemibold" FontSize="14" />
+            </Border>
+
+            <!-- Yorug'lik / ovoz: ekranning chap / o'ng yarmida tepaga-pastga surilganda -->
+            <Border
+                x:Name="LevelIndicator"
+                Margin="0,72,0,0"
+                Padding="16,10"
+                HorizontalOptions="Center"
+                VerticalOptions="Start"
+                StrokeThickness="0"
+                StrokeShape="RoundRectangle 20"
+                BackgroundColor="#B3000000"
+                Opacity="0"
+                InputTransparent="True">
+                <HorizontalStackLayout Spacing="12">
+                    <Image x:Name="LevelIcon" WidthRequest="22" HeightRequest="22" VerticalOptions="Center" />
+                    <ProgressBar
+                        x:Name="LevelBar"
+                        WidthRequest="160"
+                        ProgressColor="White"
+                        BackgroundColor="#4DFFFFFF"
+                        VerticalOptions="Center" />
                     <Label
-                        Text="{Binding PlaylistHeader}"
+                        x:Name="LevelText"
+                        WidthRequest="44"
                         TextColor="White"
                         FontFamily="OpenSansSemibold"
-                        FontSize="17"
+                        FontSize="14"
+                        HorizontalTextAlignment="End"
                         VerticalOptions="Center" />
-                    <ImageButton
+                </HorizontalStackLayout>
+            </Border>
+
+            <Grid x:Name="Controls" RowDefinitions="Auto,*,Auto" SafeAreaEdges="Container">
+                <!-- Yuqori panel -->
+                <Grid Padding="8,8,12,24" ColumnDefinitions="Auto,*,Auto" ColumnSpacing="4">
+                    <Grid.Background>
+                        <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                            <GradientStop Color="#CC000000" Offset="0" />
+                            <GradientStop Color="#00000000" Offset="1" />
+                        </LinearGradientBrush>
+                    </Grid.Background>
+
+                    <ImageButton Source="ic_back.png" Style="{StaticResource PlayerIconButton}" Clicked="OnBackClicked" />
+                    <Label
                         Grid.Column="1"
-                        Source="ic_close.png"
-                        Style="{StaticResource PlayerIconButton}"
-                        Clicked="OnPlaylistCloseClicked" />
+                        Text="{Binding Title}"
+                        TextColor="White"
+                        FontFamily="OpenSansSemibold"
+                        FontSize="16"
+                        LineBreakMode="TailTruncation"
+                        VerticalOptions="Center" />
+                    <HorizontalStackLayout Grid.Column="2" Spacing="2">
+                        <ImageButton
+                            Source="ic_playlist.png"
+                            Style="{StaticResource PlayerIconButton}"
+                            IsVisible="{Binding HasPlaylist}"
+                            Clicked="OnPlaylistClicked" />
+                        <HorizontalStackLayout Spacing="2" IsVisible="{Binding ShowTransport}">
+                            <ImageButton Source="ic_audio.png" Style="{StaticResource PlayerIconButton}" Clicked="OnAudioClicked" />
+                            <ImageButton Source="ic_subtitles.png" Style="{StaticResource PlayerIconButton}" Clicked="OnSubtitlesClicked" />
+                            <ImageButton Source="ic_aspect.png" Style="{StaticResource PlayerIconButton}" Clicked="OnAspectClicked" />
+                            <ImageButton Source="ic_speed.png" Style="{StaticResource PlayerIconButton}" Clicked="OnSpeedClicked" />
+                            <!-- Kichik oyna (PiP): film boshqa ilovalar ustida o'ynayveradi -->
+                            <ImageButton
+                                x:Name="PipButton"
+                                Source="ic_pip.png"
+                                Style="{StaticResource PlayerIconButton}"
+                                Clicked="OnPipClicked" />
+                            <ImageButton
+                                x:Name="FullScreenButton"
+                                Source="ic_fullscreen.png"
+                                Style="{StaticResource PlayerIconButton}"
+                                Clicked="OnFullScreenClicked" />
+                        </HorizontalStackLayout>
+                    </HorizontalStackLayout>
                 </Grid>
 
-                <CollectionView
-                    x:Name="PlaylistView"
+                <!-- Markaz: orqaga / o'ynatish / oldinga -->
+                <HorizontalStackLayout
                     Grid.Row="1"
-                    ItemsSource="{Binding Playlist}"
-                    SelectionMode="Single"
-                    SelectionChanged="OnPlaylistSelectionChanged">
-                    <CollectionView.ItemTemplate>
-                        <DataTemplate x:DataType="vm:PlaylistItem">
-                            <Grid Padding="20,10" ColumnDefinitions="32,*" ColumnSpacing="8">
-                                <Label
-                                    Text="{Binding Number}"
-                                    TextColor="#99FFFFFF"
-                                    FontSize="14"
-                                    VerticalOptions="Start">
-                                    <Label.Triggers>
-                                        <DataTrigger TargetType="Label" Binding="{Binding IsCurrent}" Value="True">
-                                            <Setter Property="Text" Value="▶" />
-                                            <Setter Property="TextColor" Value="{StaticResource Accent}" />
-                                        </DataTrigger>
-                                    </Label.Triggers>
-                                </Label>
-                                <VerticalStackLayout Grid.Column="1" Spacing="3">
+                    Spacing="40"
+                    HorizontalOptions="Center"
+                    VerticalOptions="Center"
+                    IsVisible="{Binding ShowTransport}">
+                    <ImageButton
+                        Source="ic_rewind.png"
+                        Style="{StaticResource PlayerTransportButton}"
+                        VerticalOptions="Center"
+                        Clicked="OnRewindClicked" />
+                    <ImageButton
+                        Source="{Binding PlayPauseIcon}"
+                        Style="{StaticResource PlayerTransportButton}"
+                        WidthRequest="80"
+                        HeightRequest="80"
+                        CornerRadius="40"
+                        Padding="18"
+                        Clicked="OnPlayPauseClicked" />
+                    <ImageButton
+                        Source="ic_forward.png"
+                        Style="{StaticResource PlayerTransportButton}"
+                        VerticalOptions="Center"
+                        Clicked="OnForwardClicked" />
+                </HorizontalStackLayout>
+
+                <!-- Pastki panel: vaqt, seek, stream holati -->
+                <Grid Grid.Row="2" Padding="20,28,20,14" RowDefinitions="Auto,Auto" RowSpacing="2" IsVisible="{Binding ShowTransport}">
+                    <Grid.Background>
+                        <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                            <GradientStop Color="#00000000" Offset="0" />
+                            <GradientStop Color="#CC000000" Offset="1" />
+                        </LinearGradientBrush>
+                    </Grid.Background>
+
+                    <Grid ColumnDefinitions="Auto,*,Auto,Auto" ColumnSpacing="12">
+                        <Label
+                            Text="{Binding PositionText}"
+                            TextColor="White"
+                            FontSize="13"
+                            VerticalOptions="Center" />
+                        <Grid Grid.Column="1">
+                            <!-- Bufer: hozirgi joydan keyin yuklab bo'lingan qism -->
+                            <!-- Android Slider chizig'i chetlardan ~16dp ichkarida chiziladi -->
+                            <ProgressBar
+                                Margin="{OnPlatform Android='16,0', Default='0'}"
+                                Progress="{Binding BufferedFraction}"
+                                ProgressColor="#80FFFFFF"
+                                BackgroundColor="Transparent"
+                                VerticalOptions="Center"
+                                InputTransparent="True" />
+                            <!--
+                                Value/Maximum kod orqali yangilanadi: binding bilan Maximum o'zgarganda
+                                Slider Value'ni o'zi qayta o'rnatadi va OneWay binding uzilib qoladi.
+                            -->
+                            <Slider
+                                x:Name="SeekBar"
+                                Minimum="0"
+                                Maximum="1"
+                                MinimumTrackColor="{StaticResource Accent}"
+                                MaximumTrackColor="#33FFFFFF"
+                                ThumbColor="White"
+                                DragStarted="OnSeekDragStarted"
+                                DragCompleted="OnSeekDragCompleted"
+                                ValueChanged="OnSeekValueChanged" />
+                        </Grid>
+                        <Label
+                            Grid.Column="2"
+                            Text="{Binding DurationText}"
+                            TextColor="White"
+                            FontSize="13"
+                            VerticalOptions="Center" />
+                        <!-- Keyingi fayl (serialning keyingi qismi) -->
+                        <ImageButton
+                            Grid.Column="3"
+                            Source="ic_next.png"
+                            Style="{StaticResource PlayerIconButton}"
+                            IsVisible="{Binding HasNext}"
+                            Clicked="OnNextClicked" />
+                    </Grid>
+
+                    <Label
+                        Grid.Row="1"
+                        Text="{Binding StreamInfo}"
+                        TextColor="#B3FFFFFF"
+                        FontSize="12"
+                        IsVisible="{Binding HasStreamInfo}" />
+                </Grid>
+            </Grid>
+
+            <!-- Yuklanish / buferlanish -->
+            <VerticalStackLayout
+                Spacing="10"
+                HorizontalOptions="Center"
+                VerticalOptions="Center"
+                InputTransparent="True"
+                IsVisible="{Binding ShowSpinner}">
+                <ActivityIndicator IsRunning="{Binding ShowSpinner}" Color="White" HeightRequest="44" WidthRequest="44" />
+                <Label
+                    Text="{Binding StatusText}"
+                    TextColor="White"
+                    FontFamily="OpenSansSemibold"
+                    FontSize="15"
+                    HorizontalTextAlignment="Center"
+                    IsVisible="{Binding IsLoading}" />
+                <Label
+                    Text="{Binding StreamInfo}"
+                    TextColor="#B3FFFFFF"
+                    FontSize="12"
+                    HorizontalTextAlignment="Center" />
+            </VerticalStackLayout>
+
+            <!-- "12:34 dan davom etilmoqda" -->
+            <Border
+                Margin="20,0,0,96"
+                Padding="16,6,6,6"
+                HorizontalOptions="Start"
+                VerticalOptions="End"
+                StrokeThickness="0"
+                StrokeShape="RoundRectangle 10"
+                BackgroundColor="#CC171920"
+                IsVisible="{Binding HasResumeNotice}">
+                <HorizontalStackLayout Spacing="12">
+                    <Label Text="{Binding ResumeNotice}" TextColor="White" FontSize="13" VerticalOptions="Center" />
+                    <Button Text="Boshidan" Style="{StaticResource SmallButton}" Clicked="OnRestartClicked" />
+                </HorizontalStackLayout>
+            </Border>
+
+            <!-- Xato -->
+            <VerticalStackLayout
+                Padding="32"
+                Spacing="16"
+                HorizontalOptions="Center"
+                VerticalOptions="Center"
+                IsVisible="{Binding HasError}">
+                <Label
+                    Text="{Binding ErrorMessage}"
+                    TextColor="White"
+                    FontSize="15"
+                    HorizontalTextAlignment="Center" />
+                <Button Text="Orqaga" HorizontalOptions="Center" Clicked="OnBackClicked" />
+            </VerticalStackLayout>
+
+            <!-- Fayllar ro'yxati: player'dan chiqmasdan boshqa faylga o'tish -->
+            <Grid x:Name="PlaylistOverlay" IsVisible="False" ColumnDefinitions="*,Auto">
+                <Grid BackgroundColor="#80000000">
+                    <Grid.GestureRecognizers>
+                        <TapGestureRecognizer Tapped="OnPlaylistBackdropTapped" />
+                    </Grid.GestureRecognizers>
+                </Grid>
+
+                <Grid
+                    Grid.Column="1"
+                    WidthRequest="420"
+                    RowDefinitions="Auto,*"
+                    BackgroundColor="#F2171920"
+                    SafeAreaEdges="Container">
+                    <Grid Padding="20,12,8,8" ColumnDefinitions="*,Auto">
+                        <Label
+                            Text="{Binding PlaylistHeader}"
+                            TextColor="White"
+                            FontFamily="OpenSansSemibold"
+                            FontSize="17"
+                            VerticalOptions="Center" />
+                        <ImageButton
+                            Grid.Column="1"
+                            Source="ic_close.png"
+                            Style="{StaticResource PlayerIconButton}"
+                            Clicked="OnPlaylistCloseClicked" />
+                    </Grid>
+
+                    <CollectionView
+                        x:Name="PlaylistView"
+                        Grid.Row="1"
+                        ItemsSource="{Binding Playlist}"
+                        SelectionMode="Single"
+                        SelectionChanged="OnPlaylistSelectionChanged">
+                        <CollectionView.ItemTemplate>
+                            <DataTemplate x:DataType="vm:PlaylistItem">
+                                <Grid Padding="20,10" ColumnDefinitions="32,*" ColumnSpacing="8">
                                     <Label
-                                        Text="{Binding Title}"
-                                        TextColor="White"
+                                        Text="{Binding Number}"
+                                        TextColor="#99FFFFFF"
                                         FontSize="14"
-                                        MaxLines="2"
-                                        LineBreakMode="TailTruncation">
+                                        VerticalOptions="Start">
                                         <Label.Triggers>
                                             <DataTrigger TargetType="Label" Binding="{Binding IsCurrent}" Value="True">
+                                                <Setter Property="Text" Value="▶" />
                                                 <Setter Property="TextColor" Value="{StaticResource Accent}" />
-                                                <Setter Property="FontFamily" Value="OpenSansSemibold" />
                                             </DataTrigger>
                                         </Label.Triggers>
                                     </Label>
-                                    <Label Text="{Binding Details}" TextColor="#99FFFFFF" FontSize="12" />
-                                </VerticalStackLayout>
-                            </Grid>
-                        </DataTemplate>
-                    </CollectionView.ItemTemplate>
-                </CollectionView>
+                                    <VerticalStackLayout Grid.Column="1" Spacing="3">
+                                        <Label
+                                            Text="{Binding Title}"
+                                            TextColor="White"
+                                            FontSize="14"
+                                            MaxLines="2"
+                                            LineBreakMode="TailTruncation">
+                                            <Label.Triggers>
+                                                <DataTrigger TargetType="Label" Binding="{Binding IsCurrent}" Value="True">
+                                                    <Setter Property="TextColor" Value="{StaticResource Accent}" />
+                                                    <Setter Property="FontFamily" Value="OpenSansSemibold" />
+                                                </DataTrigger>
+                                            </Label.Triggers>
+                                        </Label>
+                                        <Label Text="{Binding Details}" TextColor="#99FFFFFF" FontSize="12" />
+                                    </VerticalStackLayout>
+                                </Grid>
+                            </DataTemplate>
+                        </CollectionView.ItemTemplate>
+                    </CollectionView>
+                </Grid>
             </Grid>
         </Grid>
     </Grid>
