@@ -1,3 +1,4 @@
+using WatchTorrent.Controls;
 using WatchTorrent.Services;
 using WatchTorrent.ViewModels;
 
@@ -29,6 +30,10 @@ namespace WatchTorrent.Views
 
             BindingContext = _viewModel = viewModel;
             _viewModel.CloseRequested += async (_, _) => await LeaveAsync();
+            _viewModel.PlayerChanged += OnPlayerChanged;
+#if ANDROID
+            _viewModel.WaitForVideoSurface = () => _videoSurfaceReady;
+#endif
 
             FullScreenButton.IsVisible = PlayerWindow.CanToggleFullScreen;
             PipButton.IsVisible = PictureInPicture.IsSupported;
@@ -36,6 +41,10 @@ namespace WatchTorrent.Views
             // Android'da bosish, bosib turish va surish bitta native touch handler'da ushlanadi (AttachTouch).
             TouchLayer.GestureRecognizers.Clear();
             TouchLayer.HandlerChanged += (_, _) => AttachTouch();
+
+            // HDR rejimida subtitrlar video ustidagi alohida sirtga chiziladi (DirectVideoOutput).
+            VideoHost.Children.Insert(VideoHost.Children.IndexOf(Video) + 1, _subtitleLayer);
+            VideoHost.SizeChanged += (_, _) => ApplyVideoLayout();
 #endif
 
             _timer = Dispatcher.CreateTimer();
@@ -98,11 +107,11 @@ namespace WatchTorrent.Views
             try
             {
                 _viewModel.CreatePlayer(await GetPlatformOptionsAsync());
-                Video.MediaPlayer = _viewModel.Player;
-                ReportVideoSurfaceSize();
+                AttachVideo();
 
-                _viewModel.SetScreenSize(Video.Width, Video.Height);
-                Video.SizeChanged += (_, _) => _viewModel.SetScreenSize(Video.Width, Video.Height);
+                // Ekran o'lchami — video emas, uning konteyneri (HDR rejimida video sirti nisbatga moslab kichraytiriladi).
+                _viewModel.SetScreenSize(VideoHost.Width, VideoHost.Height);
+                VideoHost.SizeChanged += (_, _) => _viewModel.SetScreenSize(VideoHost.Width, VideoHost.Height);
 
                 await _viewModel.StartAsync();
             }
@@ -238,6 +247,50 @@ namespace WatchTorrent.Views
             return Array.Empty<string>();
         }
 
+        /// <summary>HDR/SDR almashganda VLC player yangisiga almashadi — video sirtiga qayta ulanadi.</summary>
+        private void OnPlayerChanged(object? sender, EventArgs e)
+        {
+            if (_isShutDown)
+            {
+                return;
+            }
+
+            // Fonda (sirt yo'q) ulanmaydi — ilova qaytganda OnWindowActivated ulaydi.
+            if (_viewModel.Player == null || _viewModel.IsVideoSuspended)
+            {
+                Video.MediaPlayer = null;
+
+                return;
+            }
+
+            AttachVideo();
+            _viewModel.SetScreenSize(VideoHost.Width, VideoHost.Height);
+        }
+
+        /// <summary>
+        /// Player'ni video sirtiga ulaydi. HDR rejimida (VLC android_display) qo'shimcha ravishda video o'lchami
+        /// tinglovchisi va subtitr sirti ulanadi — video sirti nisbatga moslab joylashtiriladi (<see cref="ApplyVideoLayout"/>).
+        /// </summary>
+        private void AttachVideo()
+        {
+            Video.MediaPlayer = _viewModel.Player;
+#if ANDROID
+            _directVideoAspect = 0;
+            _videoSurfaceReady = Task.CompletedTask;
+
+            if (_viewModel.IsDirectOutput
+                && Video.Handler?.PlatformView is Android.Views.View videoView
+                && _subtitleLayer.Handler?.PlatformView is Android.Views.SurfaceView subtitlesView)
+            {
+                // Sirt tayyor bo'lguncha (ko'pi bilan 2 s) video ochilmaydi — PlayerViewModel.WaitForVideoSurface.
+                _videoSurfaceReady = Task.WhenAny(DirectVideoOutput.AttachAsync(videoView, subtitlesView, OnDirectVideoAspectChanged), Task.Delay(2000));
+            }
+
+            ApplyVideoLayout();
+#endif
+            ReportVideoSurfaceSize();
+        }
+
         private void OnWindowStopped(object? sender, EventArgs e)
         {
             _viewModel.Pause();
@@ -256,8 +309,7 @@ namespace WatchTorrent.Views
             // Ilova qaytib ochildi — yangi sirtga qayta ulanadi.
             if (_viewModel.IsVideoSuspended && !_isShutDown)
             {
-                Video.MediaPlayer = _viewModel.Player;
-                ReportVideoSurfaceSize();
+                AttachVideo();
                 _viewModel.ResumeVideo();
             }
 #endif
@@ -437,6 +489,14 @@ namespace WatchTorrent.Views
         {
             ShowControls();
             _ = ShowOsdAsync($"Ekran formati: {_viewModel.CycleAspectMode()}");
+        }
+
+        private async void OnHdrClicked(object? sender, EventArgs e)
+        {
+            ShowControls();
+
+            var text = await _viewModel.ToggleHdrAsync();
+            _ = ShowOsdAsync(text);
         }
 
         private async void OnSpeedClicked(object? sender, EventArgs e)
@@ -628,6 +688,50 @@ namespace WatchTorrent.Views
         }
 
 #if ANDROID
+        private readonly SubtitleSurface _subtitleLayer = new() { InputTransparent = true };
+        private Task _videoSurfaceReady = Task.CompletedTask;
+
+        // HDR rejimida videoning ekrandagi nisbati (VLC'dan); 0 — oddiy rejim, video butun konteynerni egallaydi.
+        private double _directVideoAspect;
+
+        private void OnDirectVideoAspectChanged(double aspect)
+        {
+            _directVideoAspect = aspect;
+            ApplyVideoLayout();
+        }
+
+        /// <summary>
+        /// HDR rejimida VLC rasmni kattalashtirmaydi — video va subtitr sirtlari nisbatni saqlagan holda konteynerga
+        /// sig'diriladi (qora chiziqlar). Ekran formati (to'ldirish, 16:9...) VLC'dan kelgan nisbatda hisobga olingan.
+        /// </summary>
+        private void ApplyVideoLayout()
+        {
+            var width = VideoHost.Width;
+            var height = VideoHost.Height;
+
+            if (_directVideoAspect <= 0 || width <= 0 || height <= 0)
+            {
+                SetVideoSize(-1, -1, LayoutOptions.Fill);
+
+                return;
+            }
+
+            var fitWidth = Math.Min(width, height * _directVideoAspect);
+
+            SetVideoSize(fitWidth, fitWidth / _directVideoAspect, LayoutOptions.Center);
+        }
+
+        private void SetVideoSize(double width, double height, LayoutOptions options)
+        {
+            foreach (var view in new View[] { Video, _subtitleLayer })
+            {
+                view.WidthRequest = width;
+                view.HeightRequest = height;
+                view.HorizontalOptions = options;
+                view.VerticalOptions = options;
+            }
+        }
+
         // Barmoq shuncha bosib turilsa — 2x tezlik (YouTube'dagi kabi).
         private const int LongPressMs = 500;
 

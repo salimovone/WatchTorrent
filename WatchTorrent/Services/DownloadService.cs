@@ -335,6 +335,8 @@ namespace WatchTorrent.Services
                     {
                         item.Refresh();
                     }
+
+                    DownloadKeepAlive.Update(Items);
                 };
                 _refreshTimer.Start();
             }

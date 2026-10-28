@@ -25,6 +25,12 @@
             Icon="tab_downloads.png"
             Route="downloads"
             ContentTemplate="{DataTemplate views:DownloadsPage}" />
+
+        <ShellContent
+            Title="Sozlamalar"
+            Icon="tab_settings.png"
+            Route="settings"
+            ContentTemplate="{DataTemplate views:SettingsPage}" />
     </TabBar>
 
 </Shell>

@@ -17,7 +17,7 @@
     </Shell.BackButtonBehavior>
 
     <!-- Video kamera kesigi ostigacha cho'ziladi; boshqaruv tugmalari esa xavfsiz hududda qoladi -->
-    <Grid BackgroundColor="Black" SafeAreaEdges="None">
+    <Grid x:Name="VideoHost" BackgroundColor="Black" SafeAreaEdges="None">
         <vlc:VideoView x:Name="Video" />
 
         <!-- Kichik oynada (PiP) faqat video ko'rinadi: bu yerdagi hamma narsa yashiriladi -->
@@ -131,6 +131,19 @@
                             IsVisible="{Binding HasPlaylist}"
                             Clicked="OnPlaylistClicked" />
                         <HorizontalStackLayout Spacing="2" IsVisible="{Binding ShowTransport}">
+                            <!-- Faqat HDR videolarda: HDR'da ko'rsatish yoki SDR'ga moslash (tone mapping) -->
+                            <Button
+                                Text="{Binding HdrToggleText}"
+                                Style="{StaticResource PlayerBadgeButton}"
+                                IsVisible="{Binding ShowHdrToggle}"
+                                Clicked="OnHdrClicked">
+                                <Button.Triggers>
+                                    <DataTrigger TargetType="Button" Binding="{Binding IsHdrOutput}" Value="True">
+                                        <Setter Property="BorderColor" Value="{StaticResource Accent}" />
+                                        <Setter Property="BackgroundColor" Value="#407C5CFF" />
+                                    </DataTrigger>
+                                </Button.Triggers>
+                            </Button>
                             <ImageButton Source="ic_audio.png" Style="{StaticResource PlayerIconButton}" Clicked="OnAudioClicked" />
                             <ImageButton Source="ic_subtitles.png" Style="{StaticResource PlayerIconButton}" Clicked="OnSubtitlesClicked" />
                             <ImageButton Source="ic_aspect.png" Style="{StaticResource PlayerIconButton}" Clicked="OnAspectClicked" />

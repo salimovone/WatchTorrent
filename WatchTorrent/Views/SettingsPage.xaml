@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage
+    x:Class="WatchTorrent.Views.SettingsPage"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:vm="clr-namespace:WatchTorrent.ViewModels"
+    x:DataType="vm:SettingsViewModel"
+    Title="Sozlamalar">
+
+    <ContentPage.Resources>
+        <Style x:Key="SettingTitle" TargetType="Label">
+            <Setter Property="FontFamily" Value="OpenSansSemibold" />
+            <Setter Property="FontSize" Value="15" />
+        </Style>
+        <Style x:Key="SettingSwitch" TargetType="Switch">
+            <Setter Property="OnColor" Value="{StaticResource Accent}" />
+            <Setter Property="VerticalOptions" Value="Center" />
+        </Style>
+    </ContentPage.Resources>
+
+    <ScrollView>
+        <VerticalStackLayout Padding="16,12,16,24" Spacing="10">
+
+            <!-- ===== Player ===== -->
+            <Label Text="Player" Style="{StaticResource SectionTitle}" />
+            <Border Style="{StaticResource Card}">
+                <VerticalStackLayout Spacing="16">
+                    <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12" IsVisible="{Binding CanSwitchHdr}">
+                        <VerticalStackLayout Spacing="3">
+                            <Label Text="HDR videolarni HDR'da ko'rsatish" Style="{StaticResource SettingTitle}" />
+                            <Label Text="{Binding HdrDescription}" Style="{StaticResource Muted}" />
+                        </VerticalStackLayout>
+                        <Switch Grid.Column="1" IsToggled="{Binding HdrOutput}" Style="{StaticResource SettingSwitch}" />
+                    </Grid>
+
+                    <!-- Windows: VLC HDR'ni o'zi ekranga moslaydi — tanlov yo'q -->
+                    <VerticalStackLayout Spacing="3" IsVisible="{Binding CanSwitchHdr, Converter={StaticResource InvertBool}}">
+                        <Label Text="HDR videolar" Style="{StaticResource SettingTitle}" />
+                        <Label Text="{Binding HdrDescription}" Style="{StaticResource Muted}" />
+                    </VerticalStackLayout>
+                </VerticalStackLayout>
+            </Border>
+
+            <!-- ===== Yuklamalar ===== -->
+            <Label Margin="0,10,0,0" Text="Yuklamalar" Style="{StaticResource SectionTitle}" />
+            <Border Style="{StaticResource Card}">
+                <VerticalStackLayout Spacing="16">
+                    <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12">
+                        <VerticalStackLayout Spacing="3">
+                            <Label Text="Fonda yuklash" Style="{StaticResource SettingTitle}" />
+                            <Label Text="{Binding BackgroundDownloadsDescription}" Style="{StaticResource Muted}" />
+                        </VerticalStackLayout>
+                        <Switch Grid.Column="1" IsToggled="{Binding BackgroundDownloads}" Style="{StaticResource SettingSwitch}" />
+                    </Grid>
+
+                    <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12">
+                        <VerticalStackLayout Spacing="3">
+                            <Label Text="Yuklamalar sahifasida ekran o'chmasin" Style="{StaticResource SettingTitle}" />
+                            <Label Text="Sahifa ochiq va yuklash ketayotganda ekran o'chib qolmaydi." Style="{StaticResource Muted}" />
+                        </VerticalStackLayout>
+                        <Switch Grid.Column="1" IsToggled="{Binding KeepScreenOnInDownloads}" Style="{StaticResource SettingSwitch}" />
+                    </Grid>
+
+                    <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12" IsVisible="{Binding HasBatterySetting}">
+                        <VerticalStackLayout Spacing="3">
+                            <Label Text="Batareya tejash cheklovi" Style="{StaticResource SettingTitle}" />
+                            <Label Text="{Binding BatteryStatus}" Style="{StaticResource Muted}" />
+                        </VerticalStackLayout>
+                        <Button
+                            Grid.Column="1"
+                            Text="O'chirish"
+                            Style="{StaticResource SmallButton}"
+                            VerticalOptions="Center"
+                            IsVisible="{Binding IsBatteryUnrestricted, Converter={StaticResource InvertBool}}"
+                            Command="{Binding RequestBatteryExemptionCommand}" />
+                    </Grid>
+
+                    <VerticalStackLayout Spacing="3">
+                        <Label Text="Papka" Style="{StaticResource SettingTitle}" />
+                        <Label Text="{Binding DownloadDirectory}" Style="{StaticResource Muted}" LineBreakMode="MiddleTruncation" />
+                    </VerticalStackLayout>
+                </VerticalStackLayout>
+            </Border>
+
+            <Label
+                Margin="0,14,0,0"
+                Text="{Binding AppVersion}"
+                Style="{StaticResource Muted}"
+                HorizontalTextAlignment="Center" />
+        </VerticalStackLayout>
+    </ScrollView>
+
+</ContentPage>

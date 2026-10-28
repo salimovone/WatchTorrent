@@ -469,6 +469,23 @@
         <Setter Property="Aspect" Value="AspectFit" />
     </Style>
 
+    <!-- Player'dagi matnli kichik tugma (HDR / SDR) -->
+    <Style x:Key="PlayerBadgeButton" TargetType="Button" CanCascade="True">
+        <Setter Property="BackgroundColor" Value="Transparent" />
+        <Setter Property="TextColor" Value="White" />
+        <Setter Property="BorderColor" Value="#B3FFFFFF" />
+        <Setter Property="BorderWidth" Value="1.5" />
+        <Setter Property="CornerRadius" Value="6" />
+        <Setter Property="FontFamily" Value="OpenSansSemibold" />
+        <Setter Property="FontSize" Value="12" />
+        <Setter Property="Padding" Value="8,0" />
+        <Setter Property="MinimumWidthRequest" Value="48" />
+        <Setter Property="MinimumHeightRequest" Value="30" />
+        <Setter Property="HeightRequest" Value="30" />
+        <Setter Property="Margin" Value="6,0" />
+        <Setter Property="VerticalOptions" Value="Center" />
+    </Style>
+
     <Style x:Key="PlayerTransportButton" TargetType="ImageButton" CanCascade="True" BasedOn="{StaticResource PlayerIconButton}">
         <Setter Property="Padding" Value="12" />
         <Setter Property="WidthRequest" Value="64" />

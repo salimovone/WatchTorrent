@@ -4,6 +4,13 @@
 	<application android:allowBackup="true" android:icon="@mipmap/appicon" android:roundIcon="@mipmap/appicon_round" android:supportsRtl="true" android:usesCleartextTraffic="true"></application>
 	<uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
 	<uses-permission android:name="android.permission.INTERNET" />
+	<!-- Fon yuklash: ekran o'chganda yoki ilova fonga o'tganda ham torrent yuklanaveradi (DownloadForegroundService) -->
+	<uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+	<uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />
+	<uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+	<uses-permission android:name="android.permission.WAKE_LOCK" />
+	<!-- Sozlamalar: "batareya tejash" cheklovini o'chirishni so'rash (Samsung fon ilovalarini tez yopadi) -->
+	<uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />
 	<!-- "Boshqa ilovada ochish": Android 11+ da magnet havolani ochadigan ilovani topish uchun -->
 	<queries>
 		<intent>

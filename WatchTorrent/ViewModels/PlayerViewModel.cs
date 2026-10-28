@@ -3,6 +3,7 @@ using System.Diagnostics;
 using LibVLCSharp.Shared;
 using LibVLCSharp.Shared.Structures;
 using MonoTorrent;
+using MonoTorrent.Client;
 using WatchTorrent.Services;
 
 namespace WatchTorrent.ViewModels
@@ -29,8 +30,25 @@ namespace WatchTorrent.ViewModels
         // Subtitrlar torrentdan o'zimiz qo'shamiz (Subs/ papkasidagilari ham) — VLC'ning avtomatik qidiruvi takrorlaydi.
         private static readonly string[] BaseOptions = { "--no-sub-autodetect-file" };
 
-        // Android: LibVLC'ni har safar yaratib-yo'q qilish beqaror, shuning uchun bitta nusxa qayta ishlatiladi.
+        // HDR videoni SDR'ga moslash (tone mapping): kadrlar VLC'ga xotira orqali keladi va OpenGL ES chiqishi ularni
+        // libplacebo bilan SDR'ga o'giradi. Odatiy yo'lda (MediaCodec → SurfaceTexture) VLC rang ma'lumotini
+        // qo'llamaydi va HDR video xira/kulrang chiqadi. Exynos MediaCodec bu rejimda ochilmaydi — VLC dasturiy
+        // dekoderga o'tadi (1080p'da yaxshi, 4K'da og'ir bo'lishi mumkin).
+        private static readonly string[] ToneMappingOptions = { "--vout=gles2,none", "--no-mediacodec-dr" };
+
+        // HDR'ni HDR'da ko'rsatish: MediaCodec kadrlarni to'g'ridan-to'g'ri ekran sirtiga beradi (BT.2020 PQ) va HDR'ni
+        // displey ko'rsatadi. Bu chiqish sahifadan video o'lchami tinglovchisi va subtitr sirtini talab qiladi
+        // (DirectVideoOutput); Samsung'da qo'shimcha ravishda SamsungHdrMode yoqiladi.
+        private static readonly string[] HdrOptions = { "--vout=android-opaque,none" };
+
+        // Sarlavhasi hali yuklanmagan (stream) faylda HDR'ni aniqlash shuncha vaqt davomida qayta uriniladi.
+        private static readonly TimeSpan HdrProbeWindow = TimeSpan.FromSeconds(60);
+
+        // Android: LibVLC'ni har safar yaratib-yo'q qilish beqaror, shuning uchun har chiqish yo'li uchun bitta nusxa
+        // qayta ishlatiladi (VideoOutput).
         private static LibVLC? _sharedLibVLC;
+        private static LibVLC? _sharedToneMappingLibVLC;
+        private static LibVLC? _sharedHdrLibVLC;
 
         private readonly DownloadService _downloads;
         private readonly CancellationTokenSource _cancellation = new();
@@ -65,6 +83,14 @@ namespace WatchTorrent.ViewModels
         private long _trackRestoreUntil;
         private float? _rateBeforeHold;
         private int? _suspendedVideoTrack;
+        private VideoOutput _output;
+        private DynamicRange _dynamicRange;
+        private bool? _hdrOutputChoice;
+        private long _hdrProbeUntil;
+        private long _lastHdrProbeAt;
+        private bool _isProbingHdr;
+        private bool _pauseWhenStarted;
+        private float _rateWhenStarted = 1;
 
         private string _title = string.Empty;
         private string _statusText = "Tayyorlanmoqda…";
@@ -88,7 +114,30 @@ namespace WatchTorrent.ViewModels
         /// <summary>Film tugadi yoki foydalanuvchi faylni tanlamadi — sahifa yopilishi kerak.</summary>
         public event EventHandler? CloseRequested;
 
+        /// <summary>
+        /// HDR/SDR almashganda <see cref="Player"/> boshqasiga almashtiriladi: avval null (VideoView'dan ajratish),
+        /// keyin yangisi (qayta ulash).
+        /// </summary>
+        public event EventHandler? PlayerChanged;
+
         public LibVLCSharp.Shared.MediaPlayer? Player { get; private set; }
+
+        /// <summary>Video HDR (HDR10, HDR10+, HLG, Dolby Vision).</summary>
+        public bool IsHdrVideo => _dynamicRange != DynamicRange.Sdr;
+
+        /// <summary>HDR video hozir HDR'da (SDR'ga moslanmasdan) chiqarilyapti.</summary>
+        public bool IsHdrOutput => IsHdrVideo && _output == VideoOutput.Hdr;
+
+        /// <summary>HDR/SDR tugmasi faqat HDR videolarda va almashtirish mumkin bo'lgan qurilmada.</summary>
+        public bool ShowHdrToggle => IsHdrVideo && HdrDisplay.CanSwitch && ShowTransport;
+
+        public string HdrToggleText => IsHdrOutput ? "HDR" : "SDR";
+
+        /// <summary>Video MediaCodec'dan to'g'ridan-to'g'ri ekranga chiqadi (HDR rejimi) — sahifa sirtni o'zi joylashtiradi.</summary>
+        public bool IsDirectOutput => _output == VideoOutput.Hdr;
+
+        /// <summary>Sahifa: video sirti tayyor bo'lishini kutish (HDR rejimida sirtlar qayta ulanadi).</summary>
+        public Func<Task>? WaitForVideoSurface { get; set; }
 
         public string Title
         {
@@ -260,7 +309,7 @@ namespace WatchTorrent.ViewModels
 
             if (platformOptions.Length == 0)
             {
-                _libVLC = _sharedLibVLC ??= new LibVLC(enableDebugLogs: false, BaseOptions);
+                _libVLC = GetSharedLibVLC(VideoOutput.Default);
             }
             else
             {
@@ -269,11 +318,25 @@ namespace WatchTorrent.ViewModels
                 _ownsLibVLC = true;
             }
 
-            Player = new LibVLCSharp.Shared.MediaPlayer(_libVLC) { EnableHardwareDecoding = true };
+            Player = CreateMediaPlayer(_libVLC);
+        }
 
+        private static LibVLC GetSharedLibVLC(VideoOutput output)
+        {
+            return output switch
+            {
+                VideoOutput.ToneMapped => _sharedToneMappingLibVLC ??= new LibVLC(enableDebugLogs: false, BaseOptions.Concat(ToneMappingOptions).ToArray()),
+                VideoOutput.Hdr => _sharedHdrLibVLC ??= new LibVLC(enableDebugLogs: false, BaseOptions.Concat(HdrOptions).ToArray()),
+                _ => _sharedLibVLC ??= new LibVLC(enableDebugLogs: false, BaseOptions)
+            };
+        }
+
+        private static LibVLCSharp.Shared.MediaPlayer CreateMediaPlayer(LibVLC libVLC)
+        {
             // MediaPlayer hodisalariga (Playing, EndReached...) ataylab obuna bo'linmaydi: ular VLC'ning native
             // oqimlarida chaqiriladi va Android'da shu oqimlar tugayotganda libvlc JNI xatosi bilan ilovani yiqitadi
             // (LibVLCSharp #567). Holat o'rniga Tick() da Player.State orqali kuzatiladi.
+            return new LibVLCSharp.Shared.MediaPlayer(libVLC) { EnableHardwareDecoding = true };
         }
 
         public async Task StartAsync()
@@ -360,6 +423,9 @@ namespace WatchTorrent.ViewModels
             {
                 return;
             }
+
+            UpdateDisplayModes();
+            _ = RetryHdrProbeAsync();
 
             if (!_isSwitching)
             {
@@ -455,6 +521,7 @@ namespace WatchTorrent.ViewModels
 
             _suspendedVideoTrack = player.VideoTrack;
             player.SetVideoTrack(-1);
+            SamsungHdrMode.SetActive(false);
 
             return true;
         }
@@ -781,6 +848,7 @@ namespace WatchTorrent.ViewModels
 
             _isClosed = true;
 
+            SamsungHdrMode.SetActive(false);
             SaveResumePosition();
             _fileCancellation?.Cancel();
             _cancellation.Cancel();
@@ -855,12 +923,13 @@ namespace WatchTorrent.ViewModels
             Title = HasPlaylist ? entry.Title : _torrentTitle;
             Preferences.Default.Set(LastFileKey, _fileIndex);
 
-            // To'liq yuklangan fayl to'g'ridan-to'g'ri diskdan o'ynatiladi — eng tez va silliq yo'l.
-            if (file.BitField.AllTrue && File.Exists(file.FullPath))
-            {
-                _media = new Media(_libVLC!, file.FullPath, FromType.FromPath);
-            }
-            else
+            _dynamicRange = DynamicRange.Sdr;
+            _hdrOutputChoice = null;
+            _hdrProbeUntil = Environment.TickCount64 + (long)HdrProbeWindow.TotalMilliseconds;
+            OnHdrChanged();
+
+            // To'liq yuklangan fayl to'g'ridan-to'g'ri diskdan o'ynatiladi — eng tez va silliq yo'l (StartMedia).
+            if (!file.BitField.AllTrue || !File.Exists(file.FullPath))
             {
                 StatusText = "Buferlanmoqda…";
                 _streamRequested = true;
@@ -884,8 +953,27 @@ namespace WatchTorrent.ViewModels
                 }
 
                 _stream = stream;
-                _input = new TorrentMediaInput(stream);
-                _media = new Media(_libVLC!, _input);
+            }
+
+            // HDR video SDR'ga moslanishi kerak bo'lsa boshqa chiqish yo'li bilan ochiladi. Stream'da sarlavha odatda
+            // prebuffer bilan yuklangan bo'ladi; bo'lmasa video o'ynay boshlagach aniqlanib, kerak bo'lsa qayta ochiladi.
+            await DetectDynamicRangeAsync();
+
+            if (token.IsCancellationRequested)
+            {
+                return;
+            }
+
+            UseOutput(RequiredOutput);
+
+            if (WaitForVideoSurface != null)
+            {
+                await WaitForVideoSurface();
+            }
+
+            if (token.IsCancellationRequested)
+            {
+                return;
             }
 
             // To'xtagan joydan davom: VLC media'ni o'sha joydan ochadi (0 dan o'ynab, keyin seek qilmaydi —
@@ -894,13 +982,237 @@ namespace WatchTorrent.ViewModels
             _savedAudio = SavedTrack.Load(AudioKey, sameFile: true) ?? SavedTrack.Load(TorrentAudioKey, sameFile: false);
             _savedSubtitle = SavedTrack.Load(SubtitleKey, sameFile: true) ?? SavedTrack.Load(TorrentSubtitleKey, sameFile: false);
 
-            if (_resumeMs > 0)
+            StartMedia(_resumeMs);
+        }
+
+        /// <summary>Joriy faylni VLC'da ochadi: stream ochilgan bo'lsa undan, aks holda diskdan.</summary>
+        private void StartMedia(long startMs)
+        {
+            if (_stream == null)
             {
-                _media.AddOption($":start-time={(_resumeMs / 1000.0).ToString(System.Globalization.CultureInfo.InvariantCulture)}");
+                _media = new Media(_libVLC!, _file!.FullPath, FromType.FromPath);
+            }
+            else
+            {
+                _input = new TorrentMediaInput(_stream);
+                _media = new Media(_libVLC!, _input);
+            }
+
+            if (startMs > 0)
+            {
+                _media.AddOption($":start-time={(startMs / 1000.0).ToString(System.Globalization.CultureInfo.InvariantCulture)}");
             }
 
             StatusText = "Ochilmoqda…";
             Player!.Play(_media);
+        }
+
+        /// <summary>Joriy video uchun kerakli chiqish yo'li (HDR videoda — tanlov yoki sozlamaga qarab).</summary>
+        private VideoOutput RequiredOutput => !IsHdrVideo || !HdrDisplay.CanSwitch ? VideoOutput.Default
+            : _hdrOutputChoice ?? HdrDisplay.PreferHdrOutput ? VideoOutput.Hdr
+            : VideoOutput.ToneMapped;
+
+        /// <summary>HDR videoni HDR yoki SDR'da ko'rsatish (player'dagi tugma). OSD uchun yangi holat nomini qaytaradi.</summary>
+        public async Task<string> ToggleHdrAsync()
+        {
+            _hdrOutputChoice = !IsHdrOutput;
+            await ReopenAsync();
+
+            var label = HdrProbe.GetLabel(_dynamicRange);
+
+            return IsHdrOutput ? $"{label} · HDR rejimi" : $"{label} → SDR";
+        }
+
+        /// <summary>
+        /// Fayl HDR ekanini sarlavhasidan aniqlaydi. Kerakli qism hali yuklanmagan bo'lsa false — Tick'da
+        /// <see cref="HdrProbeWindow"/> davomida qayta uriniladi.
+        /// </summary>
+        private async Task<bool> DetectDynamicRangeAsync()
+        {
+            if (_file is not { } file || _item?.Manager is not { Torrent: not null } manager)
+            {
+                return false;
+            }
+
+            _isProbingHdr = true;
+
+            try
+            {
+                Func<long, long, bool>? isAvailable = file.BitField.AllTrue ? null : (offset, length) => IsDownloaded(manager, file, offset, length);
+                var range = await Task.Run(() => HdrProbe.Detect(file.FullPath, isAvailable));
+
+                if (range is not { } value || file != _file)
+                {
+                    return false;
+                }
+
+                _hdrProbeUntil = 0;
+                _dynamicRange = value;
+                OnHdrChanged();
+
+                return true;
+            }
+            finally
+            {
+                _isProbingHdr = false;
+                _lastHdrProbeAt = Environment.TickCount64;
+            }
+        }
+
+        /// <summary>Stream boshlanganda sarlavha hali yuklanmagan bo'lsa — HDR keyinroq aniqlanadi va kerak bo'lsa qayta ochiladi.</summary>
+        private async Task RetryHdrProbeAsync()
+        {
+            var now = Environment.TickCount64;
+
+            if (_hdrProbeUntil == 0 || _isProbingHdr || _isSwitching || !_hasStartedPlaying || now - _lastHdrProbeAt < 2000)
+            {
+                return;
+            }
+
+            if (now > _hdrProbeUntil)
+            {
+                _hdrProbeUntil = 0;
+
+                return;
+            }
+
+            if (await DetectDynamicRangeAsync() && RequiredOutput != _output)
+            {
+                await ReopenAsync();
+            }
+        }
+
+        private static bool IsDownloaded(TorrentManager manager, ITorrentManagerFile file, long offset, long length)
+        {
+            var pieceLength = manager.Torrent!.PieceLength;
+            var first = (int)((file.OffsetInTorrent + offset) / pieceLength);
+            var last = (int)((file.OffsetInTorrent + offset + length - 1) / pieceLength);
+
+            return manager.Bitfield.FirstFalse(first, last) < 0;
+        }
+
+        /// <summary>
+        /// Player'ni kerakli chiqish yo'lidagi LibVLC nusxasiga almashtiradi (<see cref="VideoOutput"/>).
+        /// Faqat Android'da va video ochilmagan (to'xtatilgan) paytda.
+        /// </summary>
+        private void UseOutput(VideoOutput output)
+        {
+            if (_ownsLibVLC || output == _output || Player is not { } old)
+            {
+                return;
+            }
+
+            _rateWhenStarted = _rateBeforeHold ?? old.Rate;
+            _rateBeforeHold = null;
+
+            // Avval VideoView'dan ajratiladi, keyin yo'q qilinadi.
+            Player = null;
+            PlayerChanged?.Invoke(this, EventArgs.Empty);
+            old.Dispose();
+
+            _libVLC = GetSharedLibVLC(output);
+            _output = output;
+            Player = CreateMediaPlayer(_libVLC);
+            PlayerChanged?.Invoke(this, EventArgs.Empty);
+            OnHdrChanged();
+        }
+
+        /// <summary>Joriy faylni boshqa chiqish yo'li (HDR/SDR) bilan, to'xtagan joyidan qayta ochadi.</summary>
+        private async Task ReopenAsync()
+        {
+            var output = RequiredOutput;
+
+            if (_isClosed || _isSwitching || output == _output || Player is not { } player || _file == null)
+            {
+                OnHdrChanged();
+
+                return;
+            }
+
+            _isSwitching = true;
+
+            try
+            {
+                var startMs = _hasStartedPlaying ? Math.Max(0, player.Time) : _resumeMs;
+                _pauseWhenStarted = _hasStartedPlaying && !IsPlaying;
+                RememberCurrentTracks(player);
+
+                _input?.Cancel();
+                await Task.Run(player.Stop);
+
+                if (_isClosed)
+                {
+                    return;
+                }
+
+                _media?.Dispose();
+                _media = null;
+                _input?.Dispose();
+                _input = null;
+
+                _hasStartedPlaying = false;
+                _bufferPaused = false;
+                _resumeMs = 0;
+                ResumeNotice = null;
+                IsBuffering = false;
+                IsLoading = true;
+
+                UseOutput(output);
+
+                if (WaitForVideoSurface != null)
+                {
+                    await WaitForVideoSurface();
+                }
+
+                if (_isClosed)
+                {
+                    return;
+                }
+
+                StartMedia(startMs);
+            }
+            catch (Exception ex) when (!_isClosed)
+            {
+                ErrorMessage = Formatting.Error(ex);
+            }
+            finally
+            {
+                _isSwitching = false;
+            }
+        }
+
+        /// <summary>Qayta ochilganda hozirgi audio/subtitr tanlovi saqlanib qoladi.</summary>
+        private void RememberCurrentTracks(LibVLCSharp.Shared.MediaPlayer player)
+        {
+            var audio = player.AudioTrack;
+            var spu = player.Spu;
+
+            if (player.AudioTrackDescription.FirstOrDefault(track => track.Id == audio) is { Name: { } audioName })
+            {
+                _savedAudio = new SavedTrack(audio, audioName, SameFile: true);
+            }
+
+            if (player.SpuDescription.FirstOrDefault(track => track.Id == spu) is { Name: { } spuName })
+            {
+                _savedSubtitle = new SavedTrack(spu, spuName, SameFile: true);
+            }
+        }
+
+        /// <summary>
+        /// Samsung HDR rejimi — HDR video HDR'da ekranda ko'rinib turganda. Kichik oynada (PiP) yoqilmaydi: yorqinlik
+        /// butun ekranga ta'sir qiladi.
+        /// </summary>
+        private void UpdateDisplayModes()
+        {
+            SamsungHdrMode.SetActive(_hasStartedPlaying && !_isClosed && IsHdrOutput && !IsVideoSuspended && !PictureInPicture.IsActive);
+        }
+
+        private void OnHdrChanged()
+        {
+            OnPropertyChanged(nameof(IsHdrVideo));
+            OnPropertyChanged(nameof(IsHdrOutput));
+            OnPropertyChanged(nameof(ShowHdrToggle));
+            OnPropertyChanged(nameof(HdrToggleText));
         }
 
         private void ResetPlaybackState()
@@ -957,6 +1269,20 @@ namespace WatchTorrent.ViewModels
             IsLoading = false;
 
             ApplyAspectMode();
+
+            // HDR/SDR almashganda (yangi player) oldingi holat qaytariladi.
+            if (_pauseWhenStarted)
+            {
+                _pauseWhenStarted = false;
+                Player?.SetPause(true);
+            }
+
+            if (Math.Abs(_rateWhenStarted - 1) > 0.01)
+            {
+                Player?.SetRate(_rateWhenStarted);
+            }
+
+            _rateWhenStarted = 1;
 
             if (_resumeMs > 0)
             {
@@ -1192,6 +1518,20 @@ namespace WatchTorrent.ViewModels
             OnPropertyChanged(nameof(HasError));
             OnPropertyChanged(nameof(ShowSpinner));
             OnPropertyChanged(nameof(ShowTransport));
+            OnPropertyChanged(nameof(ShowHdrToggle));
+        }
+
+        /// <summary>Video qaysi yo'l bilan ekranga chiqariladi (har biriga alohida LibVLC nusxasi).</summary>
+        private enum VideoOutput
+        {
+            /// <summary>Oddiy (SDR) videolar: VLC OpenGL ES orqali.</summary>
+            Default,
+
+            /// <summary>HDR video SDR'ga moslab (libplacebo tone mapping).</summary>
+            ToneMapped,
+
+            /// <summary>HDR video HDR'da: MediaCodec to'g'ridan-to'g'ri ekranga.</summary>
+            Hdr
         }
 
         /// <summary>Saqlangan audio/subtitr yo'lagi ("id|nom" ko'rinishida saqlanadi).</summary>

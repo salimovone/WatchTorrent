@@ -93,6 +93,11 @@ namespace WatchTorrent.Services
 
         public bool CanToggle => !IsComplete;
 
+        /// <summary>Tanlangan fayllar hajmi (bayt) — fon xizmati bildirishnomasidagi umumiy foiz uchun.</summary>
+        public long TotalBytes { get; private set; }
+
+        public long DownloadedBytes { get; private set; }
+
         public string ToggleText => IsRunning ? "Pauza" : "Davom ettirish";
 
         public void Refresh()
@@ -106,6 +111,8 @@ namespace WatchTorrent.Services
             var progress = manager.PartialProgress;
             var downloaded = (long)(size * progress / 100);
 
+            TotalBytes = size;
+            DownloadedBytes = downloaded;
             Name = string.IsNullOrEmpty(manager.Name) ? _fallbackName ?? InfoHash : manager.Name;
             Progress = progress / 100;
             ProgressText = $"{progress:0.0}%";

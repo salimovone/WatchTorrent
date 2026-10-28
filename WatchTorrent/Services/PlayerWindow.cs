@@ -24,9 +24,11 @@ namespace WatchTorrent.Services
 
         private static bool IsActive { get; set; }
 
+        private const string ScreenReason = "player";
+
         public static void Enter()
         {
-            DeviceDisplay.Current.KeepScreenOn = true;
+            ScreenAwake.Set(ScreenReason, true);
             IsActive = true;
 
 #if ANDROID
@@ -53,7 +55,7 @@ namespace WatchTorrent.Services
 
         public static void Exit()
         {
-            DeviceDisplay.Current.KeepScreenOn = false;
+            ScreenAwake.Set(ScreenReason, false);
             IsActive = false;
 
 #if ANDROID

@@ -8,6 +8,7 @@
     xmlns:vm="clr-namespace:WatchTorrent.ViewModels">
 
     <converters:HtmlDecodeConverter x:Key="HtmlDecode" />
+    <converters:InvertBoolConverter x:Key="InvertBool" />
 
     <!-- Bosh sahifa va qidiruvdagi torrent qatori -->
     <DataTemplate x:Key="TorrentRowTemplate" x:DataType="models:SearchResultItem">

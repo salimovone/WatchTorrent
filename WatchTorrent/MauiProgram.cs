@@ -15,6 +15,9 @@ namespace WatchTorrent
             builder
                 .UseMauiApp<App>()
                 .UseLibVLCSharp()
+#if ANDROID
+                .ConfigureMauiHandlers(handlers => handlers.AddHandler<Controls.SubtitleSurface, Controls.SubtitleSurfaceHandler>())
+#endif
                 .ConfigureFonts(fonts =>
                 {
                     fonts.AddFont("OpenSans-Regular.ttf", "OpenSansRegular");
@@ -37,6 +40,7 @@ namespace WatchTorrent
             builder.Services.AddTransient<TorrentDetailViewModel>();
             builder.Services.AddTransient<DownloadsViewModel>();
             builder.Services.AddTransient<PlayerViewModel>();
+            builder.Services.AddTransient<SettingsViewModel>();
 
             builder.Services.AddTransient<DiscoverPage>();
             builder.Services.AddTransient<SearchPage>();
@@ -45,6 +49,7 @@ namespace WatchTorrent
             builder.Services.AddTransient<DownloadsPage>();
             builder.Services.AddTransient<PlayerPage>();
             builder.Services.AddTransient<ImageViewerPage>();
+            builder.Services.AddTransient<SettingsPage>();
 
 #if DEBUG
     		builder.Logging.AddDebug();
