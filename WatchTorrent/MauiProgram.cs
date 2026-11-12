@@ -11,6 +11,12 @@ namespace WatchTorrent
     {
         public static MauiApp CreateMauiApp()
         {
+#if ANDROID
+            Microsoft.Maui.Handlers.PickerHandler.Mapper.AppendToMapping("WatchTorrentInput", (handler, _) =>
+                handler.PlatformView.BackgroundTintList = Android.Content.Res.ColorStateList.ValueOf(Android.Graphics.Color.Transparent));
+            Microsoft.Maui.Handlers.SearchBarHandler.Mapper.AppendToMapping("WatchTorrentInput", (handler, _) =>
+                handler.PlatformView.FindViewById(Resource.Id.search_plate)?.SetBackgroundColor(Android.Graphics.Color.Transparent));
+#endif
             var builder = MauiApp.CreateBuilder();
             builder
                 .UseMauiApp<App>()
@@ -32,6 +38,7 @@ namespace WatchTorrent
                 // Saqlangan cf_clearance bo'lsa WebView har safar ochilmaydi.
                 return new TorrentClient(solver.SolveAsync) { Clearance = solver.LoadSaved() };
             });
+            builder.Services.AddSingleton(new TorrentPageCache(Path.Combine(FileSystem.AppDataDirectory, "torrent-pages")));
             builder.Services.AddSingleton<DownloadService>();
             builder.Services.AddSingleton<PosterService>();
 
@@ -50,6 +57,7 @@ namespace WatchTorrent
             builder.Services.AddTransient<PlayerPage>();
             builder.Services.AddTransient<ImageViewerPage>();
             builder.Services.AddTransient<SettingsPage>();
+            builder.Services.AddTransient<DirectConnectionTestPage>();
 
 #if DEBUG
     		builder.Logging.AddDebug();

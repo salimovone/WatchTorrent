@@ -13,6 +13,11 @@ namespace WatchTorrent.Views
             BindingContext = _viewModel = viewModel;
         }
 
+        private async void OpenDirectConnectionTest(object? sender, EventArgs e)
+        {
+            await Shell.Current.GoToAsync(nameof(DirectConnectionTestPage));
+        }
+
         protected override void OnAppearing()
         {
             base.OnAppearing();

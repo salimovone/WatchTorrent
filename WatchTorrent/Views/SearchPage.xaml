@@ -1,112 +1,114 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <ContentPage
-    x:Class="WatchTorrent.Views.SearchPage"
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
     xmlns:vm="clr-namespace:WatchTorrent.ViewModels"
-    x:DataType="vm:SearchViewModel"
-    Title="Qidiruv">
-
-    <Grid RowDefinitions="Auto,Auto,Auto,*">
-        <Border
-            Margin="16,12,16,0"
-            Padding="4,0"
-            StrokeThickness="0"
-            StrokeShape="RoundRectangle 12"
-            BackgroundColor="{StaticResource Surface2}">
-            <SearchBar
-                x:Name="SearchInput"
-                Text="{Binding Query}"
-                Placeholder="Film, serial, o'yin…"
-                SearchButtonPressed="OnSearchPressed" />
-        </Border>
-
-        <CollectionView
+    x:Class="WatchTorrent.Views.SearchPage"
+    Title="Qidiruv"
+    Shell.NavBarIsVisible="false"
+    x:DataType="vm:SearchViewModel">
+    <Grid RowDefinitions="Auto,Auto,*" MaximumWidthRequest="1040">
+        <VerticalStackLayout Padding="20,24,20,12" Spacing="16">
+            <Label Text="Qidiruv" Style="{StaticResource PageTitle}" />
+            <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
+                <Border
+                    Stroke="{StaticResource StrokeColor}"
+                    StrokeShape="RoundRectangle 8"
+                    BackgroundColor="{StaticResource Surface}">
+                    <SearchBar
+                        x:Name="SearchInput"
+                        Text="{Binding Query}"
+                        Placeholder="Nomini yozing"
+                        SearchButtonPressed="OnSearchPressed" />
+                </Border>
+                <Button Grid.Column="1" Text="Qidirish" Clicked="OnSearchPressed" IsEnabled="{Binding HasQuery}" />
+            </Grid>
+        </VerticalStackLayout>
+        <Grid
             Grid.Row="1"
-            Margin="16,12,0,0"
-            HeightRequest="36"
-            ItemsSource="{Binding SortOptions}"
-            SelectedItem="{Binding SelectedSort, Mode=TwoWay}"
-            SelectionMode="Single"
-            ItemTemplate="{StaticResource ChipTemplate}"
-            HorizontalScrollBarVisibility="Never">
-            <CollectionView.ItemsLayout>
-                <LinearItemsLayout Orientation="Horizontal" ItemSpacing="8" />
-            </CollectionView.ItemsLayout>
-        </CollectionView>
-
-        <Label
-            Grid.Row="2"
-            Margin="16,10,16,0"
-            Text="{Binding Summary}"
-            Style="{StaticResource Muted}" />
-
+            Padding="20,0,20,8"
+            ColumnDefinitions="*,Auto"
+            ColumnSpacing="12"
+            IsVisible="{Binding HasResults}">
+            <Label Text="{Binding Summary}" Style="{StaticResource Muted}" VerticalOptions="Center" />
+            <Picker
+                Grid.Column="1"
+                Title="Saralash"
+                ItemsSource="{Binding SortOptions}"
+                ItemDisplayBinding="{Binding Title, x:DataType=vm:SortOption}"
+                SelectedItem="{Binding SelectedSort}"
+                SemanticProperties.Description="Natijalarni saralash" />
+        </Grid>
         <CollectionView
-            Grid.Row="3"
-            Margin="0,4,0,0"
+            x:Name="ResultsList"
+            Grid.Row="2"
             ItemsSource="{Binding Items}"
+            ItemsUpdatingScrollMode="KeepScrollOffset"
             ItemTemplate="{StaticResource TorrentRowTemplate}"
             SelectionMode="Single"
             SelectionChanged="OnTorrentSelected"
             RemainingItemsThreshold="5"
             RemainingItemsThresholdReachedCommand="{Binding LoadMoreCommand}">
             <CollectionView.Footer>
-                <Grid Padding="0,8,0,20">
-                    <ActivityIndicator
-                        HeightRequest="28"
-                        IsRunning="{Binding IsLoadingMore}"
-                        IsVisible="{Binding IsLoadingMore}" />
-                </Grid>
+                <VerticalStackLayout Padding="20,12,20,24" Spacing="8">
+                    <ActivityIndicator IsRunning="{Binding IsLoadingMore}" IsVisible="{Binding IsLoadingMore}" HeightRequest="28" />
+                    <Label Text="{Binding ErrorMessage}" Style="{StaticResource BodyText}" IsVisible="{Binding HasMoreError}" />
+                    <Button
+                        Text="Yana yuklash"
+                        Command="{Binding RetryCommand}"
+                        Style="{StaticResource GhostButton}"
+                        IsVisible="{Binding HasMoreError}" />
+                </VerticalStackLayout>
             </CollectionView.Footer>
         </CollectionView>
-
-        <ActivityIndicator
-            Grid.Row="3"
-            IsRunning="{Binding IsBusy}"
+        <VerticalStackLayout
+            Grid.Row="2"
+            Padding="24,36"
+            Spacing="12"
             IsVisible="{Binding IsBusy}"
-            HorizontalOptions="Center"
-            VerticalOptions="Center" />
-
+            VerticalOptions="Start"
+            HorizontalOptions="Center">
+            <ActivityIndicator IsRunning="{Binding IsBusy}" HeightRequest="28" />
+            <Label Text="Qidirilmoqda…" Style="{StaticResource BodyText}" />
+        </VerticalStackLayout>
         <VerticalStackLayout
-            Grid.Row="3"
-            Padding="32"
-            Spacing="8"
+            Grid.Row="2"
+            Padding="24,32"
+            Spacing="10"
             IsVisible="{Binding ShowHint}"
-            VerticalOptions="Center">
+            VerticalOptions="Start"
+            MaximumWidthRequest="520">
+            <Label Text="Nomidan boshlang" Style="{StaticResource SectionTitle}" />
             <Label
-                Text="Nima ko'ramiz?"
-                FontFamily="OpenSansSemibold"
-                FontSize="18"
-                HorizontalTextAlignment="Center" />
+                Text="Filmning asl nomini yozing. Kerak bo'lsa yil yoki sifatni ham qo'shing — masalan, 2024 yoki 1080p."
+                Style="{StaticResource BodyText}" />
+            <BoxView Style="{StaticResource Rule}" Margin="0,14" />
             <Label
-                Text="Film, serial yoki o'yin nomini yozib qidiring."
-                TextColor="{StaticResource TextMuted}"
-                HorizontalTextAlignment="Center" />
+                Text="Natijani tanlagach, fayllarni ko'rish, tomosha qilish yoki yuklab olish mumkin."
+                Style="{StaticResource BodyText}" />
         </VerticalStackLayout>
-
         <VerticalStackLayout
-            Grid.Row="3"
-            Padding="32"
-            Spacing="14"
-            IsVisible="{Binding HasError}"
-            VerticalOptions="Center">
-            <Label
-                Text="{Binding ErrorMessage}"
-                TextColor="{StaticResource TextMuted}"
-                HorizontalTextAlignment="Center" />
-            <Button
-                Text="Qayta urinish"
-                Command="{Binding RetryCommand}"
-                HorizontalOptions="Center" />
+            Grid.Row="2"
+            Padding="24,32"
+            Spacing="12"
+            IsVisible="{Binding HasInitialError}"
+            VerticalOptions="Start"
+            MaximumWidthRequest="520">
+            <Label Text="Qidiruv yakunlanmadi" Style="{StaticResource SectionTitle}" />
+            <Label Text="{Binding ErrorMessage}" Style="{StaticResource BodyText}" />
+            <Button Text="Qayta urinish" Command="{Binding RetryCommand}" HorizontalOptions="Start" />
         </VerticalStackLayout>
-
-        <Label
-            Grid.Row="3"
-            Text="Hech narsa topilmadi"
-            TextColor="{StaticResource TextMuted}"
+        <VerticalStackLayout
+            Grid.Row="2"
+            Padding="24,32"
+            Spacing="10"
             IsVisible="{Binding IsEmpty}"
-            HorizontalOptions="Center"
-            VerticalOptions="Center" />
+            VerticalOptions="Start"
+            MaximumWidthRequest="520">
+            <Label Text="Mos natija topilmadi" Style="{StaticResource SectionTitle}" />
+            <Label
+                Text="Nomni qisqaroq yoki asl tilida yozib ko'ring. Yil va sifatni olib tashlash ham yordam berishi mumkin."
+                Style="{StaticResource BodyText}" />
+        </VerticalStackLayout>
     </Grid>
-
 </ContentPage>

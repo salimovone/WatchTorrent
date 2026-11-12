@@ -26,8 +26,8 @@ namespace WatchTorrent.ViewModels
             SortOptions = new[]
             {
                 new SortOption("Eng yangi", SearchSortByType.Time, SortOrderType.Descending),
-                new SortOption("Ko'p seed", SearchSortByType.Seeders, SortOrderType.Descending),
-                new SortOption("Ko'p leech", SearchSortByType.Leechers, SortOrderType.Descending),
+                new SortOption("Ko'p manbali", SearchSortByType.Seeders, SortOrderType.Descending),
+                new SortOption("Ko'p yuklanayotgan", SearchSortByType.Leechers, SortOrderType.Descending),
                 new SortOption("Eng katta", SearchSortByType.Size, SortOrderType.Descending),
                 new SortOption("Eng kichik", SearchSortByType.Size, SortOrderType.Ascending)
             };
@@ -52,8 +52,12 @@ namespace WatchTorrent.ViewModels
         public string Query
         {
             get => _query;
-            set => SetProperty(ref _query, value);
+            set { if (SetProperty(ref _query, value)) OnPropertyChanged(nameof(HasQuery)); }
         }
+
+        public bool HasQuery => !string.IsNullOrWhiteSpace(Query);
+
+        public event EventHandler? ResultsReplaced;
 
         public IReadOnlyList<SortOption> SortOptions { get; }
 
@@ -69,7 +73,12 @@ namespace WatchTorrent.ViewModels
             }
         }
 
-        public ObservableCollection<SearchResultItem> Items { get; } = new();
+        private ObservableCollection<SearchResultItem> _items = new();
+        public ObservableCollection<SearchResultItem> Items
+        {
+            get => _items;
+            private set => SetProperty(ref _items, value);
+        }
 
         public bool IsBusy
         {
@@ -108,7 +117,10 @@ namespace WatchTorrent.ViewModels
 
         public bool IsEmpty => _activeQuery != null && !IsBusy && !HasError && Items.Count == 0;
 
-        public string Summary => _totalPages > 0 ? $"{Items.Count} ta natija · {_currentPage}/{_totalPages} sahifa" : string.Empty;
+        public bool HasResults => Items.Count > 0;
+        public bool HasInitialError => HasError && !HasResults;
+        public bool HasMoreError => HasError && HasResults;
+        public string Summary => HasResults ? $"{Items.Count} ta natija" : string.Empty;
 
         public Command SearchCommand { get; }
 
@@ -129,7 +141,7 @@ namespace WatchTorrent.ViewModels
             _activeQuery = query;
             _currentPage = 0;
             _totalPages = 0;
-            Items.Clear();
+            Items = new();
 
             await LoadPageAsync(1);
         }
@@ -170,10 +182,8 @@ namespace WatchTorrent.ViewModels
                     return;
                 }
 
-                foreach (var item in result.Items)
-                {
-                    Items.Add(item);
-                }
+                if (page == 1) Items = new(result.Items);
+                else foreach (var item in result.Items) Items.Add(item);
 
                 _currentPage = page;
                 _totalPages = result.AmountPages;
@@ -192,6 +202,7 @@ namespace WatchTorrent.ViewModels
                     IsBusy = false;
                     IsLoadingMore = false;
                     OnStateChanged();
+                    if (page == 1 && HasResults) ResultsReplaced?.Invoke(this, EventArgs.Empty);
                 }
             }
         }
@@ -199,6 +210,9 @@ namespace WatchTorrent.ViewModels
         private void OnStateChanged()
         {
             OnPropertyChanged(nameof(HasError));
+            OnPropertyChanged(nameof(HasResults));
+            OnPropertyChanged(nameof(HasInitialError));
+            OnPropertyChanged(nameof(HasMoreError));
             OnPropertyChanged(nameof(ShowHint));
             OnPropertyChanged(nameof(IsEmpty));
             OnPropertyChanged(nameof(Summary));

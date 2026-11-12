@@ -1,36 +1,56 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <ContentPage
-    x:Class="WatchTorrent.Views.DownloadsPage"
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-    xmlns:services="clr-namespace:WatchTorrent.Services"
     xmlns:vm="clr-namespace:WatchTorrent.ViewModels"
-    x:DataType="vm:DownloadsViewModel"
-    Title="Yuklamalar">
-
-    <Grid RowDefinitions="Auto,*">
-        <Label
-            Margin="16,12,16,4"
-            Text="{Binding DownloadDirectory, StringFormat='Papka: {0}'}"
-            Style="{StaticResource Muted}"
-            LineBreakMode="MiddleTruncation" />
-
-        <CollectionView
-            Grid.Row="1"
-            ItemsSource="{Binding Items}"
-            SelectionMode="None">
+    xmlns:services="clr-namespace:WatchTorrent.Services"
+    x:Class="WatchTorrent.Views.DownloadsPage"
+    Title="Yuklamalar"
+    Shell.NavBarIsVisible="false"
+    x:DataType="vm:DownloadsViewModel">
+    <Grid RowDefinitions="Auto,*" MaximumWidthRequest="1040">
+        <VerticalStackLayout Padding="20,24,20,20" Spacing="6">
+            <Label Text="Yuklamalar" Style="{StaticResource PageTitle}" />
+            <Label Text="Saqlangan fayllar va yuklash jarayoni" Style="{StaticResource BodyText}" />
+        </VerticalStackLayout>
+        <CollectionView Grid.Row="1" ItemsSource="{Binding Items}" SelectionMode="Single" SelectionChanged="OnDownloadSelected">
             <CollectionView.ItemTemplate>
                 <DataTemplate x:DataType="services:DownloadItem">
-                    <Grid Padding="16,5">
+                    <Grid Padding="20,0,20,16">
                         <Border Style="{StaticResource Card}">
-                            <VerticalStackLayout Spacing="10">
-                                <Label
-                                    Text="{Binding Name}"
-                                    FontFamily="OpenSansSemibold"
-                                    FontSize="15"
-                                    MaxLines="2"
-                                    LineBreakMode="TailTruncation" />
-
+                            <VerticalStackLayout Spacing="12">
+                                <Grid ColumnDefinitions="*,44" ColumnSpacing="8">
+                                    <VerticalStackLayout Spacing="4" VerticalOptions="Center">
+                                        <Label
+                                            Text="{Binding Name}"
+                                            FontFamily="OpenSansSemibold"
+                                            FontSize="15"
+                                            MaxLines="2"
+                                            LineBreakMode="TailTruncation" />
+                                        <Label Text="Batafsil ›" FontSize="12" TextColor="{StaticResource Accent}" />
+                                    </VerticalStackLayout>
+                                    <ImageButton
+                                        Grid.Column="1"
+                                        Source="ic_delete.png"
+                                        BackgroundColor="Transparent"
+                                        Padding="10"
+                                        WidthRequest="44"
+                                        HeightRequest="44"
+                                        VerticalOptions="Start"
+                                        Command="{Binding RemoveCommand, Source={RelativeSource AncestorType={x:Type vm:DownloadsViewModel}}}"
+                                        CommandParameter="{Binding .}"
+                                        SemanticProperties.Description="Yuklamani o'chirish"
+                                        ToolTipProperties.Text="O'chirish" />
+                                </Grid>
+                                <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12">
+                                    <Label Text="{Binding StatusText}" Style="{StaticResource Muted}" />
+                                    <Label
+                                        Grid.Column="1"
+                                        Text="{Binding ProgressText}"
+                                        FontFamily="OpenSansSemibold"
+                                        FontSize="13"
+                                        TextColor="{StaticResource Accent}" />
+                                </Grid>
                                 <ProgressBar Progress="{Binding Progress}">
                                     <ProgressBar.Triggers>
                                         <DataTrigger TargetType="ProgressBar" Binding="{Binding IsComplete}" Value="True">
@@ -38,50 +58,27 @@
                                         </DataTrigger>
                                     </ProgressBar.Triggers>
                                 </ProgressBar>
-
-                                <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12">
-                                    <Label Text="{Binding StatusText}" FontSize="13" />
-                                    <Label
-                                        Grid.Column="1"
-                                        Text="{Binding ProgressText}"
-                                        FontFamily="OpenSansSemibold"
-                                        FontSize="13" />
-                                </Grid>
-
                                 <Label Text="{Binding SizeText}" Style="{StaticResource Muted}" />
-                                <Label
-                                    Text="{Binding TransferText}"
-                                    Style="{StaticResource Muted}"
-                                    IsVisible="{Binding IsRunning}" />
-
-                                <!-- Tor ekranda tugmalar keyingi qatorga o'tadi -->
-                                <FlexLayout Wrap="Wrap" JustifyContent="End">
+                                <Label Text="{Binding TransferText}" Style="{StaticResource Muted}" IsVisible="{Binding IsRunning}" />
+                                <FlexLayout Wrap="Wrap" JustifyContent="Start">
                                     <Button
-                                        Margin="8,6,0,0"
-                                        Text="▶ Ko'rish"
-                                        Style="{StaticResource SmallButton}"
-                                        BackgroundColor="{StaticResource Accent}"
-                                        Command="{Binding WatchCommand, Source={RelativeSource AncestorType={x:Type vm:DownloadsViewModel}}, x:DataType=vm:DownloadsViewModel}"
+                                        Text="Tomosha qilish"
+                                        Margin="0,0,8,0"
+                                        FontSize="13"
+                                        Command="{Binding WatchCommand, Source={RelativeSource AncestorType={x:Type vm:DownloadsViewModel}}}"
                                         CommandParameter="{Binding .}" />
                                     <Button
-                                        Margin="8,6,0,0"
                                         Text="{Binding ToggleText}"
+                                        Margin="0,0,8,0"
                                         Style="{StaticResource SmallButton}"
                                         IsVisible="{Binding CanToggle}"
-                                        Command="{Binding ToggleCommand, Source={RelativeSource AncestorType={x:Type vm:DownloadsViewModel}}, x:DataType=vm:DownloadsViewModel}"
+                                        Command="{Binding ToggleCommand, Source={RelativeSource AncestorType={x:Type vm:DownloadsViewModel}}}"
                                         CommandParameter="{Binding .}" />
                                     <Button
-                                        Margin="8,6,0,0"
-                                        Text="Ochish"
+                                        Text="Faylni ochish"
                                         Style="{StaticResource SmallButton}"
                                         IsVisible="{Binding IsComplete}"
-                                        Command="{Binding OpenCommand, Source={RelativeSource AncestorType={x:Type vm:DownloadsViewModel}}, x:DataType=vm:DownloadsViewModel}"
-                                        CommandParameter="{Binding .}" />
-                                    <Button
-                                        Margin="8,6,0,0"
-                                        Text="O'chirish"
-                                        Style="{StaticResource DangerSmallButton}"
-                                        Command="{Binding RemoveCommand, Source={RelativeSource AncestorType={x:Type vm:DownloadsViewModel}}, x:DataType=vm:DownloadsViewModel}"
+                                        Command="{Binding OpenCommand, Source={RelativeSource AncestorType={x:Type vm:DownloadsViewModel}}}"
                                         CommandParameter="{Binding .}" />
                                 </FlexLayout>
                             </VerticalStackLayout>
@@ -90,23 +87,25 @@
                 </DataTemplate>
             </CollectionView.ItemTemplate>
         </CollectionView>
-
         <VerticalStackLayout
             Grid.Row="1"
-            Padding="32"
-            Spacing="8"
+            Padding="24,36"
+            Spacing="14"
             IsVisible="{Binding IsEmpty}"
-            VerticalOptions="Center">
+            VerticalOptions="Start"
+            MaximumWidthRequest="480">
+            <Image
+                Source="tab_downloads.png"
+                WidthRequest="32"
+                HeightRequest="32"
+                Opacity="0.5"
+                HorizontalOptions="Start"
+                Margin="0,0,0,8" />
+            <Label Text="Birinchi yuklamangiz shu yerda bo'ladi" Style="{StaticResource SectionTitle}" />
             <Label
-                Text="Hozircha yuklamalar yo'q"
-                FontFamily="OpenSansSemibold"
-                FontSize="18"
-                HorizontalTextAlignment="Center" />
-            <Label
-                Text="Torrent sahifasida «Yuklab olish» tugmasini bosing."
-                TextColor="{StaticResource TextMuted}"
-                HorizontalTextAlignment="Center" />
+                Text="Film yoki serialni toping va uning sahifasida «Yuklab olish»ni tanlang. Jarayonni shu yerdan boshqarasiz."
+                Style="{StaticResource BodyText}" />
+            <Button Text="Film qidirish" Clicked="OnSearchClicked" HorizontalOptions="Start" Margin="0,6,0,0" />
         </VerticalStackLayout>
     </Grid>
-
 </ContentPage>

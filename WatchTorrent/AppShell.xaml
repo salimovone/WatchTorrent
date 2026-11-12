@@ -9,7 +9,7 @@
 
     <TabBar>
         <ShellContent
-            Title="Asosiy"
+            Title="Kashf etish"
             Icon="tab_home.png"
             Route="discover"
             ContentTemplate="{DataTemplate views:DiscoverPage}" />

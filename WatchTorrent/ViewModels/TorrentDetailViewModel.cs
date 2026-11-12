@@ -1,3 +1,4 @@
+using WatchTorrent.Models;
 using System.Net;
 using System.Text.RegularExpressions;
 using MonoTorrent;
@@ -9,34 +10,6 @@ using TorrentModel = TorrentReader.Torrent.Models.Torrent;
 
 namespace WatchTorrent.ViewModels
 {
-    public record CommentItem(string Username, string Text, string Posted)
-    {
-        public string Initial => Username.Length > 0 ? Username[..1].ToUpperInvariant() : "?";
-    }
-
-    /// <summary>Torrent sahifasidan olingan, ko'rsatishga tayyorlangan (HTML belgilaridan tozalangan) ma'lumot.</summary>
-    public record TorrentInfo(
-        string? ImageUrl,
-        IReadOnlyList<string> Tags,
-        string UploadedBy,
-        string DateUploaded,
-        string DateLastChecked,
-        int Downloads,
-        string InfoHash,
-        string Magnet,
-        string DescriptionHtml,
-        IReadOnlyList<string> Files,
-        IReadOnlyList<CommentItem> Comments)
-    {
-        public bool HasImage => ImageUrl != null;
-
-        public bool HasDescription => !string.IsNullOrWhiteSpace(DescriptionHtml);
-
-        public bool HasComments => Comments.Count > 0;
-
-        public string CommentsHeader => $"Izohlar ({Comments.Count})";
-    }
-
     public class TorrentDetailViewModel : ObservableObject, IQueryAttributable
     {
         private const int FilesPreviewCount = 10;
@@ -48,6 +21,9 @@ namespace WatchTorrent.ViewModels
         private readonly TorrentClient _client;
         private readonly DownloadService _downloads;
         private readonly PosterService _posters;
+        private readonly TorrentPageCache _pages;
+        private DownloadItem? _download;
+        private bool _showTechnicalDetails;
         private SearchResultItem? _item;
         private string? _posterUrl;
         private string? _posterFullUrl;
@@ -63,11 +39,13 @@ namespace WatchTorrent.ViewModels
         private bool _isAddingDownload;
         private string _copyMagnetText = CopyMagnetDefaultText;
 
-        public TorrentDetailViewModel(TorrentClient client, DownloadService downloads, PosterService posters)
+        public TorrentDetailViewModel(TorrentClient client, DownloadService downloads, PosterService posters, TorrentPageCache pages)
         {
             _client = client;
             _downloads = downloads;
             _posters = posters;
+            _pages = pages;
+            ToggleTechnicalDetailsCommand = new Command(() => ShowTechnicalDetails = !ShowTechnicalDetails);
 
             WatchCommand = new Command(async () => await WatchAsync());
             DownloadCommand = new Command(async () => await DownloadAsync());
@@ -129,6 +107,14 @@ namespace WatchTorrent.ViewModels
                 }
             }
         }
+
+        public Command ToggleTechnicalDetailsCommand { get; }
+        public bool ShowTechnicalDetails
+        {
+            get => _showTechnicalDetails;
+            private set { if (SetProperty(ref _showTechnicalDetails, value)) OnPropertyChanged(nameof(TechnicalDetailsText)); }
+        }
+        public string TechnicalDetailsText => ShowTechnicalDetails ? "Texnik ma'lumotni yopish −" : "Texnik ma'lumot +";
 
         public bool IsLoaded => Detail != null;
 
@@ -232,6 +218,12 @@ namespace WatchTorrent.ViewModels
 
         public void ApplyQueryAttributes(IDictionary<string, object> query)
         {
+            if (query.TryGetValue("Download", out var selected) && selected is DownloadItem download)
+            {
+                _download = download;
+                _ = LoadDownloadAsync(download);
+                return;
+            }
             if (!query.TryGetValue("Item", out var value) || value is not SearchResultItem item)
             {
                 return;
@@ -251,6 +243,33 @@ namespace WatchTorrent.ViewModels
         public void UpdateDownloadState()
         {
             IsInDownloads = Detail != null && _downloads.Contains(Detail.InfoHash);
+        }
+
+        private Task SavePageAsync() => Detail == null || _item == null ? Task.CompletedTask :
+            _pages.SaveAsync(new TorrentPageData(_item, Detail, Title, Size, Seeders, Leechers, _posterFullUrl ?? PosterUrl ?? Detail.ImageUrl));
+
+        private async Task LoadDownloadAsync(DownloadItem download)
+        {
+            var manager = download.Manager;
+            Title = Decode(download.Name);
+            Size = download.TotalBytes > 0 ? Formatting.Bytes(download.TotalBytes) : "—";
+            Seeders = manager.Peers.Seeds;
+            Leechers = manager.Peers.Leechs;
+            Detail = new TorrentInfo(null, [], "—", "—", "—", 0, download.InfoHash, manager.MagnetLink.ToV1String(),
+                string.Empty, manager.Files.Select(file => file.Path).ToArray(), []);
+            UpdateDownloadState();
+            var page = await _pages.LoadAsync(download.InfoHash);
+            if (page != null)
+            {
+                _item = page.Source;
+                Title = page.Title;
+                Size = page.Size;
+                Seeders = page.Seeders;
+                Leechers = page.Leechers;
+                Detail = page.Detail;
+                PosterUrl = _posterFullUrl = page.PosterUrl ?? page.Detail.ImageUrl;
+            }
+            if (PosterUrl == null) await LoadPosterAsync(download.Name);
         }
 
         private async Task LoadAsync()
@@ -280,6 +299,7 @@ namespace WatchTorrent.ViewModels
                 }
 
                 UpdateDownloadState();
+                if (IsInDownloads) await SavePageAsync();
             }
             catch (Exception ex)
             {
@@ -321,7 +341,9 @@ namespace WatchTorrent.ViewModels
         {
             if (Detail != null)
             {
-                await Routes.WatchAsync(Detail.Magnet, Title);
+                await SavePageAsync();
+                if (_download != null) await Routes.WatchAsync(_download);
+                else await Routes.WatchAsync(Detail.Magnet, Title);
             }
         }
 
@@ -344,6 +366,7 @@ namespace WatchTorrent.ViewModels
             try
             {
                 await _downloads.AddAsync(Detail.Magnet, Title);
+                await SavePageAsync();
 
                 UpdateDownloadState();
             }

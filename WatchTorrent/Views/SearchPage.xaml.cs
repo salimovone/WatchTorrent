@@ -11,13 +11,24 @@ namespace WatchTorrent.Views
             InitializeComponent();
 
             BindingContext = _viewModel = viewModel;
+            _viewModel.ResultsReplaced += OnResultsReplaced;
         }
 
         private async void OnSearchPressed(object? sender, EventArgs e)
         {
-            _viewModel.SearchCommand.Execute(null);
-
             await SearchInput.HideSoftInputAsync(CancellationToken.None);
+            SearchInput.Unfocus();
+            _viewModel.SearchCommand.Execute(null);
+        }
+
+        private void OnResultsReplaced(object? sender, EventArgs e)
+        {
+            var first = _viewModel.Items.FirstOrDefault();
+            Dispatcher.Dispatch(() =>
+            {
+                if (first != null && first == _viewModel.Items.FirstOrDefault())
+                    ResultsList.ScrollTo(first, position: ScrollToPosition.Start, animate: false);
+            });
         }
 
         private async void OnTorrentSelected(object? sender, SelectionChangedEventArgs e)

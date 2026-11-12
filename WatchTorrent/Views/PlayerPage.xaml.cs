@@ -175,6 +175,9 @@ namespace WatchTorrent.Views
             PictureInPicture.Dismiss();
 
             await Shell.Current.GoToAsync("..");
+#if ANDROID
+            PlayerWindow.RefreshAppLayout();
+#endif
         }
 
         private async Task ShutDownAsync()
@@ -194,6 +197,7 @@ namespace WatchTorrent.Views
 
             _timer.Stop();
             _hideControls?.Cancel();
+            _singleTap?.Cancel();
 
             PictureInPicture.Changed -= OnPictureInPictureChanged;
             PictureInPicture.CommandReceived -= OnPictureInPictureCommand;
@@ -322,6 +326,7 @@ namespace WatchTorrent.Views
 
         private async void HandleTap(double x)
         {
+            if (_isShutDown) return;
             var now = Environment.TickCount64;
 
             if (now - _lastTapAt < DoubleTapMs && GetZone(x) == GetZone(_lastTapX))
@@ -343,6 +348,7 @@ namespace WatchTorrent.Views
             try
             {
                 await Task.Delay(DoubleTapMs, singleTap.Token);
+                if (_isShutDown) return;
 
                 if (Controls.IsVisible)
                 {

@@ -4,6 +4,7 @@ using Android.Content.PM;
 using Android.Media;
 using Android.Views;
 using AndroidX.Core.View;
+using Google.Android.Material.BottomNavigation;
 #elif WINDOWS
 using Microsoft.UI.Windowing;
 #endif
@@ -37,6 +38,11 @@ namespace WatchTorrent.Services
                 return;
             }
 
+            _previousOrientation = activity.RequestedOrientation;
+            _previousConfiguration = activity.Resources?.Configuration?.Orientation;
+            _previousSystemUi = window.DecorView.SystemUiVisibility;
+            _navigationPadding.Clear();
+            CaptureNavigationPadding(window.DecorView);
             activity.RequestedOrientation = ScreenOrientation.SensorLandscape;
 
             WindowCompat.SetDecorFitsSystemWindows(window, false);
@@ -64,10 +70,13 @@ namespace WatchTorrent.Services
                 return;
             }
 
-            activity.RequestedOrientation = ScreenOrientation.Unspecified;
-
             WindowCompat.SetDecorFitsSystemWindows(window, true);
             WindowCompat.GetInsetsController(window, window.DecorView)?.Show(WindowInsetsCompat.Type.SystemBars());
+            window.DecorView.SystemUiVisibility = _previousSystemUi;
+            var rotate = Android.Provider.Settings.System.GetInt(activity.ContentResolver, "accelerometer_rotation", 0) != 0;
+            activity.RequestedOrientation = !rotate && _previousOrientation is ScreenOrientation.Unspecified or ScreenOrientation.User
+                ? (_previousConfiguration == Android.Content.Res.Orientation.Portrait ? ScreenOrientation.Portrait : ScreenOrientation.Landscape)
+                : _previousOrientation;
 
             if (window.Attributes is { } attributes)
             {
@@ -82,6 +91,7 @@ namespace WatchTorrent.Services
             }
 
             _brightnessBeforePictureInPicture = null;
+            RefreshAppLayout();
 #elif WINDOWS
             SetFullScreen(false);
 #endif
@@ -205,6 +215,38 @@ namespace WatchTorrent.Services
             }
 
             window.Attributes = attributes;
+        }
+
+        private static ScreenOrientation _previousOrientation;
+        private static Android.Content.Res.Orientation? _previousConfiguration;
+        private static StatusBarVisibility _previousSystemUi;
+        private static readonly List<(WeakReference<BottomNavigationView> View, int Left, int Top, int Right, int Bottom)> _navigationPadding = [];
+
+        private static void CaptureNavigationPadding(Android.Views.View view)
+        {
+            if (view is BottomNavigationView nav)
+                _navigationPadding.Add((new(nav), nav.PaddingLeft, nav.PaddingTop, nav.PaddingRight, nav.PaddingBottom));
+            if (view is not ViewGroup group) return;
+            for (int i = 0; i < group.ChildCount; i++)
+                if (group.GetChildAt(i) is { } child) CaptureNavigationPadding(child);
+        }
+
+        public static void RefreshAppLayout()
+        {
+            if (IsActive || Platform.CurrentActivity is not { Window: { } window } activity) return;
+            window.DecorView.Post(() =>
+            {
+                if (IsActive) return;
+                ViewCompat.RequestApplyInsets(window.DecorView);
+                if (activity.Resources?.Configuration?.Orientation == _previousConfiguration)
+                    foreach (var padding in _navigationPadding)
+                        if (padding.View.TryGetTarget(out var nav) && nav.IsAttachedToWindow)
+                        {
+                            nav.SetPadding(padding.Left, padding.Top, padding.Right, padding.Bottom);
+                            nav.RequestLayout();
+                        }
+                window.DecorView.RequestLayout();
+            });
         }
 
         private static void HideSystemBars(Android.Views.Window window)

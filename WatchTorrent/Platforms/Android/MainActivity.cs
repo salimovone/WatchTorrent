@@ -12,6 +12,22 @@ namespace WatchTorrent
     [Activity(Theme = "@style/Maui.SplashTheme", MainLauncher = true, LaunchMode = LaunchMode.SingleTop, SupportsPictureInPicture = true, ConfigurationChanges = ConfigChanges.ScreenSize | ConfigChanges.Orientation | ConfigChanges.UiMode | ConfigChanges.ScreenLayout | ConfigChanges.SmallestScreenSize | ConfigChanges.Density)]
     public class MainActivity : MauiAppCompatActivity
     {
+        protected override void OnCreate(Bundle? savedInstanceState)
+        {
+            base.OnCreate(savedInstanceState);
+            if (Window is not { } window) return;
+            var background = Android.Graphics.Color.Rgb(17, 18, 19);
+            window.SetStatusBarColor(background);
+            window.SetNavigationBarColor(background);
+            window.DecorView.SystemUiVisibility &= ~(Android.Views.StatusBarVisibility)(8192 | 16);
+        }
+
+        public override void OnConfigurationChanged(Configuration newConfig)
+        {
+            base.OnConfigurationChanged(newConfig);
+            PlayerWindow.RefreshAppLayout();
+        }
+
         public override void OnWindowFocusChanged(bool hasFocus)
         {
             base.OnWindowFocusChanged(hasFocus);

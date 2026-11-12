@@ -12,6 +12,20 @@ namespace WatchTorrent.Views
             BindingContext = viewModel;
         }
 
+        private bool _openingDetails;
+
+        private async void OnSearchClicked(object? sender, EventArgs e) => await Shell.Current.GoToAsync("//search");
+
+        private async void OnDownloadSelected(object? sender, SelectionChangedEventArgs e)
+        {
+            if (sender is not CollectionView list || e.CurrentSelection.FirstOrDefault() is not DownloadItem item) return;
+            list.SelectedItem = null;
+            if (_openingDetails) return;
+            _openingDetails = true;
+            try { await Routes.OpenDownloadAsync(item); }
+            finally { _openingDetails = false; }
+        }
+
         protected override void OnAppearing()
         {
             base.OnAppearing();

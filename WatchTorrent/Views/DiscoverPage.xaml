@@ -1,75 +1,103 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <ContentPage
-    x:Class="WatchTorrent.Views.DiscoverPage"
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
     xmlns:vm="clr-namespace:WatchTorrent.ViewModels"
-    x:DataType="vm:DiscoverViewModel"
-    Title="WatchTorrent">
-
-    <Grid RowDefinitions="Auto,Auto,*">
-        <CollectionView
-            Margin="16,12,0,0"
-            HeightRequest="36"
-            ItemsSource="{Binding Categories}"
-            SelectedItem="{Binding SelectedCategory, Mode=TwoWay}"
-            SelectionMode="Single"
-            ItemTemplate="{StaticResource ChipTemplate}"
-            HorizontalScrollBarVisibility="Never">
-            <CollectionView.ItemsLayout>
-                <LinearItemsLayout Orientation="Horizontal" ItemSpacing="8" />
-            </CollectionView.ItemsLayout>
-        </CollectionView>
-
-        <CollectionView
-            Grid.Row="1"
-            Margin="16,10,0,0"
-            HeightRequest="36"
-            IsVisible="{Binding ShowRanges}"
-            ItemsSource="{Binding Ranges}"
-            SelectedItem="{Binding SelectedRange, Mode=TwoWay}"
-            SelectionMode="Single"
-            ItemTemplate="{StaticResource ChipTemplate}"
-            HorizontalScrollBarVisibility="Never">
-            <CollectionView.ItemsLayout>
-                <LinearItemsLayout Orientation="Horizontal" ItemSpacing="8" />
-            </CollectionView.ItemsLayout>
-        </CollectionView>
-
-        <RefreshView
-            Grid.Row="2"
-            Margin="0,8,0,0"
-            IsRefreshing="{Binding IsRefreshing, Mode=TwoWay}"
-            Command="{Binding RefreshCommand}">
+    x:Class="WatchTorrent.Views.DiscoverPage"
+    Title="Kashf etish"
+    Shell.NavBarIsVisible="false"
+    x:DataType="vm:DiscoverViewModel">
+    <Grid RowDefinitions="Auto,*" MaximumWidthRequest="1040">
+        <VerticalStackLayout Padding="20,8,20,10" Spacing="8">
+            <Grid ColumnDefinitions="*,Auto">
+                <Label Text="WatchTorrent" FontSize="20" FontFamily="OpenSansSemibold" VerticalOptions="Center" />
+                <ImageButton
+                    Grid.Column="1"
+                    Source="tab_search.png"
+                    BackgroundColor="Transparent"
+                    WidthRequest="44"
+                    HeightRequest="44"
+                    Padding="10"
+                    Clicked="OnSearchClicked"
+                    SemanticProperties.Description="Film yoki serial qidirish"
+                    ToolTipProperties.Text="Qidirish" />
+            </Grid>
+            <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
+                <Border Stroke="{StaticResource StrokeColor}" StrokeShape="RoundRectangle 6" Padding="10,0">
+                    <Grid>
+                        <Picker
+                            Title="Toifa"
+                            ItemsSource="{Binding Categories}"
+                            ItemDisplayBinding="{Binding Title, x:DataType=vm:DiscoverCategory}"
+                            SelectedItem="{Binding SelectedCategory}"
+                            SemanticProperties.Description="Torrentlar toifasi" />
+                        <Label
+                            Text="⌄"
+                            FontSize="18"
+                            TextColor="{StaticResource TextMuted}"
+                            HorizontalOptions="End"
+                            VerticalOptions="Center"
+                            InputTransparent="true"
+                            IsVisible="{OnPlatform Android=True, Default=False}" />
+                    </Grid>
+                </Border>
+                <Border
+                    Grid.Column="1"
+                    WidthRequest="120"
+                    IsVisible="{Binding ShowRanges}"
+                    Stroke="{StaticResource StrokeColor}"
+                    StrokeShape="RoundRectangle 6"
+                    Padding="10,0">
+                    <Grid>
+                        <Picker
+                            Title="Davr"
+                            ItemsSource="{Binding Ranges}"
+                            ItemDisplayBinding="{Binding Title, x:DataType=vm:RangeOption}"
+                            SelectedItem="{Binding SelectedRange}"
+                            SemanticProperties.Description="Ro'yxat davri" />
+                        <Label
+                            Text="⌄"
+                            FontSize="18"
+                            TextColor="{StaticResource TextMuted}"
+                            HorizontalOptions="End"
+                            VerticalOptions="Center"
+                            InputTransparent="true"
+                            IsVisible="{OnPlatform Android=True, Default=False}" />
+                    </Grid>
+                </Border>
+            </Grid>
+        </VerticalStackLayout>
+        <RefreshView Grid.Row="1" IsRefreshing="{Binding IsRefreshing}" Command="{Binding RefreshCommand}">
             <CollectionView
                 ItemsSource="{Binding Items}"
                 ItemTemplate="{StaticResource TorrentRowTemplate}"
                 SelectionMode="Single"
                 SelectionChanged="OnTorrentSelected" />
         </RefreshView>
-
-        <ActivityIndicator
-            Grid.Row="2"
-            IsRunning="{Binding IsBusy}"
-            IsVisible="{Binding IsBusy}"
-            HorizontalOptions="Center"
-            VerticalOptions="Center" />
-
         <VerticalStackLayout
-            Grid.Row="2"
-            Padding="32"
-            Spacing="14"
-            IsVisible="{Binding HasError}"
-            VerticalOptions="Center">
-            <Label
-                Text="{Binding ErrorMessage}"
-                TextColor="{StaticResource TextMuted}"
-                HorizontalTextAlignment="Center" />
-            <Button
-                Text="Qayta urinish"
-                Command="{Binding RefreshCommand}"
-                HorizontalOptions="Center" />
+            Grid.Row="1"
+            Padding="24,24"
+            Spacing="12"
+            IsVisible="{Binding IsBusy}"
+            VerticalOptions="Start"
+            HorizontalOptions="Center">
+            <ActivityIndicator IsRunning="{Binding IsBusy}" HeightRequest="28" />
+            <Label Text="Ro'yxat olinmoqda…" Style="{StaticResource BodyText}" />
         </VerticalStackLayout>
+        <ScrollView Grid.Row="1" IsVisible="{Binding HasError}">
+            <VerticalStackLayout Padding="24,32" Spacing="12" MaximumWidthRequest="460">
+                <Label Text="Ro'yxatni yuklab bo'lmadi" Style="{StaticResource SectionTitle}" />
+                <Label Text="{Binding ErrorMessage}" Style="{StaticResource BodyText}" />
+                <Button Text="Qayta yuklash" Command="{Binding RefreshCommand}" HorizontalOptions="Start" Margin="0,8,0,0" />
+                <BoxView Style="{StaticResource Rule}" Margin="0,12" />
+                <Label
+                    Text="Saqlangan yuklamalaringizni ochishingiz yoki nom bo'yicha qidirishingiz mumkin."
+                    Style="{StaticResource BodyText}" />
+                <FlexLayout Wrap="Wrap">
+                    <Button Text="Yuklamalarni ochish" Style="{StaticResource TextButton}" Clicked="OnDownloadsClicked" />
+                    <Button Text="Qidirish" Style="{StaticResource TextButton}" Clicked="OnSearchClicked" />
+                </FlexLayout>
+            </VerticalStackLayout>
+        </ScrollView>
     </Grid>
-
 </ContentPage>

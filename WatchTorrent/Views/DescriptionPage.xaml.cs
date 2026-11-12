@@ -47,10 +47,10 @@ namespace WatchTorrent.Views
                     <meta charset="utf-8" />
                     <meta name="viewport" content="width=device-width, initial-scale=1" />
                     <style>
-                        body { background: #0E0F13; color: #E6E8EE; font-family: -apple-system, 'Segoe UI', Roboto, sans-serif;
-                               font-size: 15px; line-height: 1.55; margin: 0; padding: 14px; word-wrap: break-word; }
+                        body { background: #111213; color: #F5F7F2; font-family: -apple-system, 'Segoe UI', Roboto, sans-serif;
+                               font-size: 15px; line-height: 1.55; margin: 0; padding: 20px; max-width: 900px; margin: auto; word-wrap: break-word; }
                         img { max-width: 100%; height: auto; border-radius: 8px; }
-                        a { color: #9D86FF; }
+                        a { color: #B6FF2E; }
                         pre, code { white-space: pre-wrap; }
                     </style>
                 </head>

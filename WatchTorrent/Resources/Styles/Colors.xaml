@@ -5,12 +5,12 @@
 
     <!-- Note: For Android please see also Platforms\Android\Resources\values\colors.xml -->
 
-    <Color x:Key="Primary">#512BD4</Color>
-    <Color x:Key="PrimaryDark">#ac99ea</Color>
-    <Color x:Key="PrimaryDarkText">#242424</Color>
-    <Color x:Key="Secondary">#DFD8F7</Color>
-    <Color x:Key="SecondaryDarkText">#9880e5</Color>
-    <Color x:Key="Tertiary">#2B0B98</Color>
+    <Color x:Key="Primary">#B6FF2E</Color>
+    <Color x:Key="PrimaryDark">#B6FF2E</Color>
+    <Color x:Key="PrimaryDarkText">#18200D</Color>
+    <Color x:Key="Secondary">#2B3B17</Color>
+    <Color x:Key="SecondaryDarkText">#B6FF2E</Color>
+    <Color x:Key="Tertiary">#8DDC1A</Color>
 
     <Color x:Key="White">White</Color>
     <Color x:Key="Black">Black</Color>
@@ -28,16 +28,16 @@
     <Color x:Key="Gray950">#141414</Color>
 
     <!-- WatchTorrent qorong'i palitrasi (ilova doim Dark temada ishlaydi) -->
-    <Color x:Key="Bg">#0E0F13</Color>
-    <Color x:Key="Surface">#171920</Color>
-    <Color x:Key="Surface2">#232632</Color>
-    <Color x:Key="StrokeColor">#2A2E3A</Color>
-    <Color x:Key="TextPrimary">#F2F3F7</Color>
-    <Color x:Key="TextMuted">#9097A6</Color>
-    <Color x:Key="Accent">#7C5CFF</Color>
-    <Color x:Key="AccentSoft">#2A2350</Color>
-    <Color x:Key="Seed">#34D399</Color>
-    <Color x:Key="Leech">#F87171</Color>
+    <Color x:Key="Bg">#111213</Color>
+    <Color x:Key="Surface">#1B1D1F</Color>
+    <Color x:Key="Surface2">#242729</Color>
+    <Color x:Key="StrokeColor">#343739</Color>
+    <Color x:Key="TextPrimary">#F5F7F2</Color>
+    <Color x:Key="TextMuted">#A7AAA8</Color>
+    <Color x:Key="Accent">#B6FF2E</Color>
+    <Color x:Key="AccentSoft">#283B13</Color>
+    <Color x:Key="Seed">#50E99A</Color>
+    <Color x:Key="Leech">#FF8D82</Color>
 
     <SolidColorBrush x:Key="PrimaryBrush" Color="{StaticResource Primary}"/>
     <SolidColorBrush x:Key="SecondaryBrush" Color="{StaticResource Secondary}"/>

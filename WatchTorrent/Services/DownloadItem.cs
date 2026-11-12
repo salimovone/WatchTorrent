@@ -134,10 +134,10 @@ namespace WatchTorrent.Services
 
             return manager.State switch
             {
-                TorrentState.Metadata => "Torrent ma'lumoti olinmoqda…",
+                TorrentState.Metadata => manager.OpenConnections == 0 ? "Manbalarga ulanmoqda…" : "Fayl ma'lumoti olinmoqda…",
                 TorrentState.Starting or TorrentState.FetchingHashes => "Boshlanmoqda…",
                 TorrentState.Hashing or TorrentState.HashingPaused => "Fayllar tekshirilmoqda…",
-                TorrentState.Downloading => GetDownloadingText(manager.Monitor.DownloadRate, remainingBytes),
+                TorrentState.Downloading => GetDownloadingText(manager.Monitor.DownloadRate, remainingBytes, manager.OpenConnections),
                 TorrentState.Stopping => "To'xtatilmoqda…",
                 TorrentState.Stopped or TorrentState.Paused => "Pauzada",
                 TorrentState.Error => $"Xato: {manager.Error?.Exception?.Message ?? manager.Error?.Reason.ToString()}",
@@ -145,11 +145,11 @@ namespace WatchTorrent.Services
             };
         }
 
-        private static string GetDownloadingText(long rate, long remainingBytes)
+        private static string GetDownloadingText(long rate, long remainingBytes, int connections)
         {
             if (rate <= 0)
             {
-                return "Peerlar qidirilmoqda…";
+                return connections == 0 ? "Manbalar qidirilmoqda…" : "Manbalardan ma'lumot kutilmoqda…";
             }
 
             return $"Yuklanmoqda · {Formatting.Duration(TimeSpan.FromSeconds(remainingBytes / rate))} qoldi";

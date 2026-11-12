@@ -7,6 +7,9 @@ namespace WatchTorrent.Views
     {
         public const string Downloads = "//downloads";
 
+        public static Task OpenDownloadAsync(DownloadItem item) =>
+            Shell.Current.GoToAsync(nameof(TorrentDetailPage), new ShellNavigationQueryParameters { ["Download"] = item });
+
         /// <summary>Ro'yxatda tanlangan torrentni ochadi va tanlovni bekor qiladi (shu elementni qayta bosish mumkin bo'lsin).</summary>
         public static async Task OpenTorrentAsync(object? sender, SelectionChangedEventArgs e)
         {

@@ -29,10 +29,9 @@ namespace WatchTorrent.ViewModels
         }
 
         public string HdrDescription => HdrDisplay.IsSupported
-            ? "Ekraningiz HDR'ni qo'llaydi. O'chirilsa HDR videolar SDR'ga moslab (tone mapping) ko'rsatiladi. Player'dagi HDR/SDR tugmasi bilan har bir video uchun almashtirish mumkin."
-            : HdrDisplay.CanSwitch
-                ? "Ekraningiz HDR'ni qo'llamaydi — HDR videolar SDR'ga moslab ko'rsatiladi. Player'dagi HDR/SDR tugmasi bilan almashtirish mumkin."
-                : "HDR videolar ekranga moslab (tone mapping) ko'rsatiladi.";
+            ? "Yorqinlik va ranglar ekranning HDR imkoniyatiga moslanadi. Video ichida ham almashtirish mumkin."
+            : HdrDisplay.CanSwitch ? "HDR videolar ekraningizga mos rang va yorqinlikda ko'rsatiladi."
+                : "HDR videolarning rang va yorqinligi ekranga avtomatik moslanadi.";
 
         public bool CanSwitchHdr => HdrDisplay.CanSwitch;
 

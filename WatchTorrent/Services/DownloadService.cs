@@ -33,8 +33,11 @@ namespace WatchTorrent.Services
         private Task? _initializeTask;
         private IDispatcherTimer? _refreshTimer;
 
-        public DownloadService()
+        private readonly TorrentPageCache _pages;
+
+        public DownloadService(TorrentPageCache pages)
         {
+            _pages = pages;
             DownloadDirectory = GetDefaultDownloadDirectory();
 
             // Hamma torrent bitta rejimda (PlaybackPieceRequester) — yuklab olish va ko'rish bir xil faylni, bir xil
@@ -161,6 +164,7 @@ namespace WatchTorrent.Services
             }
 
             Items.Remove(item);
+            await _pages.RemoveAsync(item.InfoHash);
             _paused.Remove(item.InfoHash);
             SavePaused();
             Preferences.Default.Remove(WebSeedsKeyPrefix + item.InfoHash);

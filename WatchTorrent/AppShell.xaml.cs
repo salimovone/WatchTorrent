@@ -12,6 +12,7 @@ namespace WatchTorrent
             Routing.RegisterRoute(nameof(DescriptionPage), typeof(DescriptionPage));
             Routing.RegisterRoute(nameof(PlayerPage), typeof(PlayerPage));
             Routing.RegisterRoute(nameof(ImageViewerPage), typeof(ImageViewerPage));
+            Routing.RegisterRoute(nameof(DirectConnectionTestPage), typeof(DirectConnectionTestPage));
         }
     }
 }
