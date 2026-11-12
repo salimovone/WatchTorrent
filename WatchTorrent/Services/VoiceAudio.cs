@@ -6,6 +6,11 @@ using Android.Media;
 using Android.Media.Audiofx;
 #elif WINDOWS
 using NAudio.Wave;
+#elif IOS
+using AudioToolbox;
+using AVFoundation;
+using System.Collections.Concurrent;
+using System.Runtime.InteropServices;
 #endif
 
 namespace WatchTorrent.Services;
@@ -25,6 +30,11 @@ internal sealed class VoiceAudio : IDisposable
     private WaveInEvent? input;
     private WaveOutEvent? output;
     private BufferedWaveProvider? buffer;
+#elif IOS
+    private InputAudioQueue? input;
+    private OutputAudioQueue? output;
+    private readonly ConcurrentQueue<IntPtr> available = new();
+    private static AudioStreamBasicDescription Format => AudioStreamBasicDescription.CreateLinearPCM(Rate, 1, 16, false);
 #endif
     public bool Recording => input != null;
 
@@ -60,6 +70,25 @@ internal sealed class VoiceAudio : IDisposable
             var bytes = new byte[samples.Length * 2];
             Buffer.BlockCopy(samples, 0, bytes, 0, bytes.Length);
             buffer!.AddSamples(bytes, 0, bytes.Length);
+#elif IOS
+            if (output == null)
+            {
+                if (input == null) ConfigureSession(false);
+                output = new OutputAudioQueue(Format);
+                output.BufferCompleted += (_, e) => available.Enqueue(e.IntPtrBuffer);
+                for (int i = 0; i < 8; i++)
+                {
+                    Check(output.AllocateBuffer(Rate * 120 / 1000 * sizeof(short), out IntPtr slot));
+                    available.Enqueue(slot);
+                }
+            }
+            if (samples.Length <= Rate * 120 / 1000 && available.TryDequeue(out var buffer))
+            {
+                var data = Marshal.PtrToStructure<AudioQueueBuffer>(buffer);
+                Marshal.Copy(samples, 0, data.AudioData, samples.Length);
+                Check(output.EnqueueBuffer(buffer, samples.Length * sizeof(short), null!));
+                if (!output.IsRunning) Check(output.Start());
+            }
 #endif
         }
     }
@@ -87,6 +116,35 @@ internal sealed class VoiceAudio : IDisposable
                 Send(samples, _);
             };
             input.StartRecording();
+#elif IOS
+            ConfigureSession(true);
+            var recorder = input = new InputAudioQueue(Format);
+            var frame = new short[Frame];
+            int offset = 0;
+            recorder.InputCompleted += (_, e) =>
+            {
+                lock (sync)
+                {
+                    if (disposed || input != recorder) return;
+                    var buffer = Marshal.PtrToStructure<AudioQueueBuffer>(e.IntPtrBuffer);
+                    int count = (int)buffer.AudioDataByteSize / sizeof(short);
+                    for (int index = 0; index < count;)
+                    {
+                        int take = Math.Min(count - index, Frame - offset);
+                        Marshal.Copy(buffer.AudioData + index * sizeof(short), frame, offset, take);
+                        offset += take;
+                        index += take;
+                        if (offset == Frame) { Send(frame, recorder); offset = 0; }
+                    }
+                    recorder.EnqueueBuffer(e.IntPtrBuffer, Frame * sizeof(short), null!);
+                }
+            };
+            for (int i = 0; i < 3; i++)
+            {
+                Check(recorder.AllocateBuffer(Frame * sizeof(short), out IntPtr slot));
+                Check(recorder.EnqueueBuffer(slot, Frame * sizeof(short), null!));
+            }
+            Check(recorder.Start());
 #endif
         }
         catch { StopInput(); throw; }
@@ -120,6 +178,22 @@ internal sealed class VoiceAudio : IDisposable
         }
     }
 
+#if IOS
+    private static void Check(AudioQueueStatus status)
+    {
+        if (status != AudioQueueStatus.Ok) throw new IOException($"AudioQueue: {status}");
+    }
+    private static void ConfigureSession(bool record)
+    {
+        var session = AVAudioSession.SharedInstance();
+        var error = record
+            ? session.SetCategory(AVAudioSessionCategory.PlayAndRecord, AVAudioSessionCategoryOptions.DefaultToSpeaker)
+            : session.SetCategory(AVAudioSessionCategory.Playback);
+        error ??= session.SetActive(true);
+        if (error != null) throw new IOException(error.LocalizedDescription);
+    }
+#endif
+
     private void StopInput()
     {
         var recorder = input;
@@ -132,6 +206,10 @@ internal sealed class VoiceAudio : IDisposable
 #elif WINDOWS
         recorder.StopRecording();
         recorder.Dispose();
+#elif IOS
+        recorder.Stop(true);
+        recorder.Dispose();
+        AVAudioSession.SharedInstance().SetCategory(AVAudioSessionCategory.Playback);
 #endif
     }
 
@@ -142,7 +220,11 @@ internal sealed class VoiceAudio : IDisposable
         lock (sync)
         {
             disposed = true;
+#if IOS
+            output?.Stop(true);
+#else
             output?.Stop();
+#endif
 #if ANDROID
             output?.Release();
 #endif

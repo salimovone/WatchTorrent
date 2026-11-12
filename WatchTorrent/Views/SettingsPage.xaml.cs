@@ -33,6 +33,14 @@ namespace WatchTorrent.Views
                 var window = (Microsoft.UI.Xaml.Window)Window!.Handler!.PlatformView!;
                 WinRT.Interop.InitializeWithWindow.Initialize(picker, WinRT.Interop.WindowNative.GetWindowHandle(window));
                 var path = (await picker.PickSingleFolderAsync())?.Path;
+#elif IOS
+                var root = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
+                var folders = Directory.GetDirectories(root).Select(Path.GetFileName).OfType<string>().Order().ToArray();
+                const string create = "Yangi papka…";
+                var name = await DisplayActionSheetAsync("WatchTorrent papkalari", "Bekor qilish", null, folders.Append(create).ToArray());
+                if (name == create) name = (await DisplayPromptAsync("Yangi papka", "Papka nomini kiriting."))?.Trim();
+                if (string.IsNullOrEmpty(name) || name is "." or ".." or "Bekor qilish" || Path.GetFileName(name) != name) return;
+                var path = Directory.CreateDirectory(Path.Combine(root, name)).FullName;
 #else
                 string? path = null;
 #endif

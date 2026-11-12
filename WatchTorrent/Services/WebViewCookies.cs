@@ -15,6 +15,8 @@ namespace WatchTorrent.Services
             return Task.FromResult(cookies ?? string.Empty);
 #elif WINDOWS
             return GetWindowsAsync(webView, url);
+#elif IOS
+            return GetIosAsync(webView, url);
 #else
             return Task.FromResult(string.Empty);
 #endif
@@ -57,6 +59,10 @@ namespace WatchTorrent.Services
             return Task.CompletedTask;
 #elif WINDOWS
             return ClearWindowsAsync(webView);
+#elif IOS
+            return webView.Handler?.PlatformView is WebKit.WKWebView browser
+                ? browser.Configuration.WebsiteDataStore.RemoveDataOfTypesAsync(WebKit.WKWebsiteDataStore.AllWebsiteDataTypes, Foundation.NSDate.DistantPast)
+                : Task.CompletedTask;
 #else
             return Task.CompletedTask;
 #endif
@@ -118,6 +124,19 @@ namespace WatchTorrent.Services
         }
 #endif
 
+#if IOS
+        private static async Task<string> GetIosAsync(WebView webView, Uri url)
+        {
+            if (webView.Handler?.PlatformView is not WebKit.WKWebView browser) return string.Empty;
+            var cookies = await browser.Configuration.WebsiteDataStore.HttpCookieStore.GetAllCookiesAsync();
+            var matching = cookies.Where(cookie =>
+                (url.Host.Equals(cookie.Domain.TrimStart('.'), StringComparison.OrdinalIgnoreCase) ||
+                 (cookie.Domain.StartsWith('.') && url.Host.EndsWith(cookie.Domain, StringComparison.OrdinalIgnoreCase))) &&
+                (!cookie.IsSecure || url.Scheme == Uri.UriSchemeHttps) &&
+                (url.AbsolutePath == cookie.Path || url.AbsolutePath.StartsWith(cookie.Path.TrimEnd('/') + "/", StringComparison.Ordinal)));
+            return string.Join("; ", matching.Select(cookie => $"{cookie.Name}={cookie.Value}"));
+        }
+#endif
 #if WINDOWS
         private static async Task<string> GetWindowsAsync(WebView webView, Uri url)
         {

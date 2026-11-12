@@ -58,6 +58,11 @@ namespace WatchTorrent.Services
         {
             _pages = pages;
             DownloadDirectory = Preferences.Default.Get("downloads.directory", GetDefaultDownloadDirectory());
+#if IOS
+            // iOS can assign the sandbox a new absolute path after an app update.
+            DownloadDirectory = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments),
+                Path.GetFileName(DownloadDirectory));
+#endif
 
             // Hamma torrent bitta rejimda (PlaybackPieceRequester) — yuklab olish va ko'rish bir xil faylni, bir xil
             // tartibda yuklaydi; player ochilganda rejim almashtirish uchun torrentni to'xtatish kerak bo'lmaydi.
@@ -92,7 +97,7 @@ namespace WatchTorrent.Services
             DownloadDirectory = directory;
         }
 
-        private static bool IsMobile => DeviceInfo.Current.Platform == DevicePlatform.Android;
+        private static bool IsMobile => DeviceInfo.Current.Platform == DevicePlatform.Android || DeviceInfo.Current.Platform == DevicePlatform.iOS;
 
         private string StatePath => Path.Combine(_cacheDirectory, "engine.state");
 
@@ -630,6 +635,8 @@ namespace WatchTorrent.Services
             return string.IsNullOrEmpty(external) ? Path.Combine(FileSystem.AppDataDirectory, "Downloads") : external;
 #elif WINDOWS
             return Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "Downloads", "WatchTorrent");
+#elif IOS
+            return Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "Downloads");
 #else
             return Path.Combine(FileSystem.AppDataDirectory, "Downloads");
 #endif
