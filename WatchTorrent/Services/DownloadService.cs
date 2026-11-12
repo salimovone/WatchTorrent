@@ -38,7 +38,7 @@ namespace WatchTorrent.Services
         public DownloadService(TorrentPageCache pages)
         {
             _pages = pages;
-            DownloadDirectory = GetDefaultDownloadDirectory();
+            DownloadDirectory = Preferences.Default.Get("downloads.directory", GetDefaultDownloadDirectory());
 
             // Hamma torrent bitta rejimda (PlaybackPieceRequester) — yuklab olish va ko'rish bir xil faylni, bir xil
             // tartibda yuklaydi; player ochilganda rejim almashtirish uchun torrentni to'xtatish kerak bo'lmaydi.
@@ -55,7 +55,23 @@ namespace WatchTorrent.Services
         public ObservableCollection<DownloadItem> Items { get; } = new();
 
         /// <summary>Yuklangan fayllar saqlanadigan papka.</summary>
-        public string DownloadDirectory { get; }
+        public string DownloadDirectory { get; private set; }
+        public bool UsesCustomDirectory => DownloadDirectory != GetDefaultDownloadDirectory();
+
+        public void RestoreDefaultDirectory()
+        {
+            Preferences.Default.Remove("downloads.directory");
+            DownloadDirectory = GetDefaultDownloadDirectory();
+        }
+
+        public void SetDownloadDirectory(string directory)
+        {
+            directory = Path.GetFullPath(directory);
+            using (new FileStream(Path.Combine(directory, $".watchtorrent-{Guid.NewGuid():N}"),
+                FileMode.CreateNew, FileAccess.Write, FileShare.None, 1, FileOptions.DeleteOnClose)) { }
+            Preferences.Default.Set("downloads.directory", directory);
+            DownloadDirectory = directory;
+        }
 
         private static bool IsMobile => DeviceInfo.Current.Platform == DevicePlatform.Android;
 
@@ -104,7 +120,8 @@ namespace WatchTorrent.Services
                 return existing;
             }
 
-            var manager = await _engine!.AddStreamingAsync(magnet, DownloadDirectory, CreateTorrentSettings());
+            var directory = Directory.CreateDirectory(DownloadDirectory).FullName;
+            var manager = await _engine!.AddStreamingAsync(magnet, directory, CreateTorrentSettings());
 
             RestoreWebSeeds(manager, webSeeds);
 
@@ -160,7 +177,7 @@ namespace WatchTorrent.Services
 
             if (deleteFiles)
             {
-                DeleteEmptyDirectory(manager.ContainingDirectory);
+                DeleteEmptyDirectory(manager.ContainingDirectory, manager.SavePath);
             }
 
             Items.Remove(item);
@@ -287,7 +304,6 @@ namespace WatchTorrent.Services
         private async Task InitializeCoreAsync()
         {
             Directory.CreateDirectory(_cacheDirectory);
-            Directory.CreateDirectory(DownloadDirectory);
 
             _dhtBootstrapNodes = await TorrentNetwork.GetBootstrapNodesAsync(DhtCachePath);
 
@@ -547,13 +563,13 @@ namespace WatchTorrent.Services
         }
 
         /// <summary>Ko'p faylli torrent o'chirilgach qolgan bo'sh papkani tozalaydi (MonoTorrent faqat fayllarni o'chiradi).</summary>
-        private void DeleteEmptyDirectory(string directory)
+        private static void DeleteEmptyDirectory(string directory, string downloadRoot)
         {
             try
             {
                 var isDownloadRoot = string.Equals(
                     Path.TrimEndingDirectorySeparator(Path.GetFullPath(directory)),
-                    Path.TrimEndingDirectorySeparator(Path.GetFullPath(DownloadDirectory)),
+                    Path.TrimEndingDirectorySeparator(Path.GetFullPath(downloadRoot)),
                     StringComparison.OrdinalIgnoreCase);
 
                 if (isDownloadRoot || !Directory.Exists(directory) || Directory.EnumerateFiles(directory, "*", SearchOption.AllDirectories).Any())

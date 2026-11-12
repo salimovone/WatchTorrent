@@ -1,8 +1,48 @@
 "use strict";
 const el = id => document.getElementById(id);
+const voice = document.documentElement.dataset.mode === "voice";
 const networkHelp = "Ikkala telefonni bir Wi‑Fi’ga ulang va qayta boshlang. Operator NAT’i, firewall yoki UDP cheklovi sabab bo‘lishi mumkin.";
 const gatheringMs = 30000, connectionMs = 45000, pongMs = 8000;
 let active, phase, events, supported;
+let incomingInvite;
+
+function importInvite(file, automatic = false) {
+    if (!voice || !supported) return;
+    if (file?.format !== "watchtorrent-voice-1" || !/^[a-f0-9]{32}$/.test(file.callId)
+        || typeof file.sdp !== "string" || !/^m=audio [1-9]\d* /m.test(file.sdp)) {
+        status("Ovozli aloqa faylini o‘qib bo‘lmadi. Yuboruvchidan yangi fayl so‘rang.");
+    } else if (automatic && file.type === "answer" && phase === "answer" && active?.callId === file.callId) {
+        el("input").value = JSON.stringify(file);
+        signal("answer");
+    } else if (file.type === "offer" && phase === "start") {
+        if (!/^[A-Za-z0-9+/]{43}=$/.test(file.replyKey)) {
+            status("Bu taklif eskirgan. Suhbatdoshingizdan yangi taklif yuborishini so‘rang.");
+            return;
+        }
+        incomingInvite = file;
+        controls();
+        status("Ovozli suhbatga taklif keldi. Ulanish uchun taklifni qabul qiling.");
+    } else {
+        status(file.type === "answer" ? "Suhbatdoshingiz yuborgan taklif faylini oching."
+            : "Avval joriy suhbatni tugating, keyin yangi taklifni oching.");
+    }
+}
+
+function shareInvite() {
+    if (active && el("output").value) location.href = "https://voice.watchtorrent.invalid/share";
+}
+
+function outgoingInvite() {
+    const description = JSON.parse(el("output").value);
+    return {format: "watchtorrent-voice-1", callId: active.callId,
+        replyKey: description.type === "offer" ? active.replyKey : undefined, ...description};
+}
+
+function autoReplyStatus(id, delivered) {
+    if (active?.callId !== id || phase !== "confirm") return;
+    if (delivered) startConnecting(active);
+    else fail(active, "Ulanib bo‘lmadi. Yangi taklif bilan qayta urinib ko‘ring.");
+}
 
 function log(message) {
     events.push(new Date().toLocaleTimeString() + "  " + message);
@@ -18,12 +58,34 @@ function status(message) {
 function controls() {
     const waiting = phase === "answer";
     el("offer").hidden = !supported || phase !== "start";
-    el("receive").hidden = !supported || (!waiting && phase !== "start");
-    el("prompt").textContent = waiting ? "A telefon · B yuborgan answer matnini joylang." : "B telefon · A yuborgan offer matnini joylang.";
-    el("apply").textContent = waiting ? "Answer qo‘llash" : "Offer qabul qilish";
-    el("share").hidden = !el("output").value || phase === "failed";
-    el("confirm").hidden = phase !== "confirm";
-    el("ping").disabled = active?.channel?.readyState !== "open";
+    if (voice) {
+        const interrupted = active && [active.pc.connectionState, active.pc.iceConnectionState].includes("disconnected");
+        const connected = active?.channel?.readyState === "open" && !interrupted;
+        const waitingForPeer = !["start", "failed"].includes(phase) && !connected;
+        el("indicator").dataset.state = connected ? "on" : waitingForPeer ? "waiting" : "off";
+        el("indicator").textContent = connected ? "Ulangan" : interrupted ? "Qayta ulanmoqda"
+            : waiting ? "Taklif qabul qilinishi kutilmoqda" : waitingForPeer ? "Ulanmoqda" : "Ulanmagan";
+        document.title = connected ? "Ulangan" : "Ovozli aloqa";
+        if (incomingInvite) el("offer").hidden = true;
+        el("accept").hidden = !incomingInvite || phase !== "start";
+        el("pick").hidden = !supported || phase !== "start" || !!incomingInvite;
+        el("signaling").hidden = phase === "open" || phase === "failed";
+        el("reset").hidden = phase === "start";
+        el("reset").textContent = phase === "failed" ? "Qayta boshlash" : "Suhbatni tugatish";
+        const mic = active?.mic?.getAudioTracks()[0];
+        el("mute").hidden = !connected;
+        el("mute").disabled = !!active?.changingMic;
+        const transmitting = mic?.readyState === "live" && mic === active?.audioSender?.track && mic.enabled;
+        el("mute").setAttribute("aria-checked", String(transmitting));
+        el("mute").textContent = transmitting ? "Mening mikrofonim · Yoqilgan" : "Mening mikrofonim · O‘chiq";
+    } else {
+        el("receive").hidden = !supported || (!waiting && phase !== "start");
+        el("prompt").textContent = waiting ? "A telefon · B yuborgan answer matnini joylang." : "B telefon · A yuborgan offer matnini joylang.";
+        el("apply").textContent = waiting ? "Answer qo‘llash" : "Offer qabul qilish";
+        el("share").hidden = !el("output").value || phase === "failed";
+        el("confirm").hidden = phase !== "confirm";
+        el("ping").disabled = active?.channel?.readyState !== "open";
+    }
 }
 
 function diagnostics(s) {
@@ -65,12 +127,19 @@ function stop() {
     const s = active;
     active = null;
     if (!s) return;
+    if (voice && s.replyKey) location.href = "https://voice.watchtorrent.invalid/stop-reply/" + s.callId;
     clearTimeout(s.connectionTimer);
     clearInterval(s.statsTimer);
     s.cancelGather?.();
     for (const ping of s.pings.values()) clearTimeout(ping.timer);
     s.pings.clear();
     const p = s.pc;
+    p.ontrack = null;
+    if (voice) {
+        for (const track of s.mic?.getTracks() ?? []) track.stop();
+        el("remoteAudio").srcObject = null;
+        el("listen").hidden = true;
+    }
     p.onicecandidate = p.ondatachannel = p.onsignalingstatechange = p.onicegatheringstatechange = null;
     p.onconnectionstatechange = p.oniceconnectionstatechange = null;
     if (s.channel) {
@@ -82,16 +151,19 @@ function stop() {
 
 function reset() {
     stop();
+    incomingInvite = null;
     events = [];
     phase = "start";
     for (const id of ["input", "output"]) el(id).value = "";
-    el("copyHint").textContent = "";
+    if (!voice) el("copyHint").textContent = "";
     el("pair").textContent = "Tanlangan candidate juftligi: aniqlanmadi";
     const missing = typeof window.RTCPeerConnection !== "function" ? "RTCPeerConnection"
-        : typeof RTCPeerConnection.prototype.createDataChannel !== "function" ? "createDataChannel" : "";
+        : typeof RTCPeerConnection.prototype.createDataChannel !== "function" ? "createDataChannel"
+        : voice && !navigator.mediaDevices?.getUserMedia ? "Mikrofon (getUserMedia)" : "";
     supported = !missing;
     diagnostics(null);
     status(missing ? missing + " API mavjud emas. Play Market → Android System WebView sahifasida versiyani tekshiring, yangilang va ilovani qayta oching."
+        : voice ? "Taklif yuboring yoki suhbatdoshingizdan kelgan taklif faylini oching."
         : "Bir telefonda offer yarating. Ikkinchisida shu offer’ni qabul qiling.");
 }
 
@@ -122,7 +194,7 @@ function connectionChanged(s) {
             status("Aloqa vaqtincha uzildi. Tiklanishi kutilmoqda.");
             armConnection(s);
         } else if (["connected", "completed"].includes(p.iceConnectionState) && p.connectionState !== "connecting") {
-            if (s.connectionTimer) status("Aloqa tiklandi. Ping yuboring.");
+            if (s.connectionTimer) status(voice ? "Ovozli aloqa tiklandi." : "Aloqa tiklandi. Ping yuboring.");
             clearTimeout(s.connectionTimer);
             s.connectionTimer = null;
         }
@@ -138,7 +210,7 @@ function attachChannel(s, ch) {
         s.connectionTimer = null;
         phase = "open";
         diagnostics(s);
-        status("Kanal ochildi. Direct ulanishni tekshirish uchun Ping yuboring.");
+        status(voice ? "Gapirish uchun mikrofoningizni yoqing." : "Kanal ochildi. Direct ulanishni tekshirish uchun Ping yuboring.");
         selectedPair(s);
         s.statsTimer = setInterval(() => selectedPair(s), 4000);
     }
@@ -149,6 +221,11 @@ function attachChannel(s, ch) {
         if (active !== s || ch.readyState !== "open") return;
         let msg;
         try { msg = JSON.parse(event.data); } catch { return; }
+        if (voice && msg?.type === "hangup") {
+            reset();
+            status("Suhbatdosh aloqani tugatdi. Yangi suhbat boshlashingiz mumkin.");
+            return;
+        }
         if (!msg || !Number.isSafeInteger(msg.id)) return;
         if (msg.type === "ping") {
             try {
@@ -186,9 +263,12 @@ function newSession() {
 
 function gather(s) {
     return new Promise((resolve, reject) => {
+        let settleTimer;
         function finish(error) {
             clearTimeout(timer);
+            clearTimeout(settleTimer);
             s.pc.removeEventListener("icegatheringstatechange", check);
+            s.pc.removeEventListener("icecandidate", candidate);
             s.cancelGather = null;
             if (error) reject(error);
             else resolve();
@@ -196,9 +276,21 @@ function gather(s) {
         function check() {
             if (s.pc.iceGatheringState === "complete") finish();
         }
-        const timer = setTimeout(() => finish(new Error("gather-timeout")), gatheringMs);
+        function candidate() {
+            // A voice invitation can use the gathered routes even if another interface is slow.
+            if (voice && / typ srflx\b/.test(s.pc.localDescription?.sdp ?? "")) {
+                clearTimeout(settleTimer);
+                settleTimer = setTimeout(() => finish(), 1500);
+            }
+        }
+        const timer = setTimeout(() => {
+            if (voice && /^a=candidate:/m.test(s.pc.localDescription?.sdp ?? "")) finish();
+            else finish(new Error("gather-timeout"));
+        }, gatheringMs);
         s.cancelGather = () => finish(new Error("cancelled"));
         s.pc.addEventListener("icegatheringstatechange", check);
+        s.pc.addEventListener("icecandidate", candidate);
+        candidate();
         check();
     });
 }
@@ -215,7 +307,51 @@ function readDescription(expected) {
         status("SDP matni bo‘sh yoki noto‘g‘ri. To‘liq " + expected + " matnini joylang.");
         return;
     }
+    if (voice && !/^m=audio [1-9]\d* /m.test(value.sdp)) {
+        status("Ovozli kanal topilmadi. Ikkala telefonda ham Ovozli aloqa sahifasini oching.");
+        return;
+    }
     return { type: expected, sdp: value.sdp };
+}
+
+async function playRemote(s) {
+    try {
+        await el("remoteAudio").play();
+        if (active === s) el("listen").hidden = true;
+    } catch {
+        if (active === s) el("listen").hidden = false;
+    }
+}
+
+async function toggleMicrophone() {
+    const s = active;
+    if (!s?.audioSender || s.changingMic || s.channel?.readyState !== "open") return;
+    s.changingMic = true;
+    controls();
+    let stream;
+    try {
+        if (s.mic) {
+            s.mic.getTracks().forEach(track => track.stop());
+            s.mic = null;
+            await s.audioSender.replaceTrack(null);
+        } else {
+            stream = await navigator.mediaDevices.getUserMedia({
+                audio: { echoCancellation: true, noiseSuppression: true }, video: false
+            });
+            if (s !== active) return;
+            await s.audioSender.replaceTrack(stream.getAudioTracks()[0]);
+            if (s !== active) return;
+            s.mic = stream;
+            stream = null;
+        }
+        if (s === active) status(s.mic ? "Suhbatdoshingiz sizni eshita oladi." : "Gapirish uchun mikrofoningizni yoqing.");
+    } catch {
+        if (s === active) status("Mikrofonni yoqib bo‘lmadi. Mikrofon ruxsatini tekshiring.");
+    } finally {
+        stream?.getTracks().forEach(track => track.stop());
+        s.changingMic = false;
+        if (s === active) controls();
+    }
 }
 
 async function signal(action) {
@@ -226,15 +362,36 @@ async function signal(action) {
     controls();
     try {
         if (action !== "answer") s = newSession();
+        if (voice && action !== "answer") {
+            s.callId = action === "offer" && incomingInvite?.sdp === remote.sdp ? incomingInvite.callId
+                : Array.from(crypto.getRandomValues(new Uint8Array(16)), n => n.toString(16).padStart(2, "0")).join("");
+            s.replyKey = action === "create" ? btoa(String.fromCharCode(...crypto.getRandomValues(new Uint8Array(32))))
+                : incomingInvite?.sdp === remote.sdp && /^[A-Za-z0-9+/]{43}=$/.test(incomingInvite.replyKey) ? incomingInvite.replyKey : null;
+            incomingInvite = null;
+        }
         const pc = s.pc;
+        if (voice && action !== "answer") {
+            pc.ontrack = ({ track }) => {
+                if (s !== active || track.kind !== "audio") return;
+                el("remoteAudio").srcObject = new MediaStream([track]);
+                playRemote(s);
+            };
+            if (action === "create")
+                s.audioSender = pc.addTransceiver("audio", { direction: "sendrecv" }).sender;
+        }
         if (action === "create") {
             step = "DataChannel yaratish";
-            attachChannel(s, pc.createDataChannel("direct-test"));
+            attachChannel(s, pc.createDataChannel(voice ? "voice-control" : "direct-test"));
         } else {
             if (action === "offer") pc.ondatachannel = event => attachChannel(s, event.channel);
             step = remote.type + " SDP’sini qo‘llash";
             await pc.setRemoteDescription(remote);
             if (active !== s) return;
+            if (voice && action === "offer") {
+                const audio = pc.getTransceivers().find(t => t.receiver.track.kind === "audio");
+                audio.direction = "sendrecv";
+                s.audioSender = audio.sender;
+            }
             if (action === "answer") {
                 if (!s.opened) startConnecting(s);
                 return;
@@ -246,19 +403,33 @@ async function signal(action) {
         step = "Lokal SDP’ni qo‘llash";
         await pc.setLocalDescription(description);
         if (active !== s) return;
-        status("ICE candidate’lar yig‘ilmoqda…");
+        status(voice ? "Suhbatga ulanish tayyorlanmoqda…" : "ICE candidate’lar yig‘ilmoqda…");
         await gather(s);
         if (active !== s) return;
         const { type, sdp } = pc.localDescription;
         el("output").value = JSON.stringify({ type, sdp });
-        el("outputLabel").textContent = type + " · ikkinchi telefonga yuboring";
+        if (!voice) el("outputLabel").textContent = type + " · ikkinchi telefonga yuboring";
         el("input").value = "";
         phase = action === "create" ? "answer" : "confirm";
+        if (voice) {
+            status(action === "create" ? "Taklif faylini yuboring. Suhbatdoshingiz qabul qilganda aloqa avtomatik boshlanadi."
+                : "Taklif qabul qilindi. Ulanish o‘rnatilmoqda…");
+            controls();
+            if (action === "offer") location.href = "https://voice.watchtorrent.invalid/auto-reply";
+            else shareInvite();
+            return;
+        }
         status(action === "create" ? "Offer’ni B ga yuboring. Kelgan answer’ni shu yerga joylang."
             : "Answer’ni A ga yuboring. A uni qo‘llagach, pastdagi tugma bilan tasdiqlang.");
         controls();
     } catch (error) {
         if (s !== active) return;
+        if (step === "Mikrofonni ochish") {
+            fail(s, error.name === "NotAllowedError"
+                ? "Mikrofonga ruxsat berilmadi. Android sozlamalarida ilovaning mikrofon ruxsatini yoqing va qayta boshlang."
+                : "Mikrofon ochilmadi (" + error.name + "). Mikrofon bandligini tekshirib, qayta boshlang.");
+            return;
+        }
         const retry = step === "PeerConnection yaratish" || step === "DataChannel yaratish"
             ? "Play Market → Android System WebView sahifasida versiyani tekshiring, yangilang va ilovani qayta oching."
             : "Qayta boshlang.";
@@ -270,15 +441,32 @@ async function signal(action) {
 function startConnecting(s) {
     phase = "connecting";
     controls();
-    status("Direct yo‘l va ma’lumot kanali ochilishi kutilmoqda…");
+    status(voice ? "Suhbatdoshingiz bilan aloqa o‘rnatilmoqda…" : "Direct yo‘l va ma’lumot kanali ochilishi kutilmoqda…");
     armConnection(s);
 }
 
 el("offer").onclick = () => signal("create");
-el("apply").onclick = () => signal(phase === "answer" ? "answer" : "offer");
-el("confirm").onclick = () => startConnecting(active);
-el("reset").onclick = reset;
-el("copy").onclick = async () => {
+if (!voice) {
+    el("apply").onclick = () => signal(phase === "answer" ? "answer" : "offer");
+    el("confirm").onclick = () => startConnecting(active);
+}
+function endCall() {
+    if (voice && active?.channel?.readyState === "open") {
+        try { active.channel.send(JSON.stringify({ type: "hangup" })); } catch { }
+    }
+    reset();
+}
+el("reset").onclick = endCall;
+if (voice) {
+    el("pick").onclick = () => { location.href = "https://voice.watchtorrent.invalid/pick"; };
+    el("accept").onclick = () => {
+        el("input").value = JSON.stringify(incomingInvite);
+        signal("offer");
+    };
+    el("mute").onclick = toggleMicrophone;
+    el("listen").onclick = () => playRemote(active);
+}
+if (!voice) el("copy").onclick = async () => {
     const output = el("output"), s = active;
     output.focus();
     output.select();
@@ -289,7 +477,7 @@ el("copy").onclick = async () => {
         if (active === s) el("copyHint").textContent = "Matnni bosib turing va «Nusxalash»ni tanlang.";
     }
 };
-el("ping").onclick = () => {
+if (!voice) el("ping").onclick = () => {
     const s = active;
     if (s?.channel?.readyState !== "open") return;
     const id = ++s.nextId;
@@ -303,7 +491,7 @@ el("ping").onclick = () => {
     s.pings.set(id, { start, timer });
     status("Ping #" + id + " yuborildi. Pong kutilmoqda…");
 };
-window.addEventListener("pagehide", stop);
+window.addEventListener("pagehide", voice ? endCall : stop);
 window.addEventListener("pageshow", event => {
     if (event.persisted) reset();
 });

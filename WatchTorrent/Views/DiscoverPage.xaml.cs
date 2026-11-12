@@ -20,7 +20,7 @@ namespace WatchTorrent.Views
             await _viewModel.InitializeAsync();
         }
 
-        private async void OnSearchClicked(object? sender, EventArgs e) => await Shell.Current.GoToAsync("//search");
+        private async void OnSearchClicked(object? sender, EventArgs e) => await Shell.Current.GoToAsync(nameof(SearchPage));
 
         private async void OnDownloadsClicked(object? sender, EventArgs e) => await Shell.Current.GoToAsync(Routes.Downloads);
 

@@ -5,11 +5,10 @@
     xmlns:vm="clr-namespace:WatchTorrent.ViewModels"
     x:Class="WatchTorrent.Views.SearchPage"
     Title="Qidiruv"
-    Shell.NavBarIsVisible="false"
+    Shell.NavBarIsVisible="true"
     x:DataType="vm:SearchViewModel">
     <Grid RowDefinitions="Auto,Auto,*" MaximumWidthRequest="1040">
         <VerticalStackLayout Padding="20,24,20,12" Spacing="16">
-            <Label Text="Qidiruv" Style="{StaticResource PageTitle}" />
             <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
                 <Border
                     Stroke="{StaticResource StrokeColor}"

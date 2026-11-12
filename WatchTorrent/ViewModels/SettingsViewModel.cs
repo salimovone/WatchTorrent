@@ -81,6 +81,21 @@ namespace WatchTorrent.ViewModels
         public Command RequestBatteryExemptionCommand { get; }
 
         public string DownloadDirectory => _downloads.DownloadDirectory;
+        public bool UsesCustomDirectory => _downloads.UsesCustomDirectory;
+
+        public void SetDownloadDirectory(string path)
+        {
+            _downloads.SetDownloadDirectory(path);
+            OnPropertyChanged(nameof(DownloadDirectory));
+            OnPropertyChanged(nameof(UsesCustomDirectory));
+        }
+
+        public void RestoreDefaultDirectory()
+        {
+            _downloads.RestoreDefaultDirectory();
+            OnPropertyChanged(nameof(DownloadDirectory));
+            OnPropertyChanged(nameof(UsesCustomDirectory));
+        }
 
         public string AppVersion => $"WatchTorrent {AppInfo.Current.VersionString}";
 

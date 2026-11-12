@@ -23,6 +23,7 @@ namespace WatchTorrent
                 .UseLibVLCSharp()
 #if ANDROID
                 .ConfigureMauiHandlers(handlers => handlers.AddHandler<Controls.SubtitleSurface, Controls.SubtitleSurfaceHandler>())
+                .ConfigureMauiHandlers(handlers => handlers.AddHandler<CallSurface, CallSurfaceHandler>())
 #endif
                 .ConfigureFonts(fonts =>
                 {

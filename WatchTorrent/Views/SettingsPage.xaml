@@ -71,8 +71,11 @@
                 </Border>
             </VerticalStackLayout>
             <VerticalStackLayout Spacing="8">
-                <Label Text="Saqlash joyi" Style="{StaticResource SectionTitle}" />
+                <Label Text="Kinolar saqlanadigan papka" Style="{StaticResource SectionTitle}" />
                 <Label Text="{Binding DownloadDirectory}" Style="{StaticResource Muted}" LineBreakMode="CharacterWrap" />
+                <Button Text="Papkani tanlash" Style="{StaticResource GhostButton}" HorizontalOptions="Start" Clicked="ChooseFolder" />
+                <Button Text="Standart papkaga qaytish" Style="{StaticResource TextButton}" HorizontalOptions="Start" IsVisible="{Binding UsesCustomDirectory}" Clicked="RestoreFolder" />
+                <Label Text="Yangi yuklamalar tanlangan papkaga saqlanadi." Style="{StaticResource Muted}" />
             </VerticalStackLayout>
             <BoxView Style="{StaticResource Rule}" />
             <Label Text="{Binding AppVersion}" Style="{StaticResource Muted}" SemanticProperties.Hint="Direct ulanish testi">

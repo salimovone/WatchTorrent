@@ -14,7 +14,7 @@ namespace WatchTorrent.Views
 
         private bool _openingDetails;
 
-        private async void OnSearchClicked(object? sender, EventArgs e) => await Shell.Current.GoToAsync("//search");
+        private async void OnSearchClicked(object? sender, EventArgs e) => await Shell.Current.GoToAsync(nameof(SearchPage));
 
         private async void OnDownloadSelected(object? sender, SelectionChangedEventArgs e)
         {

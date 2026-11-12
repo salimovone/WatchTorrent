@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="uz" data-mode="voice">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; media-src blob: mediastream:; base-uri 'none'; form-action 'none'">
+<title>Ovozli aloqa</title>
+<style>
+  * { box-sizing: border-box }
+  body { color-scheme: dark; background: #111213; color: #f5f7f2; font: 16px/1.5 Roboto, sans-serif; margin: auto; padding: 20px; max-width: 42rem }
+  section { background: #1b1d1f; padding: 16px; border-radius: 8px; margin: 14px 0 }
+  button, textarea { font: inherit; border-radius: 8px; padding: 10px 14px }
+  button { min-height: 44px; background: #b6ff2e; color: #18200d; border: 0; margin: 4px 3px 4px 0 }
+  #reset, #mute, #copy { background: #242729; color: #f5f7f2; border: 1px solid #343739 }
+  textarea { display: block; width: 100%; border: 1px solid #343739; background: #111213; margin: 8px 0 }
+  pre { white-space: pre-wrap; overflow-wrap: anywhere }
+  [hidden] { display: none !important }
+  h1 { margin: 0 0 18px; font-size: 30px }
+  #indicator { display: inline-flex; gap: 8px; align-items: center; font-weight: 600 }
+  #indicator::before { content: ""; width: 10px; height: 10px; border-radius: 50%; background: #9a9d98 }
+  #indicator[data-state="on"]::before { background: #b6ff2e }
+  #indicator[data-state="waiting"]::before { background: #ffc465 }
+  #mute[aria-checked="true"] { border-color: #b6ff2e }
+  #status { color: #d7d9d3 }
+  #pick, #resend { background: #303335; color: white }
+  section:has(>button:not([hidden])) { display: grid; gap: 6px }
+</style>
+<h1>Ulanish</h1>
+<div id="indicator" role="status">Ulanmagan</div>
+<p id="status" role="status">Ovozli aloqa yuklanmoqda…</p>
+<section id="signaling">
+  <button id="offer">Taklif yuborish</button>
+  <button id="pick">Taklif faylini ochish</button>
+  <button id="accept" hidden>Taklifni qabul qilish</button>
+  <input id="input" type="hidden"><input id="output" type="hidden">
+</section>
+<audio id="remoteAudio" autoplay></audio>
+<button id="listen" hidden>Ovozni eshitish</button>
+<button id="mute" role="switch" aria-label="Mening mikrofonim" aria-checked="false" hidden>Mening mikrofonim · O‘chiq</button>
+<button id="reset" hidden>Suhbatni tugatish</button>
+<div hidden>
+  <pre id="states"></pre><p id="candidates"></p><p id="pair"></p><pre id="log"></pre>
+</div>
+<script>/* signaling */</script>
+</html>
+
