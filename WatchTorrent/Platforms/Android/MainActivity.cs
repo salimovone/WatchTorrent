@@ -1,4 +1,4 @@
-﻿using System.Runtime.Versioning;
+using System.Runtime.Versioning;
 using Android.App;
 using Android.Content;
 using Android.Content.PM;
@@ -11,7 +11,9 @@ namespace WatchTorrent
 {
     // SupportsPictureInPicture: player kichik oynada (PiP) o'ynay oladi. ConfigurationChanges'dagi ScreenSize/ScreenLayout
     // tufayli kichik oynaga o'tishda activity qayta yaratilmaydi.
-    [IntentFilter([Intent.ActionView], Categories = [Intent.CategoryDefault], DataMimeType = VoiceCallPage.InviteMime, DataScheme = "content")]
+    [IntentFilter([Intent.ActionView], Categories = [Intent.CategoryDefault, Intent.CategoryBrowsable],
+        DataScheme = InviteLink.Scheme, DataHost = InviteLink.Host, DataPathPrefix = "/v1/")]
+    [IntentFilter([Intent.ActionView], Categories = [Intent.CategoryDefault], DataMimeType = VoiceCall.InviteMime, DataScheme = "content")]
     // Download managers often use numeric content URIs and a generic MIME type.
     [IntentFilter([Intent.ActionView], Categories = [Intent.CategoryDefault], DataMimeType = "application/octet-stream", DataScheme = "content")]
     [IntentFilter([Intent.ActionView], Categories = [Intent.CategoryDefault], DataMimeType = "*/*", DataScheme = "content", DataHost = "*", DataPathPattern = @".*\.wtcall")]
@@ -78,6 +80,11 @@ namespace WatchTorrent
 
         private void ReadInvitation(Intent? intent)
         {
+            if (intent?.Action == Intent.ActionView && intent.Data?.Scheme == InviteLink.Scheme)
+            {
+                invitation = intent;
+                return;
+            }
             if (intent?.Action == Intent.ActionView
                 && intent.Data is { Scheme: "content" } uri && uri.Authority != null
                 && PackageManager?.ResolveContentProvider(uri.Authority, 0)?.ApplicationInfo?.Uid != Android.OS.Process.MyUid())
@@ -117,7 +124,14 @@ namespace WatchTorrent
             {
                 try
                 {
-                    if (request.Type != VoiceCallPage.InviteMime && !HasInviteName(uri))
+                    if (uri.Scheme == InviteLink.Scheme)
+                    {
+                        var appShell = (AppShell)shell;
+                        if (appShell.CurrentPage is not VoiceCallPage) await appShell.GoToAsync("//connection/call");
+                        appShell.Call.ImportLink(uri.ToString());
+                        return;
+                    }
+                    if (request.Type != VoiceCall.InviteMime && !HasInviteName(uri))
                     {
                         await shell.DisplayAlertAsync("Ovozli aloqa", "WatchTorrent taklif yoki javob uchun .wtcall faylini ochadi.", "Yopish");
                         return;
@@ -127,7 +141,7 @@ namespace WatchTorrent
                 }
                 catch (Exception)
                 {
-                    await shell.DisplayAlertAsync("Ovozli aloqa", "Faylni ochib bo‘lmadi. Ovozli aloqa sahifasidan faylni tanlang.", "Yopish");
+                    await shell.DisplayAlertAsync("Ovozli aloqa", "Taklifni ochib bo‘lmadi. Yangi havola so‘rang.", "Yopish");
                 }
             }
         }

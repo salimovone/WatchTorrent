@@ -27,23 +27,39 @@ namespace WatchTorrent.Views
         }
 
         /// <summary>Torrent sahifasidan ko'rish: kerak bo'lsa torrent yuklamalarga qo'shiladi.</summary>
-        public static Task WatchAsync(string magnet, string title)
+        public static async Task WatchAsync(string magnet, string title, Models.TorrentPageData? page = null)
         {
-            return Shell.Current.GoToAsync(nameof(PlayerPage), new ShellNavigationQueryParameters
+            var shell = (AppShell)Shell.Current;
+            var parameters = new ShellNavigationQueryParameters
             {
                 ["Magnet"] = magnet,
                 ["Title"] = title
-            });
+            };
+            if (shell.Call.Connected)
+            {
+                var session = await shell.InviteMovieAsync(magnet, title, page);
+                if (session == null) return;
+                parameters["Session"] = session;
+            }
+            await shell.GoToAsync(nameof(PlayerPage), parameters);
         }
 
         /// <summary>Yuklamalar ro'yxatidagi torrentni ko'rish.</summary>
-        public static Task WatchAsync(DownloadItem item)
+        public static async Task WatchAsync(DownloadItem item, Models.TorrentPageData? page = null)
         {
-            return Shell.Current.GoToAsync(nameof(PlayerPage), new ShellNavigationQueryParameters
+            var shell = (AppShell)Shell.Current;
+            var parameters = new ShellNavigationQueryParameters
             {
                 ["InfoHash"] = item.InfoHash,
                 ["Title"] = item.Name
-            });
+            };
+            if (shell.Call.Connected)
+            {
+                var session = await shell.InviteMovieAsync(DownloadService.ShareMagnet(item), item.Name, page);
+                if (session == null) return;
+                parameters["Session"] = session;
+            }
+            await shell.GoToAsync(nameof(PlayerPage), parameters);
         }
     }
 }

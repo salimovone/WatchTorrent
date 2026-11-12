@@ -23,6 +23,18 @@ namespace WatchTorrent.Views
         private bool _leaving;
         private bool _isShutDown;
         private Window? _window;
+        private Services.VoiceCall? call;
+        private void RefreshMic()
+        {
+            MicButton.IsVisible = call?.Connected == true;
+            bool on = call?.Microphone == true;
+            MicButton.Source = on ? "ic_mic_on.png" : "ic_mic_off.png";
+            SemanticProperties.SetDescription(MicButton, on ? "Mikrofonni o‘chirish" : "Mikrofonni yoqish");
+        }
+        private async void OnMicClicked(object? sender, EventArgs args)
+        {
+            if (call != null) await call.ToggleMicrophoneAsync();
+        }
 
         public PlayerPage(PlayerViewModel viewModel)
         {
@@ -52,6 +64,7 @@ namespace WatchTorrent.Views
             _timer.Tick += (_, _) =>
             {
                 _viewModel.Tick();
+                PartnerBuffer.IsVisible = PartnerSpinner.IsRunning = _viewModel.Session?.RemoteLoading == true && !_viewModel.ShowSpinner && !_viewModel.HasError;
                 UpdateSeekBar();
 
                 if (PictureInPicture.IsSupported)
@@ -79,6 +92,9 @@ namespace WatchTorrent.Views
             }
 
             _started = true;
+            call = ((AppShell)Shell.Current).Call;
+            call.Changed += RefreshMic;
+            RefreshMic();
 
             PlayerWindow.Enter();
 
@@ -140,7 +156,7 @@ namespace WatchTorrent.Views
         protected override async void OnDisappearing()
         {
             base.OnDisappearing();
-
+            if (Navigation.ModalStack.LastOrDefault() is MovieChoicePage) return;
             await ShutDownAsync();
         }
 
@@ -160,7 +176,7 @@ namespace WatchTorrent.Views
         }
 
         /// <summary>Avval player to'xtatiladi (VLC va torrent stream toza yopilsin), keyin sahifa yopiladi.</summary>
-        private async Task LeaveAsync()
+        internal async Task LeaveAsync()
         {
             if (_leaving)
             {
@@ -188,6 +204,8 @@ namespace WatchTorrent.Views
             }
 
             _isShutDown = true;
+            _viewModel.Session?.Close();
+            if (call != null) call.Changed -= RefreshMic;
 
             if (_window != null)
             {

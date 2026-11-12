@@ -60,6 +60,7 @@
 		<PackageReference Include="Microsoft.Maui.Controls" Version="$(MauiVersion)" />
 		<PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="10.0.0" />
 		<PackageReference Include="MonoTorrent" Version="3.0.2" />
+		<PackageReference Include="SIPSorcery" Version="10.0.17" />
 		<PackageReference Include="LibVLCSharp.MAUI" Version="3.10.2" />
 	</ItemGroup>
 
@@ -70,6 +71,7 @@
 	</ItemGroup>
 	<ItemGroup Condition="$(TargetFramework.Contains('-windows'))">
 		<PackageReference Include="VideoLAN.LibVLC.Windows" Version="3.0.24" />
+		<PackageReference Include="NAudio.WinMM" Version="2.2.1" />
 	</ItemGroup>
 	<!-- Ilova faqat win-x64 uchun yig'iladi — x86/arm64 VLC nusxalari (~300 MB) kerak emas -->
 	<PropertyGroup Condition="$(TargetFramework.Contains('-windows'))">

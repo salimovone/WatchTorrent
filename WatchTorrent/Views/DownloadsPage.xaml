@@ -12,6 +12,19 @@
         <VerticalStackLayout Padding="20,24,20,20" Spacing="6">
             <Label Text="Yuklamalar" Style="{StaticResource PageTitle}" />
             <Label Text="Saqlangan fayllar va yuklash jarayoni" Style="{StaticResource BodyText}" />
+            <VerticalStackLayout BindableLayout.ItemsSource="{Binding PartnerDownloads}" Spacing="6">
+                <BindableLayout.ItemTemplate>
+                    <DataTemplate x:DataType="vm:PartnerDownload">
+                        <Border Style="{StaticResource Card}">
+                            <VerticalStackLayout Spacing="5">
+                                <Label Text="{Binding Percent, StringFormat='Sherigingizning yuklamasi · {0}%'}" TextColor="{StaticResource Accent}" />
+                                <Label Text="{Binding Title}" MaxLines="2" LineBreakMode="TailTruncation" />
+                                <ProgressBar Progress="{Binding Fraction}" />
+                            </VerticalStackLayout>
+                        </Border>
+                    </DataTemplate>
+                </BindableLayout.ItemTemplate>
+            </VerticalStackLayout>
         </VerticalStackLayout>
         <CollectionView Grid.Row="1" ItemsSource="{Binding Items}" SelectionMode="Single" SelectionChanged="OnDownloadSelected">
             <CollectionView.ItemTemplate>

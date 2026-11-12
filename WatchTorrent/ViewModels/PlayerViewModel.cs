@@ -53,6 +53,25 @@ namespace WatchTorrent.ViewModels
         private readonly DownloadService _downloads;
         private readonly CancellationTokenSource _cancellation = new();
         private string? _magnet;
+        private int? _invitedFileIndex;
+        internal WatchSession? Session { get; set; }
+
+        internal void SetSharedPause(bool pause)
+        {
+            if (_hasStartedPlaying) Player?.SetPause(pause);
+        }
+        internal void SetSharedTime(long time)
+        {
+            if (Player is { IsSeekable: true, Length: > 0 } player)
+                player.Time = Math.Clamp(time, 0, player.Length);
+        }
+        internal void ApplyShared(long position, bool play, float rate)
+        {
+            if (!_hasStartedPlaying || Player == null) return;
+            if (Math.Abs(Player.Time - position) > 120) SetSharedTime(position);
+            if (Math.Abs(Player.Rate - rate) > 0.01) Player.SetRate(rate);
+            SetSharedPause(!play);
+        }
         private string? _infoHash;
         private DownloadItem? _item;
         private ITorrentManagerFile? _file;
@@ -295,6 +314,9 @@ namespace WatchTorrent.ViewModels
         public void ApplyQueryAttributes(IDictionary<string, object> query)
         {
             _magnet = query.TryGetValue("Magnet", out var magnet) ? magnet as string : null;
+            _invitedFileIndex = query.TryGetValue("FileIndex", out var index) ? index as int? : null;
+            Session = query.TryGetValue("Session", out var session) ? session as WatchSession : null;
+            Session?.Attach(this);
             _infoHash = query.TryGetValue("InfoHash", out var infoHash) ? infoHash as string : null;
             Title = _torrentTitle = query.TryGetValue("Title", out var title) ? title as string ?? string.Empty : string.Empty;
         }
@@ -390,7 +412,7 @@ namespace WatchTorrent.ViewModels
                 OnPlaylistChanged();
 
                 // Serialda oxirgi ko'rilgan qismdan, aks holda birinchisidan boshlanadi; boshqasini ro'yxatdan tanlash mumkin.
-                var lastFile = Preferences.Default.Get(LastFileKey, -1);
+                var lastFile = _invitedFileIndex ?? Preferences.Default.Get(LastFileKey, -1);
                 var first = Playlist.FirstOrDefault(item => _item.Manager.Files.IndexOf(item.File) == lastFile) ?? Playlist[0];
 
                 await PlayFileAsync(first);
@@ -434,6 +456,7 @@ namespace WatchTorrent.ViewModels
 
             if (!_hasStartedPlaying)
             {
+                Session?.Tick(false);
                 return;
             }
 
@@ -441,8 +464,9 @@ namespace WatchTorrent.ViewModels
             RestoreTracks(player);
 
             // Bufer uchun avtomatik pauza foydalanuvchi uchun "o'ynamoqda" holati hisoblanadi.
-            IsPlaying = player.IsPlaying || _bufferPaused;
-            IsBuffering = _bufferPaused || _input?.IsWaiting == true;
+            IsPlaying = Session?.WantsPlay ?? (player.IsPlaying || _bufferPaused);
+            IsBuffering = _bufferPaused || _input?.IsWaiting == true || player.State == VLCState.Buffering;
+            Session?.Tick(!IsBuffering && !IsLoading && !HasError && !_isSwitching);
 
             var length = player.Length;
 
@@ -473,6 +497,7 @@ namespace WatchTorrent.ViewModels
 
         public void TogglePlay()
         {
+            if (Session != null) { Session.Command(Session.WantsPlay ? "pause" : "play"); return; }
             var player = Player;
 
             if (player == null || !_hasStartedPlaying)
@@ -504,6 +529,7 @@ namespace WatchTorrent.ViewModels
 
         public void Pause()
         {
+            if (Session != null) { Session.Command("pause"); return; }
             _bufferPaused = false;
             Player?.SetPause(true);
         }
@@ -577,6 +603,7 @@ namespace WatchTorrent.ViewModels
             }
 
             seconds = Math.Clamp(seconds, 0, DurationSeconds);
+            if (Session != null) { Session.Command("seek", (long)(seconds * 1000)); return; }
 
             Player.Time = (long)(seconds * 1000);
             PositionSeconds = seconds;
@@ -747,7 +774,8 @@ namespace WatchTorrent.ViewModels
 
             if (index >= 0)
             {
-                Player.SetRate(Speeds[index]);
+                if (Session != null) Session.Command("rate", (long)(Speeds[index] * 1000));
+                else Player.SetRate(Speeds[index]);
             }
         }
 
@@ -760,7 +788,8 @@ namespace WatchTorrent.ViewModels
             }
 
             _rateBeforeHold = player.Rate;
-            player.SetRate(HoldRate);
+            if (Session != null) Session.Command("rate", (long)(HoldRate * 1000));
+            else player.SetRate(HoldRate);
 
             return true;
         }
@@ -771,12 +800,20 @@ namespace WatchTorrent.ViewModels
             if (_rateBeforeHold is { } rate)
             {
                 _rateBeforeHold = null;
-                Player?.SetRate(rate);
+                if (Session != null) Session.Command("rate", (long)(rate * 1000));
+                else Player?.SetRate(rate);
             }
         }
 
         /// <summary>Player'dan chiqmasdan boshqa faylga (masalan serialning keyingi qismiga) o'tadi.</summary>
-        public async Task SwitchToAsync(PlaylistItem entry)
+        public Task SwitchToAsync(PlaylistItem entry)
+        {
+            if (Session == null) return SwitchFileAsync(entry);
+            if (!entry.IsCurrent) Session.Command("file", Playlist.IndexOf(entry));
+            return Task.CompletedTask;
+        }
+        internal Task SwitchSharedFileAsync(int index) => SwitchFileAsync(Playlist[index]);
+        private async Task SwitchFileAsync(PlaylistItem entry)
         {
             if (_isClosed || _isSwitching || entry.IsCurrent)
             {
@@ -1004,6 +1041,7 @@ namespace WatchTorrent.ViewModels
             }
 
             StatusText = "Ochilmoqda…";
+            if (Session != null) _media.AddOption(":start-paused");
             Player!.Play(_media);
         }
 
@@ -1246,6 +1284,7 @@ namespace WatchTorrent.ViewModels
             switch (state)
             {
                 case VLCState.Playing when !_hasStartedPlaying:
+                case VLCState.Paused when !_hasStartedPlaying && Session != null:
                     OnPlaying();
                     break;
                 case VLCState.Error when !HasError:
@@ -1265,6 +1304,7 @@ namespace WatchTorrent.ViewModels
             }
 
             _hasStartedPlaying = true;
+            if (Session != null) Player?.SetPause(true);
             _trackRestoreUntil = Environment.TickCount64 + (long)TrackRestoreWindow.TotalMilliseconds;
             IsLoading = false;
 
@@ -1301,6 +1341,7 @@ namespace WatchTorrent.ViewModels
             }
 
             Preferences.Default.Remove(ResumeKey);
+            if (Session is { Host: false }) return;
 
             // Serial: qism tugagach keyingisi o'zi boshlanadi.
             if (HasNext)
@@ -1425,7 +1466,7 @@ namespace WatchTorrent.ViewModels
             }
             else if (_bufferPaused && ahead >= high)
             {
-                player.SetPause(false);
+                if (Session == null) player.SetPause(false);
                 _bufferPaused = false;
             }
         }

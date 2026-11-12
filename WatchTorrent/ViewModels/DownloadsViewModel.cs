@@ -15,6 +15,7 @@ namespace WatchTorrent.ViewModels
         {
             _service = service;
             _service.Items.CollectionChanged += (_, _) => OnPropertyChanged(nameof(IsEmpty));
+            service.PartnerDownloads.CollectionChanged += (_, _) => OnPropertyChanged(nameof(IsEmpty));
 
             ToggleCommand = new Command<DownloadItem>(async item => await ToggleAsync(item));
             RemoveCommand = new Command<DownloadItem>(async item => await RemoveAsync(item));
@@ -24,7 +25,8 @@ namespace WatchTorrent.ViewModels
 
         public ObservableCollection<DownloadItem> Items => _service.Items;
 
-        public bool IsEmpty => Items.Count == 0;
+        public ObservableCollection<PartnerDownload> PartnerDownloads => _service.PartnerDownloads;
+        public bool IsEmpty => Items.Count == 0 && PartnerDownloads.Count == 0;
 
         public string DownloadDirectory => _service.DownloadDirectory;
 

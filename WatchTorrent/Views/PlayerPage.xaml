@@ -117,6 +117,8 @@
                         LineBreakMode="TailTruncation"
                         VerticalOptions="Center" />
                     <HorizontalStackLayout Grid.Column="2" Spacing="2">
+                        <ImageButton x:Name="MicButton" Style="{StaticResource PlayerIconButton}" Padding="13"
+                                     IsVisible="False" Clicked="OnMicClicked" />
                         <ImageButton
                             Source="ic_playlist.png"
                             Style="{StaticResource PlayerIconButton}"
@@ -278,6 +280,14 @@
                     HorizontalTextAlignment="Center"
                     IsVisible="{Binding IsLoading}" />
                 <Label Text="{Binding StreamInfo}" TextColor="#B3FFFFFF" FontSize="12" HorizontalTextAlignment="Center" />
+            </VerticalStackLayout>
+            <VerticalStackLayout x:Name="PartnerBuffer" HorizontalOptions="Center" VerticalOptions="Center"
+                                 BackgroundColor="#D01B1D1F" Padding="16,10" Spacing="6" InputTransparent="True" IsVisible="False">
+                <Grid WidthRequest="38" HeightRequest="38">
+                    <ActivityIndicator x:Name="PartnerSpinner" Color="{StaticResource Accent}" />
+                    <Label Text="↔" TextColor="White" HorizontalOptions="Center" VerticalOptions="Center"/>
+                </Grid>
+                <Label Text="Sherigingizning telefoni yuklamoqda…" TextColor="White" FontSize="13" />
             </VerticalStackLayout>
             <Border
                 Margin="20,0,0,96"

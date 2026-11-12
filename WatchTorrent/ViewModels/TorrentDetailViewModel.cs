@@ -342,8 +342,9 @@ namespace WatchTorrent.ViewModels
             if (Detail != null)
             {
                 await SavePageAsync();
-                if (_download != null) await Routes.WatchAsync(_download);
-                else await Routes.WatchAsync(Detail.Magnet, Title);
+                var page = new TorrentPageData(_item, Detail, Title, Size, Seeders, Leechers, PosterUrl ?? Detail.ImageUrl);
+                if (_download != null) await Routes.WatchAsync(_download, page);
+                else await Routes.WatchAsync(Detail.Magnet, Title, page);
             }
         }
 

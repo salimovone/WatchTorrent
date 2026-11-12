@@ -17,7 +17,9 @@ namespace WatchTorrent
 
         protected override Window CreateWindow(IActivationState? activationState)
         {
-            var window = new Window(new AppShell()) { Title = "WatchTorrent" };
+            var shell = new AppShell(_downloads);
+            var window = new Window(shell) { Title = "WatchTorrent" };
+            window.Destroying += (_, _) => shell.Call.End();
 
             // Oldingi sessiyadagi yuklamalar ilova ochilishi bilan davom etadi.
             _ = InitializeDownloadsAsync();

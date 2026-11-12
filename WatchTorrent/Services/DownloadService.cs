@@ -15,6 +15,7 @@ namespace WatchTorrent.Services
     public class DownloadService
     {
         private const string PausedKey = "downloads.paused";
+        public ObservableCollection<ViewModels.PartnerDownload> PartnerDownloads { get; } = new();
         private const string WebSeedsKeyPrefix = "downloads.webseeds.";
 
         private static readonly TimeSpan StopTimeout = TimeSpan.FromSeconds(5);
@@ -34,6 +35,24 @@ namespace WatchTorrent.Services
         private IDispatcherTimer? _refreshTimer;
 
         private readonly TorrentPageCache _pages;
+        internal async Task<MovieInvite> DescribeMovieAsync(MovieInvite movie, Models.TorrentPageData? page)
+        {
+            var item = FindByMagnet(movie.Magnet);
+            if (page == null && item != null) page = await _pages.LoadAsync(item.InfoHash);
+            var manager = item?.Manager;
+            var selected = movie.SelectFile(item);
+            bool catalog = page?.Source != null;
+            var size = manager?.Torrent?.Size ?? manager?.MagnetLink.Size;
+            int? count = manager?.HasMetadata == true ? manager.Files.Count : page?.Detail.Files.Count;
+            return movie with { Details = new MovieDetails(
+                size > 0 ? Formatting.Bytes(size.Value) : page?.Size,
+                page?.PosterUrl ?? page?.Detail.ImageUrl,
+                page == null ? null : string.Join(" · ", page.Detail.Tags.Take(3)),
+                catalog ? page!.Seeders : manager?.Peers.Seeds,
+                catalog ? page!.Leechers : manager?.Peers.Leechs,
+                catalog, count, selected == null ? null : Path.GetFileName(selected.Path),
+                selected == null ? null : Formatting.Bytes(selected.Length)) };
+        }
 
         public DownloadService(TorrentPageCache pages)
         {
@@ -104,11 +123,22 @@ namespace WatchTorrent.Services
             return MagnetLink.TryParse(magnetUri, out var link) ? Find(link.InfoHashes.V1OrV2.ToHex()) : null;
         }
 
+        internal static string ShareMagnet(DownloadItem item)
+        {
+            var magnet = Preferences.Default.Get("downloads.magnet." + item.InfoHash, item.Manager.MagnetLink.ToV1String());
+            var seeds = Preferences.Default.Get(WebSeedsKeyPrefix + item.InfoHash, string.Empty);
+            var included = TorrentNetwork.GetWebSeeds(magnet);
+            foreach (var seed in seeds.Split(' ', StringSplitOptions.RemoveEmptyEntries).Except(included))
+                magnet += "&ws=" + Uri.EscapeDataString(seed);
+            return magnet;
+        }
+
         public async Task<DownloadItem> AddAsync(string magnetUri, string? name = null)
         {
             await InitializeAsync();
 
             var magnet = MagnetLink.Parse(magnetUri);
+            Preferences.Default.Set("downloads.magnet." + magnet.InfoHashes.V1OrV2.ToHex(), magnetUri);
             var webSeeds = TorrentNetwork.GetWebSeeds(magnetUri);
             var existing = Find(magnet.InfoHashes.V1OrV2.ToHex());
 
@@ -185,6 +215,7 @@ namespace WatchTorrent.Services
             _paused.Remove(item.InfoHash);
             SavePaused();
             Preferences.Default.Remove(WebSeedsKeyPrefix + item.InfoHash);
+            Preferences.Default.Remove("downloads.magnet." + item.InfoHash);
 
             await SaveAsync();
         }
