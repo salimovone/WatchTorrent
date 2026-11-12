@@ -30,7 +30,7 @@ internal sealed class VoiceCall
         ImportOffer(System.Text.Encoding.UTF8.GetString(bytes, 0, length));
     }
 
-    public void ImportLink(string link) => ImportOffer(InviteLink.Read(link));
+    public async Task ImportLinkAsync(string link) => ImportOffer(await InviteLink.ReadAsync(link));
 
     private void ImportOffer(string text)
     {
@@ -74,9 +74,10 @@ internal sealed class VoiceCall
             else
             {
                 var key = RandomNumberGenerator.GetBytes(32);
-                string id = Guid.NewGuid().ToString("N");
+                var secret = RandomNumberGenerator.GetBytes(16);
+                string id = InviteLink.CallId(secret);
                 var file = local with { Format = Format, CallId = id, ReplyKey = Convert.ToBase64String(key) };
-                var link = InviteLink.Create(file.Encode());
+                var link = await InviteLink.CreateAsync(secret, file.Encode(), current.Token);
                 using var expiration = CancellationTokenSource.CreateLinkedTokenSource(current.Token);
                 expiration.CancelAfter(TimeSpan.FromMinutes(10));
                 SetStatus("Taklif qabul qilinishi kutilmoqda.");

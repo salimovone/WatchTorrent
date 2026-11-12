@@ -1,5 +1,6 @@
 using System.IO.Compression;
 using System.Text;
+using System.Security.Cryptography;
 
 namespace WatchTorrent.Services;
 
@@ -7,20 +8,32 @@ internal static class InviteLink
 {
     public const string Scheme = "watchtorrent";
     public const string Host = "join";
+    public const string WebHost = "watchtorrent-join.convivialbongo1.chatgpt.site";
+    private const string WebPrefix = "https://" + WebHost + "/#";
+    private const string ShortPrefix = Scheme + "://" + Host + "/v2/";
     private const string Prefix = Scheme + "://" + Host + "/v1/";
 
-    public static string Create(string offer)
+    internal static string CallId(byte[] secret) =>
+        Convert.ToHexString(SHA256.HashData(secret).AsSpan(0, 16)).ToLowerInvariant();
+
+    public static async Task<string> CreateAsync(byte[] secret, string offer, CancellationToken token)
     {
-        using var output = new MemoryStream();
-        using (var compressor = new BrotliStream(output, CompressionLevel.Optimal, leaveOpen: true))
-            compressor.Write(Encoding.UTF8.GetBytes(offer));
-        var encoded = Convert.ToBase64String(output.ToArray()).TrimEnd('=').Replace('+', '-').Replace('/', '_');
-        return Prefix + encoded;
+        await VoiceAnswerExchange.PublishOfferAsync(secret, offer, token);
+        return WebPrefix + Convert.ToBase64String(secret).TrimEnd('=').Replace('+', '-').Replace('/', '_');
     }
 
-    public static string Read(string input)
+    public static async Task<string> ReadAsync(string input)
     {
         string link = input.Trim();
+        foreach (var prefix in new[] { WebPrefix, ShortPrefix })
+        {
+            if (!link.StartsWith(prefix, StringComparison.OrdinalIgnoreCase)) continue;
+            string code = link[prefix.Length..];
+            if (code.Length != 22 || code.Any(c => !char.IsAsciiLetterOrDigit(c) && c != '-' && c != '_'))
+                throw new InvalidDataException("Taklif havolasi buzilgan.");
+            var secret = Convert.FromBase64String(code.Replace('-', '+').Replace('_', '/') + "==");
+            return await VoiceAnswerExchange.FetchOfferAsync(secret);
+        }
         if (link.Length > 32768 || !link.StartsWith(Prefix, StringComparison.OrdinalIgnoreCase))
             throw new InvalidDataException("WatchTorrent taklif havolasini to‘liq kiriting.");
         var token = link[Prefix.Length..];

@@ -42,8 +42,8 @@ public partial class VoiceCallPage : ContentPage
         try
         {
             var link = await DisplayPromptAsync("Taklif havolasi", "Suhbatdoshingiz yuborgan havolani joylang.",
-                "Ochish", "Bekor qilish", "watchtorrent://join/…", maxLength: 32768);
-            if (!string.IsNullOrWhiteSpace(link)) call.ImportLink(link);
+                "Ochish", "Bekor qilish", "https://…", maxLength: 32768);
+            if (!string.IsNullOrWhiteSpace(link)) await call.ImportLinkAsync(link);
         }
         catch (Exception ex) { await DisplayAlertAsync("Ulanish", ex.Message, "Yopish"); }
     }

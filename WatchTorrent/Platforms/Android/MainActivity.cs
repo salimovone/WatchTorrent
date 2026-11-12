@@ -12,7 +12,9 @@ namespace WatchTorrent
     // SupportsPictureInPicture: player kichik oynada (PiP) o'ynay oladi. ConfigurationChanges'dagi ScreenSize/ScreenLayout
     // tufayli kichik oynaga o'tishda activity qayta yaratilmaydi.
     [IntentFilter([Intent.ActionView], Categories = [Intent.CategoryDefault, Intent.CategoryBrowsable],
-        DataScheme = InviteLink.Scheme, DataHost = InviteLink.Host, DataPathPrefix = "/v1/")]
+        DataScheme = InviteLink.Scheme, DataHost = InviteLink.Host)]
+    [IntentFilter([Intent.ActionView], Categories = [Intent.CategoryDefault, Intent.CategoryBrowsable],
+        DataScheme = "https", DataHost = InviteLink.WebHost, DataPath = "/", AutoVerify = true)]
     [IntentFilter([Intent.ActionView], Categories = [Intent.CategoryDefault], DataMimeType = VoiceCall.InviteMime, DataScheme = "content")]
     // Download managers often use numeric content URIs and a generic MIME type.
     [IntentFilter([Intent.ActionView], Categories = [Intent.CategoryDefault], DataMimeType = "application/octet-stream", DataScheme = "content")]
@@ -80,7 +82,8 @@ namespace WatchTorrent
 
         private void ReadInvitation(Intent? intent)
         {
-            if (intent?.Action == Intent.ActionView && intent.Data?.Scheme == InviteLink.Scheme)
+            if (intent?.Action == Intent.ActionView && (intent.Data?.Scheme == InviteLink.Scheme ||
+                intent.Data is { Scheme: "https", Host: InviteLink.WebHost }))
             {
                 invitation = intent;
                 return;
@@ -124,11 +127,11 @@ namespace WatchTorrent
             {
                 try
                 {
-                    if (uri.Scheme == InviteLink.Scheme)
+                    if (uri.Scheme is InviteLink.Scheme or "https")
                     {
                         var appShell = (AppShell)shell;
                         if (appShell.CurrentPage is not VoiceCallPage) await appShell.GoToAsync("//connection/call");
-                        appShell.Call.ImportLink(uri.ToString());
+                        await appShell.Call.ImportLinkAsync(uri.ToString()!);
                         return;
                     }
                     if (request.Type != VoiceCall.InviteMime && !HasInviteName(uri))

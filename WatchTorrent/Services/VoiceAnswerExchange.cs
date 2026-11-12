@@ -27,7 +27,7 @@ internal static class VoiceAnswerExchange
         return packet;
     }
 
-    private static string? ReadAnswer(byte[] key, string id, byte[] packet)
+    private static string? ReadSignal(byte[] key, string id, byte[] packet, string type)
     {
         if (packet.Length is < 29 or > Limit) return null;
         try
@@ -41,7 +41,7 @@ internal static class VoiceAnswerExchange
             if (size > Limit) return null;
             using var doc = JsonDocument.Parse(bytes.AsMemory(0, size));
             var root = doc.RootElement;
-            if (root.GetProperty("callId").GetString() != id || root.GetProperty("type").GetString() != "answer") return null;
+            if (root.GetProperty("callId").GetString() != id || root.GetProperty("type").GetString() != type) return null;
             return JsonSerializer.Serialize(root);
         }
         catch (Exception ex) when (ex is CryptographicException or IOException or JsonException or KeyNotFoundException or InvalidOperationException) { return null; }
@@ -68,7 +68,7 @@ internal static class VoiceAnswerExchange
                 while (true)
                 {
                     var received = await socket.ReceiveAsync(race.Token);
-                    var answer = ReadAnswer(key, id, received.Buffer);
+                    var answer = ReadSignal(key, id, received.Buffer, "answer");
                     if (answer == null) continue;
                     var ack = HMACSHA256.HashData(key, received.Buffer);
                     await socket.SendAsync(ack, received.RemoteEndPoint, race.Token);
@@ -91,15 +91,7 @@ internal static class VoiceAnswerExchange
                         var body = await Http.GetStringAsync(Topic(id) + "/json?poll=1&since=latest", race.Token);
                         if (string.IsNullOrWhiteSpace(body) || body.Length > Limit) continue;
                         using var message = JsonDocument.Parse(body.Trim());
-                        var encoded = message.RootElement.GetProperty("message").GetString();
-                        if (message.RootElement.TryGetProperty("attachment", out var attachment))
-                        {
-                            if (!Uri.TryCreate(attachment.GetProperty("url").GetString(), UriKind.Absolute, out var url)
-                                || url.Scheme != "https" || url.Host != "ntfy.sh" || !url.AbsolutePath.StartsWith("/file/")
-                                || attachment.GetProperty("size").GetInt64() > Limit) continue;
-                            encoded = await Http.GetStringAsync(url, race.Token);
-                        }
-                        var answer = ReadAnswer(key, id, Convert.FromBase64String(encoded ?? ""));
+                        var answer = await DecodeMessageAsync(message.RootElement, key, id, "answer", race.Token);
                         if (answer != null) { result.TrySetResult(answer); return; }
                     }
                     catch (Exception ex) when (!race.IsCancellationRequested && ex is HttpRequestException or TaskCanceledException or JsonException or FormatException or KeyNotFoundException or InvalidOperationException) { }
@@ -107,6 +99,50 @@ internal static class VoiceAnswerExchange
             }
             catch (OperationCanceledException) { }
         }
+    }
+
+    internal static async Task PublishOfferAsync(byte[] secret, string offer, CancellationToken token)
+    {
+        string id = InviteLink.CallId(secret);
+        var packet = Encrypt(secret, id, offer);
+        using var body = new StringContent(Convert.ToBase64String(packet));
+        using var response = await Http.PostAsync(Topic(id) + "-invite", body, token);
+        response.EnsureSuccessStatusCode();
+    }
+
+    private static async Task<string?> DecodeMessageAsync(JsonElement message, byte[] key, string id,
+        string type, CancellationToken token)
+    {
+        if (!message.TryGetProperty("message", out var text)) return null;
+        var encoded = text.GetString();
+        if (message.TryGetProperty("attachment", out var attachment))
+        {
+            if (!Uri.TryCreate(attachment.GetProperty("url").GetString(), UriKind.Absolute, out var url)
+                || url.Scheme != "https" || url.Host != "ntfy.sh" || !url.AbsolutePath.StartsWith("/file/")
+                || attachment.GetProperty("size").GetInt64() > Limit) return null;
+            encoded = await Http.GetStringAsync(url, token);
+        }
+        if (string.IsNullOrEmpty(encoded) || encoded.Length > Limit) return null;
+        try { return ReadSignal(key, id, Convert.FromBase64String(encoded), type); }
+        catch (FormatException) { return null; }
+    }
+
+    internal static async Task<string> FetchOfferAsync(byte[] secret)
+    {
+        string id = InviteLink.CallId(secret);
+        // ntfy can acknowledge a publish before its cached message is visible to a poll.
+        for (int attempt = 0; attempt < 4; attempt++)
+        {
+            if (attempt > 0) await Task.Delay(1000);
+            var body = await Http.GetStringAsync(Topic(id) + "-invite/json?poll=1&since=10m");
+            foreach (var line in body.Split('\n', StringSplitOptions.RemoveEmptyEntries))
+            {
+                using var doc = JsonDocument.Parse(line);
+                if (await DecodeMessageAsync(doc.RootElement, secret, id, "offer", CancellationToken.None) is string offer)
+                    return offer;
+            }
+        }
+        throw new InvalidDataException("Taklif muddati tugagan yoki topilmadi. Yangi havola so‘rang.");
     }
 
     public static async Task SendAsync(byte[] key, string id, string answer, CancellationToken token)
