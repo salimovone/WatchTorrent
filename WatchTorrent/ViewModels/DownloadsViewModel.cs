@@ -14,6 +14,7 @@ namespace WatchTorrent.ViewModels
         public DownloadsViewModel(DownloadService service)
         {
             _service = service;
+            service.PropertyChanged += (_, e) => { if (e.PropertyName == nameof(service.ConnectionStatus)) OnPropertyChanged(nameof(EngineStatus)); };
             _service.Items.CollectionChanged += (_, _) => OnPropertyChanged(nameof(IsEmpty));
             service.PartnerDownloads.CollectionChanged += (_, _) => OnPropertyChanged(nameof(IsEmpty));
 
@@ -29,6 +30,8 @@ namespace WatchTorrent.ViewModels
         public bool IsEmpty => Items.Count == 0 && PartnerDownloads.Count == 0;
 
         public string DownloadDirectory => _service.DownloadDirectory;
+        public string EngineStatus =>
+            _service.ConnectionStatus;
 
         public Command<DownloadItem> ToggleCommand { get; }
 
@@ -40,6 +43,7 @@ namespace WatchTorrent.ViewModels
 
         private async Task ToggleAsync(DownloadItem item)
         {
+            if (item == null || item.IsBusy || item.IsComplete) return;
             try
             {
                 if (item.IsRunning)
@@ -59,6 +63,7 @@ namespace WatchTorrent.ViewModels
 
         private async Task RemoveAsync(DownloadItem item)
         {
+            if (item == null || item.IsBusy) return;
             var choice = await Shell.Current.DisplayActionSheetAsync(
                 $"\"{item.Name}\" o'chirilsinmi?",
                 "Bekor qilish",

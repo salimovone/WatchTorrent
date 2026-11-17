@@ -3,4 +3,7 @@
   <Project Path="WatchTorrent/WatchTorrent.csproj">
     <Deploy Solution="Debug|*" />
   </Project>
+  <Project Path="WatchTorrent.Core/WatchTorrent.Core.csproj" />
+  <Project Path="WatchTorrent.EngineTests/WatchTorrent.EngineTests.csproj" />
+  <Project Path="WatchTorrent.Libtorrent/WatchTorrent.Libtorrent.csproj" />
 </Solution>

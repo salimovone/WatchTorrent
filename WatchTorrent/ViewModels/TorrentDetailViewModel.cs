@@ -1,7 +1,7 @@
 using WatchTorrent.Models;
 using System.Net;
 using System.Text.RegularExpressions;
-using MonoTorrent;
+using WatchTorrent.Core;
 using TorrentReader;
 using TorrentReader.Search.Models;
 using WatchTorrent.Services;
@@ -103,6 +103,7 @@ namespace WatchTorrent.ViewModels
                 if (SetProperty(ref _detail, value))
                 {
                     OnPropertyChanged(nameof(IsLoaded));
+                    OnPropertyChanged(nameof(DisplayDetail));
                     OnFilesChanged();
                 }
             }
@@ -117,6 +118,10 @@ namespace WatchTorrent.ViewModels
         public string TechnicalDetailsText => ShowTechnicalDetails ? "Texnik ma'lumotni yopish −" : "Texnik ma'lumot +";
 
         public bool IsLoaded => Detail != null;
+
+        // Compiled XAML needs non-null value types while metadata is still loading.
+        private static readonly TorrentInfo EmptyDetail = new(null, [], "", "", "", 0, "", "", "", [], []);
+        public TorrentInfo DisplayDetail => Detail ?? EmptyDetail;
 
         public bool ShowAllFiles
         {
@@ -447,7 +452,7 @@ namespace WatchTorrent.ViewModels
             var magnet = WebUtility.HtmlDecode(detail.MagnetDownload);
 
             // DownloadService torrentlarni magnet'dagi hash bo'yicha taniydi, sahifadagi matn bo'yicha emas.
-            var infoHash = MagnetLink.TryParse(magnet, out var link) ? link.InfoHashes.V1OrV2.ToHex() : detail.InfoHash.Trim();
+            var infoHash = Magnet.TryParse(magnet, out var link) ? link!.Hash : detail.InfoHash.Trim();
 
             var tags = new[] { detail.Category, detail.Type, detail.Language }
                 .Select(Decode)

@@ -1,0 +1,31 @@
+<Project>
+  <PropertyGroup>
+    <LibtorrentNativeRoot Condition="'$(LibtorrentNativeRoot)' == ''">$(MSBuildThisFileDirectory)artifacts</LibtorrentNativeRoot>
+    <_LibtorrentRid>$(RuntimeIdentifier)</_LibtorrentRid>
+    <_LibtorrentRid Condition="'$(_LibtorrentRid)' == '' And $(TargetFramework.Contains('-windows'))">win-x64</_LibtorrentRid>
+    <_LibtorrentBinary Condition="$(TargetFramework.Contains('-windows'))">$(LibtorrentNativeRoot)/$(_LibtorrentRid)/watchtorrent_libtorrent.dll</_LibtorrentBinary>
+    <_LibtorrentBinary Condition="$(TargetFramework.Contains('-android'))">$(LibtorrentNativeRoot)/$(_LibtorrentRid)/libwatchtorrent_libtorrent.so</_LibtorrentBinary>
+    <_LibtorrentBinary Condition="$(TargetFramework.Contains('-ios'))">$(LibtorrentNativeRoot)/$(_LibtorrentRid)/libwatchtorrent_libtorrent.a</_LibtorrentBinary>
+  </PropertyGroup>
+  <ItemGroup Condition="$(TargetFramework.Contains('-windows'))">
+    <Content Include="$(_LibtorrentBinary)" Link="watchtorrent_libtorrent.dll" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+  </ItemGroup>
+  <ItemGroup Condition="$(TargetFramework.Contains('-android'))">
+    <AndroidNativeLibrary Include="$(LibtorrentNativeRoot)/android-arm64/libwatchtorrent_libtorrent.so" Abi="arm64-v8a" Condition="Exists('$(LibtorrentNativeRoot)/android-arm64/libwatchtorrent_libtorrent.so')" />
+    <AndroidNativeLibrary Include="$(LibtorrentNativeRoot)/android-arm/libwatchtorrent_libtorrent.so" Abi="armeabi-v7a" Condition="Exists('$(LibtorrentNativeRoot)/android-arm/libwatchtorrent_libtorrent.so')" />
+    <AndroidNativeLibrary Include="$(LibtorrentNativeRoot)/android-x64/libwatchtorrent_libtorrent.so" Abi="x86_64" Condition="Exists('$(LibtorrentNativeRoot)/android-x64/libwatchtorrent_libtorrent.so')" />
+  </ItemGroup>
+  <ItemGroup Condition="$(TargetFramework.Contains('-ios'))">
+    <NativeReference Include="$(_LibtorrentBinary)">
+      <Kind>Static</Kind><ForceLoad>true</ForceLoad><SmartLink>false</SmartLink><IsCxx>true</IsCxx>
+      <Frameworks>Foundation CoreFoundation Security SystemConfiguration</Frameworks><LinkerFlags>-lc++ -lz</LinkerFlags>
+    </NativeReference>
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="$(LibtorrentNativeRoot)/$(_LibtorrentRid)/licenses/*.txt" Link="licenses/%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" Condition="$(TargetFramework.Contains('-windows'))" />
+    <MauiAsset Include="$(LibtorrentNativeRoot)/$(_LibtorrentRid)/licenses/*.txt" LogicalName="licenses/%(Filename)%(Extension)" Condition="$(TargetFramework.Contains('-android')) Or $(TargetFramework.Contains('-ios'))" />
+  </ItemGroup>
+  <Target Name="VerifyLibtorrentNative" BeforeTargets="PrepareForBuild" Condition="'$(DesignTimeBuild)' != 'true' And '$(TargetFramework)' != ''">
+    <Error Condition="!Exists('$(_LibtorrentBinary)')" Text="Missing libtorrent native binary for $(_LibtorrentRid). Run scripts/build-native.ps1 for this device before building the app." />
+  </Target>
+</Project>

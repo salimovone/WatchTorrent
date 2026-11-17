@@ -1,4 +1,4 @@
-using MonoTorrent;
+using WatchTorrent.Core;
 using System.Text.Json.Serialization;
 
 namespace WatchTorrent.Services;
@@ -12,11 +12,11 @@ internal sealed record MovieInvite(string Magnet, string Title, int FileIndex, G
     [JsonIgnore]
     public bool Valid => Title is { Length: > 0 and <= 512 } && FileIndex >= -1 &&
         Magnet?.StartsWith("magnet:?", StringComparison.OrdinalIgnoreCase) == true &&
-        MagnetLink.TryParse(Magnet, out _);
+        WatchTorrent.Core.Magnet.TryParse(Magnet, out _);
 
     public static MovieInvite Create(string magnet, string title)
     {
-        var hash = MagnetLink.Parse(magnet).InfoHashes.V1OrV2.ToHex();
+        var hash = WatchTorrent.Core.Magnet.Parse(magnet).Hash;
         return new(magnet, string.IsNullOrWhiteSpace(title) ? hash : title[..Math.Min(title.Length, 512)],
             Preferences.Default.Get($"lastfile.{hash}", -1), Guid.NewGuid());
     }

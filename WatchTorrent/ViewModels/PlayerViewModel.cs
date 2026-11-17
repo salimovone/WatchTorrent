@@ -2,8 +2,8 @@ using System.Collections.ObjectModel;
 using System.Diagnostics;
 using LibVLCSharp.Shared;
 using LibVLCSharp.Shared.Structures;
-using MonoTorrent;
-using MonoTorrent.Client;
+using WatchTorrent.Core;
+
 using WatchTorrent.Services;
 
 namespace WatchTorrent.ViewModels
@@ -327,7 +327,7 @@ namespace WatchTorrent.ViewModels
         /// </summary>
         public void CreatePlayer(string[] platformOptions)
         {
-            Core.Initialize();
+            LibVLCSharp.Shared.Core.Initialize();
 
             if (platformOptions.Length == 0)
             {
@@ -838,7 +838,7 @@ namespace WatchTorrent.ViewModels
                 _input?.Dispose();
                 _input = null;
 
-                // MonoTorrent bitta torrentda faqat bitta ochiq stream'ga ruxsat beradi — yangisidan oldin eskisi yopiladi.
+                // Player bitta torrentda bitta faol stream bilan ishlaydi — yangisidan oldin eskisi yopiladi.
                 _stream?.Dispose();
                 _stream = null;
 

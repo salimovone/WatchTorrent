@@ -1,41 +1,36 @@
 using System.Collections.ObjectModel;
 using System.Diagnostics;
-using System.Reflection;
-using MonoTorrent;
-using MonoTorrent.Client;
-using MonoTorrent.Dht;
-using MonoTorrent.PiecePicking;
+using WatchTorrent.Core;
+using WatchTorrent.Libtorrent;
 
-namespace WatchTorrent.Services
+namespace WatchTorrent.Services;
+
+public sealed class DownloadService : ViewModels.ObservableObject, IDisposable
 {
-    /// <summary>
-    /// MonoTorrent dvigateli ustidagi yuklamalar menejeri. Ro'yxat va yuklanish holati ilova qayta
-    /// ochilganda tiklanadi. Public metodlar UI oqimidan chaqiriladi.
-    /// </summary>
-    public class DownloadService
+    private readonly TorrentPageCache _pages;
+    private LibtorrentEngine? _engine;
+    private Task? _initialization;
+    private IDispatcherTimer? _timer;
+    private bool _refreshing;
+    private long _lastSave;
+    private readonly SemaphoreSlim _addLock = new(1, 1);
+    private readonly HashSet<string> _streaming = new(StringComparer.OrdinalIgnoreCase);
+    public ObservableCollection<DownloadItem> Items { get; } = [];
+    public ObservableCollection<ViewModels.PartnerDownload> PartnerDownloads { get; } = [];
+    public string DownloadDirectory { get; private set; }
+    private string _connectionStatus = string.Empty;
+    public string ConnectionStatus { get => _connectionStatus; private set => SetProperty(ref _connectionStatus, value); }
+
+    public DownloadService(TorrentPageCache pages)
     {
-        private const string PausedKey = "downloads.paused";
-        public ObservableCollection<ViewModels.PartnerDownload> PartnerDownloads { get; } = new();
-        private const string WebSeedsKeyPrefix = "downloads.webseeds.";
+        _pages = pages;
+        DownloadDirectory = Preferences.Default.Get("downloads.directory", GetDefaultDownloadDirectory());
+#if IOS
+        DownloadDirectory = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), Path.GetFileName(DownloadDirectory));
+#endif
+    }
 
-        private static readonly TimeSpan StopTimeout = TimeSpan.FromSeconds(5);
-
-        // Rejim almashtirishda trackerlarga "stopped" xabari uchun uzoq kutilmaydi.
-        private static readonly TimeSpan QuickStopTimeout = TimeSpan.FromSeconds(1);
-
-        private readonly string _cacheDirectory = Path.Combine(FileSystem.AppDataDirectory, "monotorrent");
-        private readonly SemaphoreSlim _saveLock = new(1, 1);
-        private readonly HashSet<string> _paused;
-        private readonly HashSet<TorrentManager> _streaming = new();
-        private readonly Factories _factories;
-        private IReadOnlyList<ReadOnlyMemory<byte>> _dhtBootstrapNodes = Array.Empty<ReadOnlyMemory<byte>>();
-        private DhtEngine? _dht;
-        private ClientEngine? _engine;
-        private Task? _initializeTask;
-        private IDispatcherTimer? _refreshTimer;
-
-        private readonly TorrentPageCache _pages;
-        internal async Task<MovieInvite> DescribeMovieAsync(MovieInvite movie, Models.TorrentPageData? page)
+    internal async Task<MovieInvite> DescribeMovieAsync(MovieInvite movie, Models.TorrentPageData? page)
         {
             var item = FindByMagnet(movie.Magnet);
             if (page == null && item != null) page = await _pages.LoadAsync(item.InfoHash);
@@ -54,33 +49,8 @@ namespace WatchTorrent.Services
                 selected == null ? null : Formatting.Bytes(selected.Length)) };
         }
 
-        public DownloadService(TorrentPageCache pages)
-        {
-            _pages = pages;
-            DownloadDirectory = Preferences.Default.Get("downloads.directory", GetDefaultDownloadDirectory());
-#if IOS
-            // iOS can assign the sandbox a new absolute path after an app update.
-            DownloadDirectory = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments),
-                Path.GetFileName(DownloadDirectory));
-#endif
 
-            // Hamma torrent bitta rejimda (PlaybackPieceRequester) — yuklab olish va ko'rish bir xil faylni, bir xil
-            // tartibda yuklaydi; player ochilganda rejim almashtirish uchun torrentni to'xtatish kerak bo'lmaydi.
-            _factories = Factories.Default
-                .WithDhtCreator(CreateDht)
-                .WithStreamingPieceRequesterCreator(() => new PlaybackPieceRequester());
-
-            // Foydalanuvchi o'zi to'xtatgan torrentlar qayta ishga tushganda avtomatik boshlanmaydi.
-            _paused = Preferences.Default.Get(PausedKey, string.Empty)
-                .Split(',', StringSplitOptions.RemoveEmptyEntries)
-                .ToHashSet(StringComparer.OrdinalIgnoreCase);
-        }
-
-        public ObservableCollection<DownloadItem> Items { get; } = new();
-
-        /// <summary>Yuklangan fayllar saqlanadigan papka.</summary>
-        public string DownloadDirectory { get; private set; }
-        public bool UsesCustomDirectory => DownloadDirectory != GetDefaultDownloadDirectory();
+    public bool UsesCustomDirectory => DownloadDirectory != GetDefaultDownloadDirectory();
 
         public void RestoreDefaultDirectory()
         {
@@ -97,536 +67,8 @@ namespace WatchTorrent.Services
             DownloadDirectory = directory;
         }
 
-        private static bool IsMobile => DeviceInfo.Current.Platform == DevicePlatform.Android || DeviceInfo.Current.Platform == DevicePlatform.iOS;
 
-        private string StatePath => Path.Combine(_cacheDirectory, "engine.state");
-
-        private string DhtCachePath => Path.Combine(_cacheDirectory, "dht-nodes.bencode");
-
-        public Task InitializeAsync()
-        {
-            if (_initializeTask == null || _initializeTask.IsFaulted)
-            {
-                _initializeTask = InitializeCoreAsync();
-            }
-
-            return _initializeTask;
-        }
-
-        public bool Contains(string infoHash)
-        {
-            return Find(infoHash) != null;
-        }
-
-        public DownloadItem? Find(string infoHash)
-        {
-            return Items.FirstOrDefault(item => string.Equals(item.InfoHash, infoHash, StringComparison.OrdinalIgnoreCase));
-        }
-
-        public DownloadItem? FindByMagnet(string magnetUri)
-        {
-            return MagnetLink.TryParse(magnetUri, out var link) ? Find(link.InfoHashes.V1OrV2.ToHex()) : null;
-        }
-
-        internal static string ShareMagnet(DownloadItem item)
-        {
-            var magnet = Preferences.Default.Get("downloads.magnet." + item.InfoHash, item.Manager.MagnetLink.ToV1String());
-            var seeds = Preferences.Default.Get(WebSeedsKeyPrefix + item.InfoHash, string.Empty);
-            var included = TorrentNetwork.GetWebSeeds(magnet);
-            foreach (var seed in seeds.Split(' ', StringSplitOptions.RemoveEmptyEntries).Except(included))
-                magnet += "&ws=" + Uri.EscapeDataString(seed);
-            return magnet;
-        }
-
-        public async Task<DownloadItem> AddAsync(string magnetUri, string? name = null)
-        {
-            await InitializeAsync();
-
-            var magnet = MagnetLink.Parse(magnetUri);
-            Preferences.Default.Set("downloads.magnet." + magnet.InfoHashes.V1OrV2.ToHex(), magnetUri);
-            var webSeeds = TorrentNetwork.GetWebSeeds(magnetUri);
-            var existing = Find(magnet.InfoHashes.V1OrV2.ToHex());
-
-            if (existing != null)
-            {
-                RestoreWebSeeds(existing.Manager, webSeeds);
-                await ResumeAsync(existing);
-
-                return existing;
-            }
-
-            var directory = Directory.CreateDirectory(DownloadDirectory).FullName;
-            var manager = await _engine!.AddStreamingAsync(magnet, directory, CreateTorrentSettings());
-
-            RestoreWebSeeds(manager, webSeeds);
-
-            var item = await PrepareAsync(manager, name);
-
-            Items.Insert(0, item);
-
-            await manager.StartAsync();
-            await SaveAsync();
-
-            return item;
-        }
-
-        public async Task PauseAsync(DownloadItem item)
-        {
-            _paused.Add(item.InfoHash);
-            SavePaused();
-
-            await item.Manager.StopAsync(StopTimeout);
-            item.Refresh();
-        }
-
-        public async Task ResumeAsync(DownloadItem item)
-        {
-            _paused.Remove(item.InfoHash);
-            SavePaused();
-
-            var manager = item.Manager;
-
-            if (manager.State == TorrentState.Error)
-            {
-                await manager.StopAsync(StopTimeout);
-            }
-
-            if (manager.State is TorrentState.Stopped or TorrentState.Paused)
-            {
-                await manager.StartAsync();
-            }
-
-            item.Refresh();
-        }
-
-        public async Task RemoveAsync(DownloadItem item, bool deleteFiles)
-        {
-            var manager = item.Manager;
-
-            if (manager.State != TorrentState.Stopped)
-            {
-                await manager.StopAsync(StopTimeout);
-            }
-
-            await _engine!.RemoveAsync(manager, deleteFiles ? RemoveMode.CacheDataAndDownloadedData : RemoveMode.CacheDataOnly);
-
-            if (deleteFiles)
-            {
-                DeleteEmptyDirectory(manager.ContainingDirectory, manager.SavePath);
-            }
-
-            Items.Remove(item);
-            await _pages.RemoveAsync(item.InfoHash);
-            _paused.Remove(item.InfoHash);
-            SavePaused();
-            Preferences.Default.Remove(WebSeedsKeyPrefix + item.InfoHash);
-            Preferences.Default.Remove("downloads.magnet." + item.InfoHash);
-
-            await SaveAsync();
-        }
-
-        /// <summary>Torrent ishga tushiriladi va fayllar ro'yxati (metadata) kelguncha kutiladi.</summary>
-        public async Task WaitForMetadataAsync(DownloadItem item, CancellationToken token)
-        {
-            await ResumeAsync(item);
-            await item.Manager.WaitForMetadataAsync(token);
-            RestoreWebSeeds(item.Manager);
-        }
-
-        /// <summary>
-        /// Faylni yuklanish davomida o'qish uchun stream ochadi: o'qilayotgan joydan keyingi bo'laklar birinchi
-        /// navbatda yuklanadi, allaqachon yuklangan qism diskdan o'qiladi. <paramref name="onlyThisFile"/> bo'lsa
-        /// torrentdagi boshqa videolar yuklanmaydi — butun tezlik shu filmga ketadi.
-        /// </summary>
-        public async Task<Stream> OpenStreamAsync(DownloadItem item, ITorrentManagerFile file, bool onlyThisFile, CancellationToken token)
-        {
-            var manager = item.Manager;
-
-            lock (_streaming)
-            {
-                _streaming.Add(manager);
-            }
-
-            foreach (var other in manager.Files)
-            {
-                // Boshqa faylga o'tib ketilgan bo'lsa, eski so'rov ustuvorliklarni buzmasin.
-                token.ThrowIfCancellationRequested();
-
-                // Oldin ko'rilgan qism (Highest) oddiy navbatga qaytadi — tezlik faqat hozirgi faylga ketsin.
-                var priority = other == file ? Priority.Highest
-                    : MediaFiles.IsSubtitle(other) ? Priority.High
-                    : onlyThisFile ? Priority.DoNotDownload
-                    : other.Priority == Priority.Highest ? Priority.Normal
-                    : other.Priority;
-
-                await manager.SetFilePriorityAsync(other, priority);
-            }
-
-            // Odatda hamma torrent PlaybackPieceRequester bilan qo'shiladi; bu faqat kutilmagan holat uchun (torrent to'xtatiladi).
-            if (GetPlaybackRequester(manager) == null)
-            {
-                await ChangePickerAsync(manager, _factories.CreateStreamingPieceRequester());
-            }
-
-            await ResumeAsync(item);
-
-            // Bekor qilingan prebuffer'dan (masalan buferlanayotganda boshqa qismga o'tilsa) qolgan stream MonoTorrent'da
-            // "faol" bo'lib qoladi va yangisini ochishga yo'l bermaydi. Bir vaqtda faqat bitta player bor — u yopiladi.
-            GetActiveStream(manager)?.Dispose();
-
-            return await manager.StreamProvider!.CreateStreamAsync(file, prebuffer: true, token);
-        }
-
-        public async Task CloseStreamAsync(DownloadItem item, Stream? stream)
-        {
-            var manager = item.Manager;
-
-            stream?.Dispose();
-
-            lock (_streaming)
-            {
-                _streaming.Remove(manager);
-            }
-
-            try
-            {
-                if (manager.State == TorrentState.Seeding)
-                {
-                    await manager.StopAsync(StopTimeout);
-                }
-                else
-                {
-                    // Torrent to'xtatilmaydi (peerlar uzilmaydi) — yuklash shunchaki boshidan ketma-ket tartibga qaytadi.
-                    GetPlaybackRequester(manager)?.StopStreaming();
-                }
-            }
-            catch (Exception ex)
-            {
-                Debug.WriteLine($"[Downloads] Stream yopilmadi: {ex}");
-            }
-
-            await SaveAsync();
-        }
-
-        /// <summary>Torrentlar ro'yxati va DHT tugunlarini diskka yozadi (fast-resume'ni MonoTorrent o'zi saqlaydi).</summary>
-        public async Task SaveAsync()
-        {
-            if (_engine == null)
-            {
-                return;
-            }
-
-            await _saveLock.WaitAsync();
-
-            try
-            {
-                await _engine.SaveStateAsync(StatePath);
-
-                if (_dht?.State == DhtState.Ready)
-                {
-                    await TorrentNetwork.SaveNodesAsync(_dht, DhtCachePath);
-                }
-            }
-            catch (Exception ex)
-            {
-                Debug.WriteLine($"[Downloads] Saqlab bo'lmadi: {ex}");
-            }
-            finally
-            {
-                _saveLock.Release();
-            }
-        }
-
-        private async Task InitializeCoreAsync()
-        {
-            Directory.CreateDirectory(_cacheDirectory);
-
-            _dhtBootstrapNodes = await TorrentNetwork.GetBootstrapNodesAsync(DhtCachePath);
-
-            var engine = await RestoreEngineAsync();
-
-            Items.Clear();
-
-            foreach (var manager in engine.Torrents)
-            {
-                // Oldingi versiyalarda saqlangan torrentlar standart rejimda tiklanadi — umumiy rejimga o'tkaziladi
-                // (tiklangan torrent hali to'xtatilgan, rejimni faqat shunda almashtirish mumkin).
-                try
-                {
-                    if (GetPlaybackRequester(manager) == null)
-                    {
-                        await manager.ChangePickerAsync(_factories.CreateStreamingPieceRequester());
-                    }
-                }
-                catch (Exception ex)
-                {
-                    // Eski rejimda qolsa ham yuklanadi; ko'rish ochilganda OpenStreamAsync qayta urinadi.
-                    Debug.WriteLine($"[Downloads] {manager.Name} rejimi almashtirilmadi: {ex}");
-                }
-
-                Items.Insert(0, await PrepareAsync(manager, null));
-            }
-
-            _engine = engine;
-
-            foreach (var item in Items.Where(item => !item.IsComplete && !_paused.Contains(item.InfoHash)))
-            {
-                try
-                {
-                    await item.Manager.StartAsync();
-                }
-                catch (Exception ex)
-                {
-                    Debug.WriteLine($"[Downloads] {item.Name} ishga tushmadi: {ex}");
-                }
-            }
-
-            if (_refreshTimer == null)
-            {
-                _refreshTimer = (Dispatcher.GetForCurrentThread() ?? Application.Current!.Dispatcher).CreateTimer();
-                _refreshTimer.Interval = TimeSpan.FromSeconds(1);
-                _refreshTimer.Tick += (_, _) =>
-                {
-                    foreach (var item in Items)
-                    {
-                        item.Refresh();
-                    }
-
-                    DownloadKeepAlive.Update(Items);
-                };
-                _refreshTimer.Start();
-            }
-        }
-
-        private async Task<ClientEngine> RestoreEngineAsync()
-        {
-            if (File.Exists(StatePath))
-            {
-                try
-                {
-                    var engine = await ClientEngine.RestoreStateAsync(StatePath, _factories);
-                    await engine.UpdateSettingsAsync(CreateSettings());
-
-                    return engine;
-                }
-                catch (Exception ex)
-                {
-                    // Buzilgan holat fayli ilovani ishdan chiqarmasin — bo'sh ro'yxat bilan boshlanadi.
-                    Debug.WriteLine($"[Downloads] Holatni tiklab bo'lmadi: {ex}");
-                }
-            }
-
-            return new ClientEngine(CreateSettings(), _factories);
-        }
-
-        private EngineSettings CreateSettings()
-        {
-            return new EngineSettingsBuilder
-            {
-                CacheDirectory = _cacheDirectory,
-                AutoSaveLoadFastResume = true,
-                AutoSaveLoadMagnetLinkMetadata = true,
-                // 3.0.2 da bu kesh buzuq formatda o'qiladi — DHT tugunlarini TorrentNetwork saqlaydi.
-                AutoSaveLoadDhtCache = false,
-                AllowPortForwarding = true,
-                // Standart qiymatlar (150 ulanish, bir vaqtda 8 ta ulanish urinishi) peerlarni juda sekin yig'adi.
-                MaximumConnections = IsMobile ? 200 : 400,
-                MaximumHalfOpenConnections = IsMobile ? 24 : 48,
-                DiskCacheBytes = 32 * 1024 * 1024,
-                // Web-seed (HTTP manba) standart holatda 60 soniyadan keyin ulanadi — faqat web-seed'li torrentlarda
-                // (masalan archive.org) bu bir daqiqalik qora ekran. Peerlar sekin bo'lsa ham yordamga keladi.
-                WebSeedDelay = TimeSpan.FromSeconds(5),
-                WebSeedSpeedTrigger = 1024 * 1024
-            }.ToSettings();
-        }
-
-        private static TorrentSettings CreateTorrentSettings()
-        {
-            return new TorrentSettingsBuilder
-            {
-                // Standart 60 ta — mashhur filmlarda yuzlab peer bor, ulardan ko'prog'idan yuklash tezroq.
-                MaximumConnections = IsMobile ? 120 : 200
-            }.ToSettings();
-        }
-
-        private IDhtEngine CreateDht()
-        {
-            var dht = new DhtEngine();
-
-            if (_dhtBootstrapNodes.Count > 0)
-            {
-                dht.Add(_dhtBootstrapNodes);
-            }
-
-            _dht = dht;
-
-            return dht;
-        }
-
-        private static PlaybackPieceRequester? GetPlaybackRequester(TorrentManager manager)
-        {
-            if (manager.StreamProvider == null)
-            {
-                return null;
-            }
-
-            return typeof(MonoTorrent.Streaming.StreamProvider)
-                .GetProperty("PieceRequester", BindingFlags.Instance | BindingFlags.NonPublic)?
-                .GetValue(manager.StreamProvider) as PlaybackPieceRequester;
-        }
-
-        private static Stream? GetActiveStream(TorrentManager manager)
-        {
-            return typeof(MonoTorrent.Streaming.StreamProvider)
-                .GetProperty("ActiveStream", BindingFlags.Instance | BindingFlags.NonPublic)?
-                .GetValue(manager.StreamProvider) as Stream;
-        }
-
-        /// <summary>MonoTorrent piece tanlash rejimini faqat to'xtatilgan torrentda almashtiradi.</summary>
-        private static async Task ChangePickerAsync(TorrentManager manager, IPieceRequester requester)
-        {
-            if (manager.State != TorrentState.Stopped)
-            {
-                await manager.StopAsync(QuickStopTimeout);
-            }
-
-            await manager.ChangePickerAsync(requester);
-        }
-
-        private async Task<DownloadItem> PrepareAsync(TorrentManager manager, string? name)
-        {
-            manager.TorrentStateChanged += OnTorrentStateChanged;
-
-            try
-            {
-                await manager.UpdateSettingsAsync(CreateTorrentSettings());
-                await TorrentNetwork.SpreadTrackersAsync(manager);
-                RestoreWebSeeds(manager);
-            }
-            catch (Exception ex)
-            {
-                Debug.WriteLine($"[Downloads] Torrent sozlanmadi: {ex}");
-            }
-
-            return new DownloadItem(manager, name);
-        }
-
-        /// <summary>
-        /// MonoTorrent 3.0.2 magnet'dagi web-seed (ws=) manzillarini o'qimaydi, metadata kelganda va ilova qayta
-        /// ochilganda (torrent metadata keshidan tiklanadi) ham ularni bilmaydi — shuning uchun manzillar alohida
-        /// saqlanib, har safar qayta qo'shiladi. Ro'yxatni MonoTorrent o'z oqimida (ClientEngine.MainLoop) aylanib
-        /// chiqadi, qo'shish ham o'sha oqimga yuboriladi — torrentni to'xtatish shart emas.
-        /// </summary>
-        /// <param name="webSeeds">Magnet'dan olingan yangi manzillar (bo'lmasa saqlanganlari ishlatiladi).</param>
-        private static void RestoreWebSeeds(TorrentManager manager, IReadOnlyList<string>? webSeeds = null)
-        {
-            var key = WebSeedsKeyPrefix + manager.InfoHashes.V1OrV2.ToHex();
-
-            if (webSeeds is { Count: > 0 })
-            {
-                Preferences.Default.Set(key, string.Join(' ', webSeeds));
-            }
-
-            if (manager.Torrent is not { } torrent)
-            {
-                return;
-            }
-
-            var seeds = Preferences.Default.Get(key, string.Empty)
-                .Split(' ', StringSplitOptions.RemoveEmptyEntries)
-                .Select(url => Uri.TryCreate(url, UriKind.Absolute, out var uri) ? uri : null)
-                .OfType<Uri>()
-                .ToList();
-
-            void AddMissing()
-            {
-                foreach (var uri in seeds.Where(uri => !torrent.HttpSeeds.Contains(uri)))
-                {
-                    torrent.HttpSeeds.Add(uri);
-                }
-            }
-
-            if (EngineLoop is { } loop)
-            {
-                loop.Post(_ => AddMissing(), null);
-            }
-            else if (manager.State == TorrentState.Stopped)
-            {
-                AddMissing();
-            }
-        }
-
-        private static readonly SynchronizationContext? EngineLoop =
-            typeof(ClientEngine).GetField("MainLoop", BindingFlags.NonPublic | BindingFlags.Static)?.GetValue(null) as SynchronizationContext;
-
-        private async void OnTorrentStateChanged(object? sender, TorrentStateChangedEventArgs e)
-        {
-            if (sender is not TorrentManager manager)
-            {
-                return;
-            }
-
-            if (e.OldState == TorrentState.Metadata && manager.HasMetadata)
-            {
-                RestoreWebSeeds(manager);
-
-                return;
-            }
-
-            if (e.NewState != TorrentState.Seeding)
-            {
-                return;
-            }
-
-            // Yuklab bo'lingach tarqatish (seeding) to'xtatiladi — mobil trafik va batareyani tejash uchun.
-            // Film ko'rilayotgan paytda emas: stream torrent ishlab turishini talab qiladi.
-            lock (_streaming)
-            {
-                if (_streaming.Contains(manager))
-                {
-                    return;
-                }
-            }
-
-            try
-            {
-                await manager.StopAsync(StopTimeout);
-            }
-            catch (Exception ex)
-            {
-                Debug.WriteLine($"[Downloads] Seeding to'xtatilmadi: {ex}");
-            }
-        }
-
-        /// <summary>Ko'p faylli torrent o'chirilgach qolgan bo'sh papkani tozalaydi (MonoTorrent faqat fayllarni o'chiradi).</summary>
-        private static void DeleteEmptyDirectory(string directory, string downloadRoot)
-        {
-            try
-            {
-                var isDownloadRoot = string.Equals(
-                    Path.TrimEndingDirectorySeparator(Path.GetFullPath(directory)),
-                    Path.TrimEndingDirectorySeparator(Path.GetFullPath(downloadRoot)),
-                    StringComparison.OrdinalIgnoreCase);
-
-                if (isDownloadRoot || !Directory.Exists(directory) || Directory.EnumerateFiles(directory, "*", SearchOption.AllDirectories).Any())
-                {
-                    return;
-                }
-
-                Directory.Delete(directory, recursive: true);
-            }
-            catch (Exception ex)
-            {
-                Debug.WriteLine($"[Downloads] Papka o'chirilmadi: {ex}");
-            }
-        }
-
-        private void SavePaused()
-        {
-            Preferences.Default.Set(PausedKey, string.Join(',', _paused));
-        }
-
-        private static string GetDefaultDownloadDirectory()
+    private static string GetDefaultDownloadDirectory()
         {
 #if ANDROID
             // Android/data/<paket>/files/Download — ruxsat so'ramasdan yozish mumkin bo'lgan tashqi xotira.
@@ -641,5 +83,163 @@ namespace WatchTorrent.Services
             return Path.Combine(FileSystem.AppDataDirectory, "Downloads");
 #endif
         }
+
+
+    public Task InitializeAsync()
+    {
+        if (_initialization == null || _initialization.IsFaulted || _initialization.IsCanceled)
+            _initialization = InitializeCoreAsync();
+        return _initialization;
+    }
+    private async Task InitializeCoreAsync()
+    {
+        try
+        {
+        ConnectionStatus = string.Empty;
+        _engine?.Dispose();
+        _engine = await LibtorrentEngine.CreateAsync(Path.Combine(FileSystem.AppDataDirectory, "libtorrent"), DeviceInfo.Current.Platform != DevicePlatform.WinUI);
+        var torrents = await _engine.ListAsync();
+        Items.Clear();
+        foreach (var torrent in torrents)
+        {
+            await _engine.RefreshAsync(torrent);
+            Items.Add(new DownloadItem(torrent, null));
+        }
+        if (_timer == null)
+        {
+            _timer = (Dispatcher.GetForCurrentThread() ?? Application.Current!.Dispatcher).CreateTimer();
+            _timer.Interval = TimeSpan.FromSeconds(2);
+            _timer.Tick += async (_, _) => await RefreshAsync();
+            _timer.Start();
+        }
+        }
+        catch (Exception ex)
+        {
+            ConnectionStatus = "libtorrent ishga tushmadi. " + ex.Message;
+            throw;
+        }
+    }
+
+    private async Task RefreshAsync()
+    {
+        if (_refreshing || _engine == null) return;
+        _refreshing = true;
+        try
+        {
+            foreach (var item in Items.ToArray())
+            {
+                if (item.IsBusy) continue;
+                try
+                {
+                    await _engine.RefreshAsync(item.Manager);
+                    item.Refresh();
+                    if(item.IsComplete && item.IsRunning && !_streaming.Contains(item.InfoHash))
+                        await PauseAsync(item);
+                }
+                catch (Exception ex) { Debug.WriteLine(ex); item.SetConnectionError(ex.Message); }
+            }
+            DownloadKeepAlive.Update(Items);
+            if (Environment.TickCount64 - _lastSave > 30_000)
+            {
+                try { await SaveAsync(); _lastSave = Environment.TickCount64; }
+                catch (Exception ex) { ConnectionStatus = "Yuklama holati saqlanmadi: " + ex.Message; }
+            }
+        }
+        finally { _refreshing = false; }
+    }
+
+    public DownloadItem? Find(string infoHash) => Items.FirstOrDefault(i => string.Equals(i.InfoHash, infoHash, StringComparison.OrdinalIgnoreCase));
+    public bool Contains(string infoHash) => Find(infoHash) != null;
+    public DownloadItem? FindByMagnet(string magnet) => Magnet.TryParse(magnet, out var link) ? Find(link!.Hash) : null;
+    internal static string ShareMagnet(DownloadItem item) => item.Manager.MagnetLink.ToV1String();
+
+    public async Task<DownloadItem> AddAsync(string magnetUri, string? name = null)
+    {
+        await InitializeAsync();
+        await _addLock.WaitAsync();
+        try
+        {
+            var hash = Magnet.Parse(magnetUri).Hash;
+            if (Find(hash) is { } existing) { await ResumeAsync(existing); return existing; }
+            var manager = await _engine!.AddAsync(magnetUri, hash, Directory.CreateDirectory(DownloadDirectory).FullName);
+            var item = new DownloadItem(manager, name);
+            Items.Insert(0, item);
+            return item;
+        }
+        finally { _addLock.Release(); }
+    }
+
+    public Task PauseAsync(DownloadItem item) => SetPausedAsync(item, true);
+    public Task ResumeAsync(DownloadItem item) => SetPausedAsync(item, false);
+    private async Task SetPausedAsync(DownloadItem item, bool paused)
+    {
+        if (!item.TryBeginOperation(paused ? "Pauza qilinmoqda…" : "Davom ettirilmoqda…")) return;
+        try { await _engine!.SetPausedAsync(item.Manager, paused); }
+        finally { item.EndOperation(); }
+    }
+
+    public async Task RemoveAsync(DownloadItem item, bool deleteFiles)
+    {
+        if (!item.TryBeginOperation("O'chirilmoqda…")) return;
+        try
+        {
+            await _engine!.RemoveAsync(item.Manager, deleteFiles);
+            Items.Remove(item);
+            await _pages.RemoveAsync(item.InfoHash);
+        }
+        finally { item.EndOperation(); }
+    }
+
+    public async Task WaitForMetadataAsync(DownloadItem item, CancellationToken token)
+    {
+        await ResumeAsync(item);
+        while (!item.Manager.HasMetadata)
+        {
+            token.ThrowIfCancellationRequested();
+            await _engine!.RefreshAsync(item.Manager, token);
+            if (item.Manager.State == TorrentState.Error) throw new IOException(item.Manager.Error?.Reason);
+            await Task.Delay(400, token);
+        }
+    }
+
+    public async Task<Stream> OpenStreamAsync(DownloadItem item, ITorrentManagerFile file, bool onlyThisFile, CancellationToken token)
+    {
+        foreach (var other in item.Manager.Files)
+        {
+            token.ThrowIfCancellationRequested();
+            await item.Manager.SetFilePriorityAsync(other, other == file ? Priority.Highest : MediaFiles.IsSubtitle(other) ? Priority.High : onlyThisFile ? Priority.DoNotDownload : Priority.Normal);
+        }
+        await ResumeAsync(item);
+        var stream = await _engine!.OpenStreamAsync(item.Manager, file, token);
+        _streaming.Add(item.InfoHash);
+        return stream;
+    }
+    public async Task CloseStreamAsync(DownloadItem item, Stream? stream)
+    {
+        stream?.Dispose();
+        _streaming.Remove(item.InfoHash);
+        try { await _engine!.EndStreamingAsync(item.Manager); }
+        catch (Exception ex) { Debug.WriteLine(ex); }
+    }
+    // Resume data is saved without pausing active peer connections.
+    public async Task SaveAsync()
+    {
+        var engine=_engine;
+        if(engine==null)return;
+        try { await engine.SaveAsync(); }
+        catch(ObjectDisposedException) when(_engine==null) { }
+        catch(Exception ex)
+        {
+            ConnectionStatus="Yuklama holati saqlanmadi: "+ex.Message;
+            Debug.WriteLine(ex);
+        }
+    }
+    public void Dispose()
+    {
+        _timer?.Stop();
+        var engine=_engine;
+        _engine=null;
+        try { engine?.Dispose(); }
+        catch(Exception ex) { Debug.WriteLine("[Downloads] Final save failed: "+ex); }
     }
 }

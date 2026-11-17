@@ -1,9 +1,11 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
-		<TargetFrameworks>net10.0-android</TargetFrameworks>
-		<TargetFrameworks Condition="($([MSBuild]::IsOSPlatform('osx')) And '$(TargetFramework)' != 'net10.0-android') Or '$(TargetFramework)' == 'net10.0-ios'">net10.0-ios</TargetFrameworks>
-		<TargetFrameworks Condition="$([MSBuild]::IsOSPlatform('windows')) And '$(TargetFramework)' != 'net10.0-ios'">$(TargetFrameworks);net10.0-windows10.0.19041.0</TargetFrameworks>
+		<!-- Set WatchTorrentTarget in CI so restore installs only that platform's dependencies. -->
+		<TargetFrameworks Condition="'$(WatchTorrentTarget)' != ''">$(WatchTorrentTarget)</TargetFrameworks>
+		<TargetFrameworks Condition="'$(TargetFrameworks)' == '' And $([MSBuild]::IsOSPlatform('osx'))">net10.0-ios</TargetFrameworks>
+		<TargetFrameworks Condition="'$(TargetFrameworks)' == '' And $([MSBuild]::IsOSPlatform('windows'))">net10.0-android;net10.0-windows10.0.19041.0</TargetFrameworks>
+		<TargetFrameworks Condition="'$(TargetFrameworks)' == ''">net10.0-android</TargetFrameworks>
 
 		<OutputType>Exe</OutputType>
 		<RootNamespace>WatchTorrent</RootNamespace>
@@ -42,10 +44,10 @@
 
 	<ItemGroup>
 		<!-- App Icon -->
-		<MauiIcon Condition="!$(TargetFramework.Contains('-android'))" Include="Resources\AppIcon\appicon.svg" ForegroundFile="Resources\AppIcon\appiconfg.svg" Color="#512BD4" />
+		<MauiIcon Condition="!$(TargetFramework.Contains('-android'))" Include="Resources\AppIcon\appicon.png" Resize="true" />
 
 		<!-- Splash Screen -->
-		<MauiSplashScreen Condition="!$(TargetFramework.Contains('-android'))" Include="Resources\Splash\splash.svg" Color="#512BD4" BaseSize="128,128" />
+		<MauiSplashScreen Condition="!$(TargetFramework.Contains('-android'))" Include="Resources\Splash\splash.png" Resize="true" Color="#0D1A66" BaseSize="108,108" />
 
 		<!-- Images -->
 		<MauiImage Include="Resources\Images\*" />
@@ -61,7 +63,6 @@
 	<ItemGroup>
 		<PackageReference Include="Microsoft.Maui.Controls" Version="$(MauiVersion)" />
 		<PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="10.0.0" />
-		<PackageReference Include="MonoTorrent" Version="3.0.2" />
 		<PackageReference Include="SIPSorcery" Version="10.0.17" />
 		<PackageReference Include="LibVLCSharp.MAUI" Version="3.10.2" />
 	</ItemGroup>
@@ -86,6 +87,9 @@
 
 	<ItemGroup>
 	  <ProjectReference Include="..\TorrentReader\TorrentReader.csproj" />
+      <ProjectReference Include="..\WatchTorrent.Core\WatchTorrent.Core.csproj" />
+      <ProjectReference Include="..\WatchTorrent.Libtorrent\WatchTorrent.Libtorrent.csproj" />
 	</ItemGroup>
 
+  <Import Project="../native/NativePackaging.targets" />
 </Project>

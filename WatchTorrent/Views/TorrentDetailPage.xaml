@@ -27,7 +27,7 @@
                     </Border>
                     <VerticalStackLayout Grid.Column="1" Spacing="10" VerticalOptions="Start">
                         <Label Text="{Binding Title}" FontFamily="OpenSansSemibold" FontSize="20" />
-                        <FlexLayout Wrap="Wrap" BindableLayout.ItemsSource="{Binding Detail.Tags}">
+                        <FlexLayout Wrap="Wrap" BindableLayout.ItemsSource="{Binding DisplayDetail.Tags}">
                             <BindableLayout.ItemTemplate>
                                 <DataTemplate x:DataType="x:String">
                                     <Border Style="{StaticResource Pill}" Margin="0,0,6,6" FlexLayout.Shrink="0">
@@ -82,22 +82,22 @@
                     <Border Style="{StaticResource Card}" IsVisible="{Binding ShowTechnicalDetails}">
                         <Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto" ColumnSpacing="16" RowSpacing="8">
                             <Label Text="Yuklagan" Style="{StaticResource Muted}" />
-                            <Label Grid.Column="1" Text="{Binding Detail.UploadedBy}" FontSize="13" />
+                            <Label Grid.Column="1" Text="{Binding DisplayDetail.UploadedBy}" FontSize="13" />
                             <Label Grid.Row="1" Text="Qo'shilgan" Style="{StaticResource Muted}" />
-                            <Label Grid.Row="1" Grid.Column="1" Text="{Binding Detail.DateUploaded}" FontSize="13" />
+                            <Label Grid.Row="1" Grid.Column="1" Text="{Binding DisplayDetail.DateUploaded}" FontSize="13" />
                             <Label Grid.Row="2" Text="Tekshirilgan" Style="{StaticResource Muted}" />
-                            <Label Grid.Row="2" Grid.Column="1" Text="{Binding Detail.DateLastChecked}" FontSize="13" />
+                            <Label Grid.Row="2" Grid.Column="1" Text="{Binding DisplayDetail.DateLastChecked}" FontSize="13" />
                             <Label Grid.Row="3" Text="Yuklab olingan" Style="{StaticResource Muted}" />
                             <Label
                                 Grid.Row="3"
                                 Grid.Column="1"
-                                Text="{Binding Detail.Downloads, StringFormat='{0:N0} marta'}"
+                                Text="{Binding DisplayDetail.Downloads, StringFormat='{0:N0} marta'}"
                                 FontSize="13" />
                             <Label Grid.Row="4" Text="Info hash" Style="{StaticResource Muted}" />
                             <Label
                                 Grid.Row="4"
                                 Grid.Column="1"
-                                Text="{Binding Detail.InfoHash}"
+                                Text="{Binding DisplayDetail.InfoHash}"
                                 FontSize="12"
                                 LineBreakMode="CharacterWrap" />
                         </Grid>
@@ -113,7 +113,7 @@
                         Text="Tavsifni ko'rish"
                         Command="{Binding ShowDescriptionCommand}"
                         Style="{StaticResource GhostButton}"
-                        IsVisible="{Binding Detail.HasDescription, FallbackValue=False}" />
+                        IsVisible="{Binding DisplayDetail.HasDescription, FallbackValue=False}" />
                     <Label Text="{Binding FilesHeader}" Style="{StaticResource SectionTitle}" />
                     <Border Style="{StaticResource Card}" Padding="14,4">
                         <VerticalStackLayout BindableLayout.ItemsSource="{Binding VisibleFiles}">
@@ -130,10 +130,10 @@
                         Style="{StaticResource GhostButton}"
                         IsVisible="{Binding CanShowAllFiles}" />
                     <Label
-                        Text="{Binding Detail.CommentsHeader}"
+                        Text="{Binding DisplayDetail.CommentsHeader}"
                         Style="{StaticResource SectionTitle}"
-                        IsVisible="{Binding Detail.HasComments, FallbackValue=False}" />
-                    <VerticalStackLayout Spacing="8" BindableLayout.ItemsSource="{Binding Detail.Comments}">
+                        IsVisible="{Binding DisplayDetail.HasComments, FallbackValue=False}" />
+                    <VerticalStackLayout Spacing="8" BindableLayout.ItemsSource="{Binding DisplayDetail.Comments}">
                         <BindableLayout.ItemTemplate>
                             <DataTemplate x:DataType="models:CommentItem">
                                 <Border Style="{StaticResource Card}">

@@ -1,5 +1,5 @@
-using MonoTorrent;
-using MonoTorrent.Client;
+using WatchTorrent.Core;
+
 using WatchTorrent.ViewModels;
 
 namespace WatchTorrent.Services
@@ -20,7 +20,7 @@ namespace WatchTorrent.Services
         public DownloadItem(TorrentManager manager, string? fallbackName)
         {
             Manager = manager;
-            InfoHash = manager.InfoHashes.V1OrV2.ToHex();
+            InfoHash = manager.Hash;
             _fallbackName = fallbackName;
 
             Refresh();
@@ -51,7 +51,7 @@ namespace WatchTorrent.Services
 
         public string StatusText
         {
-            get => _statusText;
+            get => _operation ?? _statusText;
             private set => SetProperty(ref _statusText, value);
         }
 
@@ -91,14 +91,42 @@ namespace WatchTorrent.Services
             }
         }
 
+        private string? _operation;
+        public bool IsBusy => _operation != null;
+        public bool CanInteract => !IsBusy;
         public bool CanToggle => !IsComplete;
+        public void SetConnectionError(string message)
+        {
+            StatusText = "Torrent engine xatosi: " + message;
+            TransferText = string.Empty;
+        }
+        public bool TryBeginOperation(string text)
+        {
+            if (IsBusy) return false;
+            _operation = text;
+            NotifyOperation();
+            return true;
+        }
+        public void EndOperation()
+        {
+            _operation = null;
+            Refresh();
+            NotifyOperation();
+        }
+        private void NotifyOperation()
+        {
+            OnPropertyChanged(nameof(IsBusy));
+            OnPropertyChanged(nameof(CanInteract));
+            OnPropertyChanged(nameof(ToggleText));
+            OnPropertyChanged(nameof(StatusText));
+        }
 
         /// <summary>Tanlangan fayllar hajmi (bayt) — fon xizmati bildirishnomasidagi umumiy foiz uchun.</summary>
         public long TotalBytes { get; private set; }
 
         public long DownloadedBytes { get; private set; }
 
-        public string ToggleText => IsRunning ? "Pauza" : "Davom ettirish";
+        public string ToggleText => _operation ?? (IsRunning ? "Pauza" : "Davom ettirish");
 
         public void Refresh()
         {

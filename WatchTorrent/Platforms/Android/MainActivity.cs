@@ -155,9 +155,19 @@ namespace WatchTorrent
             if (savedInstanceState == null) ReadInvitation(Intent);
             if (Window is not { } window) return;
             var background = Android.Graphics.Color.Rgb(17, 18, 19);
-            window.SetStatusBarColor(background);
-            window.SetNavigationBarColor(background);
-            window.DecorView.SystemUiVisibility &= ~(Android.Views.StatusBarVisibility)(8192 | 16);
+            if (!OperatingSystem.IsAndroidVersionAtLeast(35))
+            {
+                // MAUI 10 enables edge-to-edge even on older Android releases.
+                // Let those windows fit their bars so Shell's tabs stay visible.
+                AndroidX.Core.View.WindowCompat.SetDecorFitsSystemWindows(window, true);
+                window.SetStatusBarColor(background);
+                window.SetNavigationBarColor(background);
+            }
+            if (AndroidX.Core.View.WindowCompat.GetInsetsController(window, window.DecorView) is { } controller)
+            {
+                controller.AppearanceLightStatusBars = false;
+                controller.AppearanceLightNavigationBars = false;
+            }
         }
 
         public override void OnConfigurationChanged(Configuration newConfig)

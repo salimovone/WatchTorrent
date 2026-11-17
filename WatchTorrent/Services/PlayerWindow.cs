@@ -40,7 +40,11 @@ namespace WatchTorrent.Services
 
             _previousOrientation = activity.RequestedOrientation;
             _previousConfiguration = activity.Resources?.Configuration?.Orientation;
-            _previousSystemUi = window.DecorView.SystemUiVisibility;
+            if (!OperatingSystem.IsAndroidVersionAtLeast(30))
+                _previousSystemUi = window.DecorView.SystemUiFlags;
+            var controller = WindowCompat.GetInsetsController(window, window.DecorView);
+            _previousLightStatusBars = controller?.AppearanceLightStatusBars ?? false;
+            _previousLightNavigationBars = controller?.AppearanceLightNavigationBars ?? false;
             _navigationPadding.Clear();
             CaptureNavigationPadding(window.DecorView);
             activity.RequestedOrientation = ScreenOrientation.SensorLandscape;
@@ -70,9 +74,15 @@ namespace WatchTorrent.Services
                 return;
             }
 
-            WindowCompat.SetDecorFitsSystemWindows(window, true);
+            WindowCompat.SetDecorFitsSystemWindows(window, !OperatingSystem.IsAndroidVersionAtLeast(35));
             WindowCompat.GetInsetsController(window, window.DecorView)?.Show(WindowInsetsCompat.Type.SystemBars());
-            window.DecorView.SystemUiVisibility = _previousSystemUi;
+            if (!OperatingSystem.IsAndroidVersionAtLeast(30))
+                window.DecorView.SystemUiFlags = _previousSystemUi;
+            if (WindowCompat.GetInsetsController(window, window.DecorView) is { } controller)
+            {
+                controller.AppearanceLightStatusBars = _previousLightStatusBars;
+                controller.AppearanceLightNavigationBars = _previousLightNavigationBars;
+            }
             var rotate = Android.Provider.Settings.System.GetInt(activity.ContentResolver, "accelerometer_rotation", 0) != 0;
             activity.RequestedOrientation = !rotate && _previousOrientation is ScreenOrientation.Unspecified or ScreenOrientation.User
                 ? (_previousConfiguration == Android.Content.Res.Orientation.Portrait ? ScreenOrientation.Portrait : ScreenOrientation.Landscape)
@@ -189,6 +199,10 @@ namespace WatchTorrent.Services
             {
                 HideSystemBars(window);
             }
+            else if (hasFocus)
+            {
+                RefreshAppLayout();
+            }
         }
 
         /// <summary>
@@ -219,7 +233,8 @@ namespace WatchTorrent.Services
 
         private static ScreenOrientation _previousOrientation;
         private static Android.Content.Res.Orientation? _previousConfiguration;
-        private static StatusBarVisibility _previousSystemUi;
+        private static SystemUiFlags _previousSystemUi;
+        private static bool _previousLightStatusBars, _previousLightNavigationBars;
         private static readonly List<(WeakReference<BottomNavigationView> View, int Left, int Top, int Right, int Bottom)> _navigationPadding = [];
 
         private static void CaptureNavigationPadding(Android.Views.View view)
@@ -237,6 +252,9 @@ namespace WatchTorrent.Services
             window.DecorView.Post(() =>
             {
                 if (IsActive) return;
+                // Android 15+ enforces edge-to-edge. Older versions need their
+                // normal fitted window restored after startup/fullscreen playback.
+                WindowCompat.SetDecorFitsSystemWindows(window, !OperatingSystem.IsAndroidVersionAtLeast(35));
                 ViewCompat.RequestApplyInsets(window.DecorView);
                 if (activity.Resources?.Configuration?.Orientation == _previousConfiguration)
                     foreach (var padding in _navigationPadding)

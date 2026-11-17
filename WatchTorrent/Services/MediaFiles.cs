@@ -1,4 +1,4 @@
-using MonoTorrent;
+using WatchTorrent.Core;
 
 namespace WatchTorrent.Services
 {

@@ -55,7 +55,21 @@ internal sealed class VoiceAudio : IDisposable
             if (output == null)
             {
                 var size = Math.Max(Frame * 8, AudioTrack.GetMinBufferSize(Rate, ChannelOut.Mono, Android.Media.Encoding.Pcm16bit));
-                output = new AudioTrack(Android.Media.Stream.Music, Rate, ChannelOut.Mono, Android.Media.Encoding.Pcm16bit, size, AudioTrackMode.Stream);
+                using var attributes = new AudioAttributes.Builder()
+                    .SetUsage(AudioUsageKind.Media)!
+                    .SetContentType(AudioContentType.Speech)!
+                    .Build() ?? throw new InvalidOperationException("Audio attributes could not be created.");
+                using var format = new Android.Media.AudioFormat.Builder()
+                    .SetSampleRate(Rate)!
+                    .SetChannelMask(ChannelOut.Mono)!
+                    .SetEncoding(Android.Media.Encoding.Pcm16bit)!
+                    .Build() ?? throw new InvalidOperationException("Audio format could not be created.");
+                output = new AudioTrack.Builder()
+                    .SetAudioAttributes(attributes)!
+                    .SetAudioFormat(format)!
+                    .SetBufferSizeInBytes(size)!
+                    .SetTransferMode(AudioTrackMode.Stream)!
+                    .Build() ?? throw new InvalidOperationException("Audio output could not be created.");
                 output.Play();
             }
             output.Write(samples, 0, samples.Length);

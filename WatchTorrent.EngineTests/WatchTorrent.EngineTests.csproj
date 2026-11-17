@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <DefineConstants>$(DefineConstants);WINDOWS</DefineConstants>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../WatchTorrent.Libtorrent/WatchTorrent.Libtorrent.csproj" />
+    <Compile Include="../WatchTorrent/EngineAliases.cs" Link="EngineAliases.cs" />
+    <Compile Include="../WatchTorrent/Services/DownloadItem.cs" Link="DownloadItem.cs" />
+    <Compile Include="../WatchTorrent/Services/DownloadService.cs" Link="DownloadService.cs" />
+    <Compile Include="../WatchTorrent/Services/MovieInvite.cs" Link="MovieInvite.cs" />
+    <Compile Include="../WatchTorrent/Services/MediaFiles.cs" Link="MediaFiles.cs" />
+    <Compile Include="../WatchTorrent/ViewModels/ObservableObject.cs" Link="ObservableObject.cs" />
+  </ItemGroup>
+</Project>

@@ -12,6 +12,7 @@
         <VerticalStackLayout Padding="20,24,20,20" Spacing="6">
             <Label Text="Yuklamalar" Style="{StaticResource PageTitle}" />
             <Label Text="Saqlangan fayllar va yuklash jarayoni" Style="{StaticResource BodyText}" />
+            <Label Text="{Binding EngineStatus}" Style="{StaticResource Muted}" />
             <VerticalStackLayout BindableLayout.ItemsSource="{Binding PartnerDownloads}" Spacing="6">
                 <BindableLayout.ItemTemplate>
                     <DataTemplate x:DataType="vm:PartnerDownload">
@@ -52,6 +53,7 @@
                                         VerticalOptions="Start"
                                         Command="{Binding RemoveCommand, Source={RelativeSource AncestorType={x:Type vm:DownloadsViewModel}}}"
                                         CommandParameter="{Binding .}"
+                                        IsEnabled="{Binding CanInteract}"
                                         SemanticProperties.Description="Yuklamani o'chirish"
                                         ToolTipProperties.Text="O'chirish" />
                                 </Grid>
@@ -72,6 +74,7 @@
                                     </ProgressBar.Triggers>
                                 </ProgressBar>
                                 <Label Text="{Binding SizeText}" Style="{StaticResource Muted}" />
+                                <ActivityIndicator IsRunning="{Binding IsBusy}" IsVisible="{Binding IsBusy}" HorizontalOptions="Start" />
                                 <Label Text="{Binding TransferText}" Style="{StaticResource Muted}" IsVisible="{Binding IsRunning}" />
                                 <FlexLayout Wrap="Wrap" JustifyContent="Start">
                                     <Button
@@ -82,6 +85,7 @@
                                         CommandParameter="{Binding .}" />
                                     <Button
                                         Text="{Binding ToggleText}"
+                                        IsEnabled="{Binding CanInteract}"
                                         Margin="0,0,8,0"
                                         Style="{StaticResource SmallButton}"
                                         IsVisible="{Binding CanToggle}"

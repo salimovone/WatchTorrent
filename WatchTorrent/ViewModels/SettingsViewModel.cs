@@ -16,6 +16,7 @@ namespace WatchTorrent.ViewModels
             _downloads = downloads;
 
             RequestBatteryExemptionCommand = new Command(RequestBatteryExemption);
+
         }
 
         public bool HdrOutput

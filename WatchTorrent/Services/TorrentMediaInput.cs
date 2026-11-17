@@ -5,7 +5,7 @@ namespace WatchTorrent.Services
 {
     /// <summary>
     /// VLC uchun torrent fayl manbasi. VLC o'z oqimida sinxron o'qiydi; ma'lumot hali yuklanmagan bo'lsa
-    /// o'qish kutadi (MonoTorrent shu joyni birinchi navbatga qo'yadi). Player yopilganda <see cref="Cancel"/>
+    /// o'qish kutadi (libtorrent shu joyni birinchi navbatga qo'yadi). Player yopilganda <see cref="Cancel"/>
     /// kutayotgan o'qishni to'xtatadi — aks holda VLC'ning Stop() chaqiruvi osilib qoladi.
     /// </summary>
     public class TorrentMediaInput : MediaInput

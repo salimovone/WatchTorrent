@@ -24,3 +24,7 @@ Thumbs.db
 # Tayyor build fayllari (APK, Windows ZIP)
 dist/
 artifacts/
+
+# Local SDKs and validation tools
+.tools/
+native/artifacts/

@@ -132,9 +132,9 @@ namespace WatchTorrent
 
             var download = await downloads.AddAsync(movie.Magnet, movie.Title);
             var selected = movie.SelectFile(download);
-            if (selected?.Priority == MonoTorrent.Priority.DoNotDownload)
+            if (selected?.Priority == Priority.DoNotDownload)
             {
-                await download.Manager.SetFilePriorityAsync(selected, MonoTorrent.Priority.Normal);
+                await download.Manager.SetFilePriorityAsync(selected, Priority.Normal);
                 await downloads.SaveAsync();
             }
             return download;

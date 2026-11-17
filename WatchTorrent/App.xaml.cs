@@ -19,7 +19,7 @@ namespace WatchTorrent
         {
             var shell = new AppShell(_downloads);
             var window = new Window(shell) { Title = "WatchTorrent" };
-            window.Destroying += (_, _) => shell.Call.End();
+            window.Destroying += (_, _) => { shell.Call.End(); _downloads.Dispose(); };
 
             // Oldingi sessiyadagi yuklamalar ilova ochilishi bilan davom etadi.
             _ = InitializeDownloadsAsync();

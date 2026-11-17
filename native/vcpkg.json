@@ -1,0 +1,8 @@
+{
+  "name": "watchtorrent-native",
+  "version-string": "1.0.0",
+  "dependencies": [
+    { "name": "libtorrent", "default-features": false },
+    "nlohmann-json"
+  ]
+}

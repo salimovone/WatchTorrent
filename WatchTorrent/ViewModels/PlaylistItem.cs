@@ -1,4 +1,4 @@
-using MonoTorrent;
+using WatchTorrent.Core;
 using WatchTorrent.Services;
 
 namespace WatchTorrent.ViewModels
