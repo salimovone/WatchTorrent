@@ -28,7 +28,27 @@ namespace WatchTorrent.ViewModels
         private static readonly TimeSpan TrackRestoreWindow = TimeSpan.FromSeconds(60);
 
         // Subtitrlar torrentdan o'zimiz qo'shamiz (Subs/ papkasidagilari ham) — VLC'ning avtomatik qidiruvi takrorlaydi.
-        private static readonly string[] BaseOptions = { "--no-sub-autodetect-file" };
+        private static readonly string[] BaseOptions = CreateBaseOptions();
+
+        private static string[] CreateBaseOptions()
+        {
+            List<string> options =
+            [
+                "--no-sub-autodetect-file",
+                "--audio-time-stretch",
+                // Short overlapping grains avoid the default 50 ms tempo-filter
+                // warm-up when leaving the unity-rate bypass path.
+                "--scaletempo-stride=10",
+                "--scaletempo-search=5",
+                "--scaletempo-overlap=0.5"
+            ];
+#if ANDROID
+            // LibVLC 3.7's AudioTrack backend probes ENCODING_PCM_32BIT, which
+            // does not exist before API 31. Use the native OpenSL ES sink there.
+            if (!OperatingSystem.IsAndroidVersionAtLeast(31)) options.Add("--aout=opensles");
+#endif
+            return options.ToArray();
+        }
 
         // HDR videoni SDR'ga moslash (tone mapping): kadrlar VLC'ga xotira orqali keladi va OpenGL ES chiqishi ularni
         // libplacebo bilan SDR'ga o'giradi. Odatiy yo'lda (MediaCodec → SurfaceTexture) VLC rang ma'lumotini
@@ -58,19 +78,33 @@ namespace WatchTorrent.ViewModels
 
         internal void SetSharedPause(bool pause)
         {
-            if (_hasStartedPlaying) Player?.SetPause(pause);
+            if (_hasStartedPlaying && Player is { } player
+                && player.State != (pause ? VLCState.Paused : VLCState.Playing))
+                player.SetPause(pause);
         }
         internal void SetSharedTime(long time)
         {
             if (Player is { IsSeekable: true, Length: > 0 } player)
+            {
                 player.Time = Math.Clamp(time, 0, player.Length);
+                _input?.InterruptRead();
+            }
         }
-        internal void ApplyShared(long position, bool play, float rate)
+        internal void ApplyShared(long position, bool play)
         {
             if (!_hasStartedPlaying || Player == null) return;
             if (Math.Abs(Player.Time - position) > 120) SetSharedTime(position);
-            if (Math.Abs(Player.Rate - rate) > 0.01) Player.SetRate(rate);
             SetSharedPause(!play);
+        }
+
+        // Rate-only changes must not seek or pause: both flush the decoder and its clock.
+        internal void SetSharedRate(float rate) => SetPlaybackRate(rate);
+
+        private bool SetPlaybackRate(float rate)
+        {
+            if (Player is not { } player) return false;
+            _rateTransition ??= new PlaybackRateTransition(value => Player == player && player.SetRate(value) == 0, player.Rate);
+            return _rateTransition.Set(rate);
         }
         private string? _infoHash;
         private DownloadItem? _item;
@@ -82,7 +116,7 @@ namespace WatchTorrent.ViewModels
         private CancellationTokenSource? _fileCancellation;
         private Stream? _stream;
         private bool _streamRequested;
-        private TorrentMediaInput? _input;
+        private TorrentMediaServer? _input;
         private LibVLC? _libVLC;
         private bool _ownsLibVLC;
         private Media? _media;
@@ -90,7 +124,10 @@ namespace WatchTorrent.ViewModels
         private bool _isSeeking;
         private bool _isClosed;
         private long _lastResumeSaveAt;
-        private bool _bufferPaused;
+        private PlaybackRateTransition? _rateTransition;
+        private PlayerAudioOutput? _audioOutput;
+        private long _lastPlaybackTime = -1;
+        private long _lastProgressAt;
         private long _resumeMs;
         private int _aspectMode = Math.Clamp(Preferences.Default.Get(AspectModeKey, 0), 0, AspectModes.Length - 1);
         private double _screenWidth;
@@ -353,12 +390,19 @@ namespace WatchTorrent.ViewModels
             };
         }
 
-        private static LibVLCSharp.Shared.MediaPlayer CreateMediaPlayer(LibVLC libVLC)
+        private LibVLCSharp.Shared.MediaPlayer CreateMediaPlayer(LibVLC libVLC)
         {
             // MediaPlayer hodisalariga (Playing, EndReached...) ataylab obuna bo'linmaydi: ular VLC'ning native
             // oqimlarida chaqiriladi va Android'da shu oqimlar tugayotganda libvlc JNI xatosi bilan ilovani yiqitadi
             // (LibVLCSharp #567). Holat o'rniga Tick() da Player.State orqali kuzatiladi.
-            return new LibVLCSharp.Shared.MediaPlayer(libVLC) { EnableHardwareDecoding = true };
+            var player = new LibVLCSharp.Shared.MediaPlayer(libVLC)
+            {
+                EnableHardwareDecoding = true,
+                EnableKeyInput = false,
+                EnableMouseInput = false
+            };
+            _audioOutput = new PlayerAudioOutput(player, libVLC);
+            return player;
         }
 
         public async Task StartAsync()
@@ -446,6 +490,8 @@ namespace WatchTorrent.ViewModels
                 return;
             }
 
+            if (_audioOutput?.Error is { } audioError && !HasError) ShowError(audioError);
+
             UpdateDisplayModes();
             _ = RetryHdrProbeAsync();
 
@@ -460,12 +506,19 @@ namespace WatchTorrent.ViewModels
                 return;
             }
 
-            UpdateStreamBuffer(player);
             RestoreTracks(player);
 
-            // Bufer uchun avtomatik pauza foydalanuvchi uchun "o'ynamoqda" holati hisoblanadi.
-            IsPlaying = Session?.WantsPlay ?? (player.IsPlaying || _bufferPaused);
-            IsBuffering = _bufferPaused || _input?.IsWaiting == true || player.State == VLCState.Buffering;
+            var playbackTime = player.Time;
+            if (playbackTime != _lastPlaybackTime)
+            {
+                _lastPlaybackTime = playbackTime;
+                _lastProgressAt = Environment.TickCount64;
+            }
+            IsPlaying = Session?.WantsPlay ?? player.IsPlaying;
+            // Read-ahead can wait while cached audio/video keeps playing. Let VLC
+            // buffer naturally; never pause the decoder based on the read cursor.
+            IsBuffering = player.State == VLCState.Buffering
+                || IsPlaying && _input?.IsWaiting == true && Environment.TickCount64 - _lastProgressAt > 1200;
             Session?.Tick(!IsBuffering && !IsLoading && !HasError && !_isSwitching);
 
             var length = player.Length;
@@ -497,6 +550,7 @@ namespace WatchTorrent.ViewModels
 
         public void TogglePlay()
         {
+            EndHoldSpeed();
             if (Session != null) { Session.Command(Session.WantsPlay ? "pause" : "play"); return; }
             var player = Player;
 
@@ -505,12 +559,7 @@ namespace WatchTorrent.ViewModels
                 return;
             }
 
-            if (_bufferPaused)
-            {
-                // Buferlanish paytida foydalanuvchi pauza bosdi — bufer to'lganda o'zi davom etmaydi.
-                _bufferPaused = false;
-            }
-            else if (player.IsPlaying)
+            if (player.IsPlaying)
             {
                 player.SetPause(true);
             }
@@ -529,8 +578,9 @@ namespace WatchTorrent.ViewModels
 
         public void Pause()
         {
+            EndHoldSpeed();
             if (Session != null) { Session.Command("pause"); return; }
-            _bufferPaused = false;
+
             Player?.SetPause(true);
         }
 
@@ -606,6 +656,8 @@ namespace WatchTorrent.ViewModels
             if (Session != null) { Session.Command("seek", (long)(seconds * 1000)); return; }
 
             Player.Time = (long)(seconds * 1000);
+            _input?.InterruptRead();
+            _lastPlaybackTime = -1;
             PositionSeconds = seconds;
             PositionText = FormatTime((long)(seconds * 1000));
         }
@@ -769,27 +821,33 @@ namespace WatchTorrent.ViewModels
                 return;
             }
 
-            var current = Player.Rate;
+            EndHoldSpeed();
+            var current = _rateTransition?.Target ?? Player.Rate;
             var index = await ChooseAsync("Tezlik", Speeds.Select(speed => MarkCurrent($"{speed:0.##}x", Math.Abs(speed - current) < 0.01)));
 
             if (index >= 0)
             {
                 if (Session != null) Session.Command("rate", (long)(Speeds[index] * 1000));
-                else Player.SetRate(Speeds[index]);
+                else SetPlaybackRate(Speeds[index]);
             }
         }
 
         /// <summary>Ekran bosib turilganda film vaqtincha 2x tezlikda o'ynaydi (faqat o'ynayotgan bo'lsa).</summary>
         public bool BeginHoldSpeed()
         {
-            if (Player is not { } player || !_hasStartedPlaying || !IsPlaying || _rateBeforeHold != null)
+            if (Player is not { IsPlaying: true } player || !_hasStartedPlaying || !IsPlaying
+                || IsLoading || IsBuffering || _isSwitching || _isClosed || _rateBeforeHold != null)
             {
                 return false;
             }
 
-            _rateBeforeHold = player.Rate;
+            _rateBeforeHold = Session?.PlaybackRate ?? _rateTransition?.Target ?? player.Rate;
             if (Session != null) Session.Command("rate", (long)(HoldRate * 1000));
-            else player.SetRate(HoldRate);
+            else if (!SetPlaybackRate(HoldRate))
+            {
+                _rateBeforeHold = null;
+                return false;
+            }
 
             return true;
         }
@@ -801,7 +859,7 @@ namespace WatchTorrent.ViewModels
             {
                 _rateBeforeHold = null;
                 if (Session != null) Session.Command("rate", (long)(rate * 1000));
-                else Player?.SetRate(rate);
+                else SetPlaybackRate(rate);
             }
         }
 
@@ -821,6 +879,8 @@ namespace WatchTorrent.ViewModels
             }
 
             _isSwitching = true;
+            EndHoldSpeed();
+            _rateTransition?.Cancel();
 
             try
             {
@@ -830,6 +890,7 @@ namespace WatchTorrent.ViewModels
 
                 if (Player is { } player)
                 {
+                    _audioOutput?.Cancel();
                     await Task.Run(player.Stop);
                 }
 
@@ -883,13 +944,16 @@ namespace WatchTorrent.ViewModels
                 return;
             }
 
+            EndHoldSpeed();
             _isClosed = true;
+            _rateTransition?.Cancel();
 
             SamsungHdrMode.SetActive(false);
             SaveResumePosition();
             _fileCancellation?.Cancel();
             _cancellation.Cancel();
             _input?.Cancel();
+            _audioOutput?.Cancel();
 
             var player = Player;
 
@@ -906,6 +970,10 @@ namespace WatchTorrent.ViewModels
         /// <summary>VideoView'dan ajratilgandan keyin chaqiriladi.</summary>
         public void DisposePlayer()
         {
+            _rateTransition?.Cancel();
+            _rateTransition = null;
+            _audioOutput?.Dispose();
+            _audioOutput = null;
             Player?.Dispose();
             Player = null;
 
@@ -1025,14 +1093,20 @@ namespace WatchTorrent.ViewModels
         /// <summary>Joriy faylni VLC'da ochadi: stream ochilgan bo'lsa undan, aks holda diskdan.</summary>
         private void StartMedia(long startMs)
         {
+            if (_audioOutput?.IsClosed == true)
+            {
+                _audioOutput.Dispose();
+                _audioOutput = new PlayerAudioOutput(Player!, _libVLC!);
+            }
             if (_stream == null)
             {
                 _media = new Media(_libVLC!, _file!.FullPath, FromType.FromPath);
             }
             else
             {
-                _input = new TorrentMediaInput(_stream);
-                _media = new Media(_libVLC!, _input);
+                _input = new TorrentMediaServer(_stream);
+                _media = new Media(_libVLC!, _input.Url, FromType.FromLocation);
+                _media.AddOption(":network-caching=300");
             }
 
             if (startMs > 0)
@@ -1140,12 +1214,16 @@ namespace WatchTorrent.ViewModels
                 return;
             }
 
-            _rateWhenStarted = _rateBeforeHold ?? old.Rate;
+            _rateWhenStarted = _rateBeforeHold ?? _rateTransition?.Target ?? old.Rate;
+            _rateTransition?.Cancel();
+            _rateTransition = null;
             _rateBeforeHold = null;
 
             // Avval VideoView'dan ajratiladi, keyin yo'q qilinadi.
             Player = null;
             PlayerChanged?.Invoke(this, EventArgs.Empty);
+            _audioOutput?.Dispose();
+            _audioOutput = null;
             old.Dispose();
 
             _libVLC = GetSharedLibVLC(output);
@@ -1176,6 +1254,7 @@ namespace WatchTorrent.ViewModels
                 RememberCurrentTracks(player);
 
                 _input?.Cancel();
+                _audioOutput?.Cancel();
                 await Task.Run(player.Stop);
 
                 if (_isClosed)
@@ -1189,7 +1268,7 @@ namespace WatchTorrent.ViewModels
                 _input = null;
 
                 _hasStartedPlaying = false;
-                _bufferPaused = false;
+
                 _resumeMs = 0;
                 ResumeNotice = null;
                 IsBuffering = false;
@@ -1256,7 +1335,9 @@ namespace WatchTorrent.ViewModels
         private void ResetPlaybackState()
         {
             _hasStartedPlaying = false;
-            _bufferPaused = false;
+            _rateTransition?.Cancel();
+            _rateTransition = null;
+            _lastPlaybackTime = -1;
             _resumeMs = 0;
 
             ResumeNotice = null;
@@ -1319,7 +1400,7 @@ namespace WatchTorrent.ViewModels
 
             if (Math.Abs(_rateWhenStarted - 1) > 0.01)
             {
-                Player?.SetRate(_rateWhenStarted);
+                SetPlaybackRate(_rateWhenStarted);
             }
 
             _rateWhenStarted = 1;
@@ -1437,40 +1518,6 @@ namespace WatchTorrent.ViewModels
             Preferences.Default.Set(torrentKey, value);
         }
 
-        /// <summary>
-        /// Stream'da VLC hech qachon ma'lumotsiz qolmasligi kerak: aks holda (ayniqsa Android MediaCodec'da)
-        /// dekoder tiqilib, ovoz davom etsa ham video qotib qoladi. Shuning uchun oldinda yuklangan qism
-        /// ~3 soniyadan kamaysa player pauza qilinadi va ~12 soniyalik bufer to'planganda davom ettiriladi.
-        /// </summary>
-        private void UpdateStreamBuffer(LibVLCSharp.Shared.MediaPlayer player)
-        {
-            if (_stream == null || _file == null || _item?.Manager.Torrent is not { } torrent)
-            {
-                return;
-            }
-
-            var lengthSeconds = player.Length / 1000.0;
-            var bytesPerSecond = lengthSeconds > 0 ? _file.Length / lengthSeconds : 1024 * 1024;
-            var low = Math.Clamp((long)(bytesPerSecond * 3), 2L * 1024 * 1024, 32L * 1024 * 1024);
-            var high = Math.Clamp((long)(bytesPerSecond * 12), 8L * 1024 * 1024, 48L * 1024 * 1024);
-
-            // VLC oxirgi o'qigan joydan keyin uzluksiz yuklangan baytlar.
-            var readPosition = _file.OffsetInTorrent + _stream.Position;
-            var firstMissing = _item.Manager.Bitfield.FirstFalse((int)(readPosition / torrent.PieceLength), _file.EndPieceIndex);
-            var ahead = firstMissing < 0 ? long.MaxValue : (long)firstMissing * torrent.PieceLength - readPosition;
-
-            if (!_bufferPaused && player.IsPlaying && ahead < low)
-            {
-                player.SetPause(true);
-                _bufferPaused = true;
-            }
-            else if (_bufferPaused && ahead >= high)
-            {
-                if (Session == null) player.SetPause(false);
-                _bufferPaused = false;
-            }
-        }
-
         private void UpdateStreamInfo()
         {
             var manager = _item?.Manager;
@@ -1544,7 +1591,7 @@ namespace WatchTorrent.ViewModels
 
         private static string MarkCurrent(string name, bool isCurrent)
         {
-            return isCurrent ? $"✓  {name}" : name;
+            return isCurrent ? $"{name} (tanlangan)" : name;
         }
 
         private static string FormatTime(long milliseconds)

@@ -7,6 +7,9 @@ using AndroidX.Core.View;
 using Google.Android.Material.BottomNavigation;
 #elif WINDOWS
 using Microsoft.UI.Windowing;
+#elif IOS
+using UIKit;
+using MediaPlayer;
 #endif
 
 namespace WatchTorrent.Services
@@ -18,10 +21,12 @@ namespace WatchTorrent.Services
     public static class PlayerWindow
     {
         /// <summary>To'liq ekranni qo'lda yoqib-o'chirish faqat kompyuterda ma'noli.</summary>
-        public static bool CanToggleFullScreen => DeviceInfo.Current.Idiom == DeviceIdiom.Desktop;
+        public static bool CanToggleFullScreen => DeviceInfo.Current.Platform == DevicePlatform.WinUI
+            && DeviceInfo.Current.Idiom == DeviceIdiom.Desktop;
 
-        /// <summary>Yorug'lik va ovozni ekranda barmoq bilan surib boshqarish (VLC'dagi kabi) — faqat Android'da.</summary>
-        public static bool CanAdjustLevels => DeviceInfo.Current.Platform == DevicePlatform.Android;
+        /// <summary>Telefon/tabletda yorug'lik va media ovozini surib boshqarish.</summary>
+        public static bool CanAdjustLevels => DeviceInfo.Current.Platform == DevicePlatform.Android
+            || DeviceInfo.Current.Platform == DevicePlatform.iOS;
 
         private static bool IsActive { get; set; }
 
@@ -60,6 +65,10 @@ namespace WatchTorrent.Services
             }
 #elif WINDOWS
             SetFullScreen(true);
+#elif IOS
+            _previousBrightness = UIScreen.MainScreen.Brightness;
+            AttachVolumeControl();
+            RotateApplePlayer(true);
 #endif
         }
 
@@ -104,6 +113,14 @@ namespace WatchTorrent.Services
             RefreshAppLayout();
 #elif WINDOWS
             SetFullScreen(false);
+#elif IOS
+            if (_previousBrightness is { } brightness) UIScreen.MainScreen.Brightness = brightness;
+            _previousBrightness = null;
+            _applePlaybackBrightness = null;
+            _volumeView?.RemoveFromSuperview();
+            _volumeView?.Dispose();
+            _volumeView = null;
+            RotateApplePlayer(false);
 #endif
         }
 
@@ -123,6 +140,8 @@ namespace WatchTorrent.Services
                 var system = Android.Provider.Settings.System.GetInt(resolver, Android.Provider.Settings.System.ScreenBrightness, 128);
 
                 return Math.Clamp(system / 255.0, 0, 1);
+#elif IOS
+                return UIScreen.MainScreen.Brightness;
 #else
                 return 1;
 #endif
@@ -136,6 +155,8 @@ namespace WatchTorrent.Services
                     attributes.ScreenBrightness = (float)Math.Clamp(value, 0.01, 1);
                     window.Attributes = attributes;
                 }
+#elif IOS
+                UIScreen.MainScreen.Brightness = (nfloat)Math.Clamp(value, 0.01, 1);
 #endif
             }
         }
@@ -150,8 +171,13 @@ namespace WatchTorrent.Services
                 {
                     return audio.GetStreamVolume(Android.Media.Stream.Music) / (double)max;
                 }
+#elif IOS
+                return _volumeView?.Subviews.OfType<UISlider>().FirstOrDefault()?.Value
+                    ?? AVFoundation.AVAudioSession.SharedInstance().OutputVolume;
 #endif
+#if !IOS
                 return 1;
+#endif
             }
             set
             {
@@ -180,9 +206,81 @@ namespace WatchTorrent.Services
                 {
                     // "Bezovta qilmang" rejimi ovozni o'zgartirishga ruxsat bermasligi mumkin.
                 }
+#elif IOS
+                if (_volumeView?.Subviews.OfType<UISlider>().FirstOrDefault() is { } slider)
+                {
+                    slider.SetValue((float)Math.Clamp(value, 0, 1), false);
+                    slider.SendActionForControlEvents(UIControlEvent.ValueChanged);
+                }
 #endif
             }
         }
+
+#if IOS
+        private static nfloat? _previousBrightness;
+        private static nfloat? _applePlaybackBrightness;
+        private static MPVolumeView? _volumeView;
+        private static UIInterfaceOrientation _previousAppleOrientation;
+
+        public static void SuspendLevels()
+        {
+            if (!IsActive || _applePlaybackBrightness != null) return;
+            _applePlaybackBrightness = UIScreen.MainScreen.Brightness;
+            if (_previousBrightness is { } brightness) UIScreen.MainScreen.Brightness = brightness;
+        }
+
+        public static void ResumeLevels()
+        {
+            if (!IsActive || _applePlaybackBrightness is not { } brightness) return;
+            UIScreen.MainScreen.Brightness = brightness;
+            _applePlaybackBrightness = null;
+        }
+
+        public static UIInterfaceOrientationMask SupportedOrientations => IsActive
+            ? UIInterfaceOrientationMask.Landscape
+            : UIDevice.CurrentDevice.UserInterfaceIdiom == UIUserInterfaceIdiom.Pad
+                ? UIInterfaceOrientationMask.All : UIInterfaceOrientationMask.AllButUpsideDown;
+
+        private static void AttachVolumeControl()
+        {
+            var window = Platform.GetCurrentUIViewController()?.View?.Window;
+            if (window == null) return;
+            // Keep the native system-volume control in the hierarchy; the app draws
+            // the visible level indicator over video.
+            _volumeView = new MPVolumeView(new CoreGraphics.CGRect(-100, -100, 1, 1))
+            {
+                ShowsRouteButton = false,
+                Alpha = 0.01f,
+                UserInteractionEnabled = false
+            };
+            window.AddSubview(_volumeView);
+        }
+
+        private static void RotateApplePlayer(bool entering)
+        {
+            if (Foundation.NSProcessInfo.ProcessInfo.IsiOSApplicationOnMac) return;
+            var controller = Platform.GetCurrentUIViewController();
+            if (controller?.View?.Window?.WindowScene is not { } scene) return;
+            if (entering) _previousAppleOrientation = scene.InterfaceOrientation;
+            if (OperatingSystem.IsIOSVersionAtLeast(16))
+            {
+                controller.SetNeedsUpdateOfSupportedInterfaceOrientations();
+                var mask = entering ? UIInterfaceOrientationMask.Landscape : _previousAppleOrientation switch
+                {
+                    UIInterfaceOrientation.LandscapeLeft => UIInterfaceOrientationMask.LandscapeLeft,
+                    UIInterfaceOrientation.LandscapeRight => UIInterfaceOrientationMask.LandscapeRight,
+                    UIInterfaceOrientation.PortraitUpsideDown => UIInterfaceOrientationMask.PortraitUpsideDown,
+                    _ => UIInterfaceOrientationMask.Portrait
+                };
+                using var preferences = new UIWindowSceneGeometryPreferencesIOS(mask);
+                scene.RequestGeometryUpdate(preferences, error => System.Diagnostics.Debug.WriteLine(error.LocalizedDescription));
+            }
+            else
+            {
+                UIViewController.AttemptRotationToDeviceOrientation();
+            }
+        }
+#endif
 
 #if ANDROID
         private static float? _brightnessBeforePictureInPicture;

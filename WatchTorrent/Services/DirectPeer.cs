@@ -93,7 +93,7 @@ internal sealed class DirectPeer : IDisposable
         var ice = pc.GetRtpChannel();
         var counts = string.Join(", ", ice.Candidates.GroupBy(c => c.type).Select(g => $"{g.Key} × {g.Count()}"));
         var pair = ice.NominatedEntry;
-        var route = pair == null ? "aniqlanmadi" : $"{pair.LocalCandidate.type}/{pair.LocalCandidate.protocol} ↔ {pair.RemoteCandidate.type}/{pair.RemoteCandidate.protocol}";
+        var route = pair == null ? "aniqlanmadi" : $"{pair.LocalCandidate.type}/{pair.LocalCandidate.protocol} - {pair.RemoteCandidate.type}/{pair.RemoteCandidate.protocol}";
         return $"Signaling: {pc.signalingState}\nICE yig‘ish: {pc.iceGatheringState}\nICE: {pc.iceConnectionState}\nUlanish: {pc.connectionState}\nDataChannel: {channel?.readyState.ToString() ?? "—"}\nManzillar: {counts}\nTanlangan juftlik: {route}\n\n" + string.Join("\n", log);
     }
 

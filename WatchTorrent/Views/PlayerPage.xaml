@@ -54,9 +54,9 @@
                 StrokeThickness="0"
                 StrokeShape="RoundRectangle 16"
                 BackgroundColor="#99000000"
-                IsVisible="False"
+                Opacity="0"
                 InputTransparent="true">
-                <Label Text="2x  ▶▶" TextColor="White" FontFamily="OpenSansSemibold" FontSize="14" />
+                <Label Text="2x" TextColor="White" FontFamily="OpenSansSemibold" FontSize="14" />
             </Border>
             <Border
                 x:Name="LevelIndicator"
@@ -285,7 +285,7 @@
                                  BackgroundColor="#D01B1D1F" Padding="16,10" Spacing="6" InputTransparent="True" IsVisible="False">
                 <Grid WidthRequest="38" HeightRequest="38">
                     <ActivityIndicator x:Name="PartnerSpinner" Color="{StaticResource Accent}" />
-                    <Label Text="↔" TextColor="White" HorizontalOptions="Center" VerticalOptions="Center"/>
+                    <Image Source="tab_connection.png" WidthRequest="18" HeightRequest="18" HorizontalOptions="Center" VerticalOptions="Center"/>
                 </Grid>
                 <Label Text="Sherigingizning telefoni yuklamoqda…" TextColor="White" FontSize="13" />
             </VerticalStackLayout>
@@ -351,7 +351,6 @@
                                     <Label Text="{Binding Number}" TextColor="#99FFFFFF" FontSize="14" VerticalOptions="Start">
                                         <Label.Triggers>
                                             <DataTrigger TargetType="Label" Binding="{Binding IsCurrent}" Value="True">
-                                                <Setter Property="Text" Value="▶" />
                                                 <Setter Property="TextColor" Value="{StaticResource Accent}" />
                                             </DataTrigger>
                                         </Label.Triggers>

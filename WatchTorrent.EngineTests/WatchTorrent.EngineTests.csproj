@@ -4,15 +4,21 @@
     <TargetFramework>net10.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
-    <DefineConstants>$(DefineConstants);WINDOWS</DefineConstants>
+    <DefineConstants>$(DefineConstants);WINDOWS;PLAYER_AUDIO_TESTS</DefineConstants>
   </PropertyGroup>
   <ItemGroup>
+    <PackageReference Include="LibVLCSharp" Version="3.10.2" />
     <ProjectReference Include="../WatchTorrent.Libtorrent/WatchTorrent.Libtorrent.csproj" />
     <Compile Include="../WatchTorrent/EngineAliases.cs" Link="EngineAliases.cs" />
     <Compile Include="../WatchTorrent/Services/DownloadItem.cs" Link="DownloadItem.cs" />
     <Compile Include="../WatchTorrent/Services/DownloadService.cs" Link="DownloadService.cs" />
     <Compile Include="../WatchTorrent/Services/MovieInvite.cs" Link="MovieInvite.cs" />
     <Compile Include="../WatchTorrent/Services/MediaFiles.cs" Link="MediaFiles.cs" />
+    <Compile Include="../WatchTorrent/Services/WatchSession.cs" Link="WatchSession.cs" />
+    <Compile Include="../WatchTorrent/Services/TorrentMediaServer.cs" Link="TorrentMediaServer.cs" />
+    <Compile Include="../WatchTorrent/Services/PlaybackRateTransition.cs" Link="PlaybackRateTransition.cs" />
+    <Compile Include="../WatchTorrent/Services/PlayerAudioOutput.cs" Link="PlayerAudioOutput.cs" />
+    <Compile Include="../WatchTorrent/Views/PlayerPage.Input.cs" Link="PlayerPage.Input.cs" />
     <Compile Include="../WatchTorrent/ViewModels/ObservableObject.cs" Link="ObservableObject.cs" />
   </ItemGroup>
 </Project>

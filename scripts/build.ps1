@@ -84,7 +84,24 @@ try {
             if (!(Test-Path -LiteralPath (Join-Path $output 'WatchTorrent.exe'))) { throw 'Windows executable was not produced.' }
         }
         'Android' {
-            if (!(Get-ChildItem -LiteralPath $output -Filter '*-Signed.apk' -Recurse)) { throw 'Installable signed APK was not produced.' }
+            $signedApks = @(Get-ChildItem -LiteralPath $output -Filter '*-Signed.apk' -Recurse)
+            if (!$signedApks.Count) { throw 'Installable signed APK was not produced.' }
+            $abi = switch ($AndroidRid) {
+                'android-arm64' { 'arm64-v8a' }
+                'android-arm' { 'armeabi-v7a' }
+                'android-x64' { 'x86_64' }
+            }
+            foreach ($apk in $signedApks) {
+                $archive = [IO.Compression.ZipFile]::OpenRead($apk.FullName)
+                try {
+                    foreach ($library in @('libvlc.so', 'libc++_shared.so', 'libwatchtorrent_libtorrent.so')) {
+                        if (!$archive.GetEntry("lib/$abi/$library")) {
+                            throw "APK is missing lib/$abi/$library; playback would fail on the device."
+                        }
+                    }
+                }
+                finally { $archive.Dispose() }
+            }
         }
         'iOSSimulator' {
             if (!(Get-ChildItem -Path 'WatchTorrent/bin' -Directory -Filter '*.app' -Recurse)) { throw 'iOS simulator app was not produced.' }

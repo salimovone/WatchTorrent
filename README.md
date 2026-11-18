@@ -48,7 +48,7 @@ Native natijalar `native/artifacts/<rid>/`, tayyor app `artifacts/` ichiga chiqa
 
 - Libtorrent sessiyasi app ichida ishlaydi; barcha qurilmalarda bitta engine.
 - Oddiy yuklash libtorrent'ning odatiy picker'i bilan ishlaydi. Playback/seek paytida o'qiladigan joydan keyingi bo'laklarga deadline beriladi; peerlar pause/start bilan uzilmaydi.
-- Player baytlarni `read_piece_alert` orqali oladi. Hali kelmagan sparse disk baytlari VLC'ga berilmaydi. Kutish cancellation bilan to'xtaydi.
+- Player baytlarni `read_piece_alert` orqali oladi va VLC'ga shaxsiy loopback HTTP Range endpoint orqali beradi. Yangi seek eski range/o'qishni bekor qiladi; yuklangan joyga qaytish eski yetishmayotgan bo'lakni kutmaydi. Hali kelmagan sparse disk baytlari VLC'ga berilmaydi.
 - Pause/continue/remove darhol pending matni va spinner ko'rsatadi, qayta bosish bloklanadi, xatolarda tugma qayta ochiladi.
 - Manifest va fast-resume holati atomik saqlanadi. App fonga o'tganda va har 30 soniyada save qilinadi. Save faol torrentlarni pauza qilmaydi.
 - Yuklab olingan fayllar avvalgi papkada qoladi. Avvalgi engine sessiya formatlari import qilinmaydi: magnetni qayta qo'shib o'sha papkani tanlasangiz, libtorrent mavjud fayllarni tekshirib davom etadi.
@@ -56,7 +56,13 @@ Native natijalar `native/artifacts/<rid>/`, tayyor app `artifacts/` ichiga chiqa
 
 ## Tekshiruv va CI
 
-Managed assertion suite `scripts/build.ps1 -Target Tests` bilan bajariladi. Native Windows build lokal seeder/downloader bilan metadata, real piece baytlari, pause holatini saqlab qayta tiklash va fayllarni saqlab remove qilishni tekshiradi. `--native` managed smoke test real DLL/session bilan P/Invoke va manifest tiklanishini tekshiradi.
+Player gesturelari Android, Windows va iOS'da bitta boshqaruvdan foydalanadi: bir marta bosish boshqaruvni ochadi/yopadi, ikki marta bosish chap/o'ngda 10 soniya seek, o'rtada pauza/davom; 500 ms bosib turish vaqtincha 2x qiladi. Qo'yib yuborish, pointer cancellation, sirt qayta yaratilishi va fonga o'tish hold'ni tugatadi. iOS'da ham chap/o'ng vertikal surish yorug'lik/media ovozini boshqaradi; player landshaft rejimini so'raydi va yopilganda oldingi ekran holatini qaytaradi. VLC ichki mouse/key boshqaruvi o'chirilgan: buyruqlar ilova orqali o'tadi.
+
+Birga tomosha qilishda tezlik alohida `rateApply` buyrug'i bilan kelishiladi: bu seek/pauza qilmaydi. Tez qo'yib yuborilganda navbatdagi eski 2x buyrug'i bekor qilinadi. Birga tomosha qiladigan ikkala qurilma ham yangi build'da bo'lishi kerak. Tezlik 180 ms davomida bosqichma-bosqich o'zgaradi; qayta hold/release eski o'tishni bekor qiladi. PCM chiqishi uzluksiz, chegaralangan navbat orqali bitta audio qurilmasiga uzatiladi; tezlik almashishi audio qurilmasini qayta ochmaydi yoki buferni tozalamaydi. Seek/stop esa eski PCM'ni alohida bekor qiladi. O'qish kursori bo'yicha avtomatik pauza ishlatilmaydi: VLC o'z buferini boshqaradi. Gesture va sessiya regression testlari managed suite'ga kiritilgan. Qurilmada tekshirish: 1x va 1.25x'dan takroriy hold/release, release oynadan tashqarida, ikkinchi barmoq/cancel, hold paytida fonga o'tish, sekin torrent va ikki qurilmada birga tomosha qilish.
+
+Apple qo'llovi hozir `net10.0-ios`: Apple silicon Mac'da iOS ilovasi sifatida ishlash yo'li ham shu koddan foydalanadi. Alohida macOS/Mac Catalyst target mavjud emas. iOS PiP va HDR/SDR almashtirish hali amalga oshirilmagan; Android bilan to'liq funksiya tengligi deb hisoblamang. Apple qurilmasidagi playback silliqligi va UI uchun Mac/Xcode hamda real qurilmadagi sinov kerak; Windows'dagi reference-assembly compile buning o'rnini bosmaydi.
+
+Managed assertion suite `scripts/build.ps1 -Target Tests` bilan bajariladi. `WatchTorrent.EngineTests` executable'iga `--vlc-path <libvlc-papkasi>` berilsa, haqiqiy VLC bilan yuklanmagan joydan cached seek va takroriy hold/release paytidagi uzluksiz PCM sinovlari ham bajariladi. Native Windows build lokal seeder/downloader bilan metadata, real piece baytlari, pause holatini saqlab qayta tiklash va fayllarni saqlab remove qilishni tekshiradi. `--native` managed smoke test real DLL/session bilan P/Invoke va manifest tiklanishini tekshiradi.
 
 `.github/workflows/build.yml` testlardan keyin Windows, Android ARM64/ARM/x64 va iOS device/simulator native kutubxonalarini yig'ib, app bilan link qilishni tekshiradi. Tayyor Windows app, Android sinov imzoli APK'lar va iOS native archive'lar Actions artifactlariga chiqadi. Android artifact Play Store release keystore'i bilan imzolanmagan.
 

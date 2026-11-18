@@ -395,7 +395,7 @@ namespace WatchTorrent.ViewModels
 
             await Clipboard.Default.SetTextAsync(Detail.Magnet);
 
-            CopyMagnetText = "Nusxalandi ✓";
+            CopyMagnetText = "Nusxalandi";
             await Task.Delay(2000);
             CopyMagnetText = CopyMagnetDefaultText;
         }
