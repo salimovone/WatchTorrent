@@ -1,20 +1,14 @@
 # WatchTorrent
 
-WatchTorrent is a BitTorrent video player for **Windows and Android**. Find a torrent, start watching while it downloads, or save it for later. You can also invite a friend to watch the same video in sync and talk in the app.
+WatchTorrent is a BitTorrent video player built with **Android** in mind. It uses libtorrent for downloads and VLC for playback.
 
-The app bundles libtorrent for downloads and VLC for video playback.
+The **Windows x64** installer will be published on [GitHub Releases](https://github.com/salimovone/WatchTorrent/releases).
 
-## What you can do
+## Features
 
-| Feature | What it does |
-| --- | --- |
-| **Discover and search** | Browse trending torrents, search by title, and check file lists, sizes, and seed counts before choosing a result. |
-| **Stream while downloading** | Start playback as soon as enough data is available. WatchTorrent prioritizes the pieces the player needs. If you seek to a piece that has yet to arrive, you can use the timeline to return to an available section while the player buffers. |
-| **Download for later** | Pause and resume downloads, choose a save folder, and play completed videos from disk. On Android, you can enable background downloading in Settings. |
-| **Control playback** | Resume from a saved position, select episodes or files in multi-file torrents, switch audio and subtitle tracks, and adjust playback speed. HDR output and picture-in-picture depend on the device. |
-| **Watch together** | Invite one friend to a synchronized session. WatchTorrent coordinates play, pause, seeking, and speed changes across both players. Each device streams or plays its own copy of the video. |
-| **Talk while watching** | Start a voice call from **Connection** and turn on the microphone when you want to speak. |
-| **Choose your language** | Use English, Uzbek, or the device language in **Settings → Language**. For other device languages, WatchTorrent uses English. |
+- **Stream torrents while they download.** Start watching as soon as enough data is available. WatchTorrent prioritizes the pieces needed for playback.
+- **Watch together in sync.** Invite a friend and keep playback in sync when either of you plays, pauses, or seeks.
+- **Talk while watching.** Use in-app voice calls with a peer-to-peer connection when the network allows it.
 
 ## Getting started
 
@@ -56,7 +50,9 @@ The script writes a development-signed APK to `artifacts/android/` for devices r
 
 Opening HTTPS invitations directly requires the APK signing certificate to appear in the site's Android App Links association. When distributing an APK signed with a new certificate, add its SHA-256 fingerprint to the [GitHub Pages deployment](https://github.com/salimovone/salimovone.github.io/blob/main/.well-known/assetlinks.json).
 
-**iOS status.** The source includes an iOS target. Building the iOS app requires a VoiceConnection adapter that is still pending.
+### macOS and iOS
+
+I don’t have a Mac to build and test Apple releases. If you have a Mac and Xcode, you can work on Apple builds from source. The iOS target still needs a native VoiceConnection adapter, and macOS needs an app target and native dependencies. [iOS device setup notes](WatchTorrent/Platforms/iOS/README.md)
 
 ## Project layout
 
