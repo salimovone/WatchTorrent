@@ -1,3 +1,4 @@
+using L = WatchTorrent.Core.Localization.AppText;
 using System.Runtime.Versioning;
 using Android.App;
 using Android.Content;
@@ -20,7 +21,7 @@ namespace WatchTorrent
     [IntentFilter([Intent.ActionView], Categories = [Intent.CategoryDefault], DataMimeType = "application/octet-stream", DataScheme = "content")]
     [IntentFilter([Intent.ActionView], Categories = [Intent.CategoryDefault], DataMimeType = "*/*", DataScheme = "content", DataHost = "*", DataPathPattern = @".*\.wtcall")]
     [IntentFilter([Intent.ActionView], Categories = [Intent.CategoryDefault], DataScheme = "content", DataHost = "*", DataPathPattern = @".*\.wtcall")]
-    [Activity(Theme = "@style/Maui.SplashTheme", MainLauncher = true, LaunchMode = LaunchMode.SingleTask, SupportsPictureInPicture = true, ConfigurationChanges = ConfigChanges.ScreenSize | ConfigChanges.Orientation | ConfigChanges.UiMode | ConfigChanges.ScreenLayout | ConfigChanges.SmallestScreenSize | ConfigChanges.Density)]
+    [Activity(Theme = "@style/WatchTorrentSplashTheme", MainLauncher = true, LaunchMode = LaunchMode.SingleTask, SupportsPictureInPicture = true, ConfigurationChanges = ConfigChanges.ScreenSize | ConfigChanges.Orientation | ConfigChanges.UiMode | ConfigChanges.ScreenLayout | ConfigChanges.SmallestScreenSize | ConfigChanges.Density)]
     public class MainActivity : MauiAppCompatActivity
     {
         private Intent? invitation;
@@ -136,7 +137,7 @@ namespace WatchTorrent
                     }
                     if (request.Type != VoiceCall.InviteMime && !HasInviteName(uri))
                     {
-                        await shell.DisplayAlertAsync("Ovozli aloqa", "WatchTorrent taklif yoki javob uchun .wtcall faylini ochadi.", "Yopish");
+                        await shell.DisplayAlertAsync(L.Get("Ovozli aloqa"), L.Get("WatchTorrent taklif yoki javob uchun .wtcall faylini ochadi."), L.Get("Yopish"));
                         return;
                     }
                     using var stream = ContentResolver?.OpenInputStream(uri) ?? throw new IOException();
@@ -144,7 +145,7 @@ namespace WatchTorrent
                 }
                 catch (Exception)
                 {
-                    await shell.DisplayAlertAsync("Ovozli aloqa", "Taklifni ochib bo‘lmadi. Yangi havola so‘rang.", "Yopish");
+                    await shell.DisplayAlertAsync(L.Get("Ovozli aloqa"), L.Get("Taklifni ochib bo‘lmadi. Yangi havola so‘rang."), L.Get("Yopish"));
                 }
             }
         }

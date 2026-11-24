@@ -1,9 +1,12 @@
+using L = WatchTorrent.Core.Localization.AppText;
 using WatchTorrent.ViewModels;
 
 namespace WatchTorrent.Views
 {
     public partial class SettingsPage : ContentPage
     {
+        protected override bool OnBackButtonPressed() => Controls.DropdownMenu.Dismiss(this) || base.OnBackButtonPressed();
+
         private readonly SettingsViewModel _viewModel;
 
         public SettingsPage(SettingsViewModel viewModel)
@@ -36,10 +39,10 @@ namespace WatchTorrent.Views
 #elif IOS
                 var root = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
                 var folders = Directory.GetDirectories(root).Select(Path.GetFileName).OfType<string>().Order().ToArray();
-                const string create = "Yangi papka…";
-                var name = await DisplayActionSheetAsync("WatchTorrent papkalari", "Bekor qilish", null, folders.Append(create).ToArray());
-                if (name == create) name = (await DisplayPromptAsync("Yangi papka", "Papka nomini kiriting."))?.Trim();
-                if (string.IsNullOrEmpty(name) || name is "." or ".." or "Bekor qilish" || Path.GetFileName(name) != name) return;
+                var create = L.Get("Yangi papka…");
+                var name = await DisplayActionSheetAsync(L.Get("WatchTorrent papkalari"), L.Get("Bekor qilish"), null, folders.Append(create).ToArray());
+                if (name == create) name = (await DisplayPromptAsync(L.Get("Yangi papka"), L.Get("Papka nomini kiriting.")))?.Trim();
+                if (string.IsNullOrEmpty(name) || name is "." or ".." || name == L.Get("Bekor qilish") || Path.GetFileName(name) != name) return;
                 var path = Directory.CreateDirectory(Path.Combine(root, name)).FullName;
 #else
                 string? path = null;
@@ -50,8 +53,8 @@ namespace WatchTorrent.Views
                 catch (UnauthorizedAccessException) when (!OperatingSystem.IsAndroidVersionAtLeast(30)
                     || !Android.OS.Environment.IsExternalStorageManager)
                 {
-                    if (!await DisplayAlertAsync("Papkaga yozish uchun ruxsat kerak",
-                        "Kinoni shu papkaga yuklash uchun Android sozlamalarida fayllarga kirishga ruxsat bering.", "Davom etish", "Bekor qilish")) return;
+                    if (!await DisplayAlertAsync(L.Get("Papkaga yozish uchun ruxsat kerak"),
+                        L.Get("Kinoni shu papkaga yuklash uchun Android sozlamalarida fayllarga kirishga ruxsat bering."), L.Get("Davom etish"), L.Get("Bekor qilish"))) return;
                     if (!await activity.RequestFolderAccessAsync()) return;
                     _viewModel.SetDownloadDirectory(path);
                 }
@@ -61,7 +64,7 @@ namespace WatchTorrent.Views
             }
             catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or NotSupportedException or PermissionException)
             {
-                await DisplayAlertAsync("Papka tanlanmadi", "Telefon yoki kompyuterdagi yozish mumkin bo‘lgan boshqa papkani tanlang.", "Yopish");
+                await DisplayAlertAsync(L.Get("Papka tanlanmadi"), L.Get("Telefon yoki kompyuterdagi yozish mumkin bo‘lgan boshqa papkani tanlang."), L.Get("Yopish"));
             }
             finally { button.IsEnabled = true; }
         }

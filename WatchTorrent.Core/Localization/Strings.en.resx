@@ -1,0 +1,960 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <data name="S001" xml:space="preserve">
+    <value>Delete "{0}"?</value>
+  </data>
+  <data name="S002" xml:space="preserve">
+    <value>Back 10 s</value>
+  </data>
+  <data name="S003" xml:space="preserve">
+    <value>Forward 10 seconds</value>
+  </data>
+  <data name="S004" xml:space="preserve">
+    <value>Back 10 seconds</value>
+  </data>
+  <data name="S005" xml:space="preserve">
+    <value>2x</value>
+  </data>
+  <data name="S006" xml:space="preserve">
+    <value>A applied the answer</value>
+  </data>
+  <data name="S007" xml:space="preserve">
+    <value>Send the answer. Confirm once it has been applied.</value>
+  </data>
+  <data name="S008" xml:space="preserve">
+    <value>End the current call first.</value>
+  </data>
+  <data name="S009" xml:space="preserve">
+    <value>Connect first.</value>
+  </data>
+  <data name="S010" xml:space="preserve">
+    <value>Show all {0} files</value>
+  </data>
+  <data name="S011" xml:space="preserve">
+    <value>Details</value>
+  </data>
+  <data name="S012" xml:space="preserve">
+    <value>Details ›</value>
+  </data>
+  <data name="S013" xml:space="preserve">
+    <value>Battery permission</value>
+  </data>
+  <data name="S014" xml:space="preserve">
+    <value>Cancel</value>
+  </data>
+  <data name="S015" xml:space="preserve">
+    <value>Create an offer on one phone and accept it on the other.</value>
+  </data>
+  <data name="S016" xml:space="preserve">
+    <value>Choose to watch together or download for later.</value>
+  </data>
+  <data name="S017" xml:space="preserve">
+    <value>Watch together</value>
+  </data>
+  <data name="S018" xml:space="preserve">
+    <value>Your first download will appear here</value>
+  </data>
+  <data name="S019" xml:space="preserve">
+    <value>From the beginning</value>
+  </data>
+  <data name="S020" xml:space="preserve">
+    <value>Starting…</value>
+  </data>
+  <data name="S021" xml:space="preserve">
+    <value>Open in another app</value>
+  </data>
+  <data name="S022" xml:space="preserve">
+    <value>Try another internet connection or update Android System WebView. Check that your phone's date and time are correct.</value>
+  </data>
+  <data name="S023" xml:space="preserve">
+    <value>No subtitles were found for this video.</value>
+  </data>
+  <data name="S024" xml:space="preserve">
+    <value>This torrent has no video files.</value>
+  </data>
+  <data name="S025" xml:space="preserve">
+    <value>Today</value>
+  </data>
+  <data name="S026" xml:space="preserve">
+    <value>Restricted — the system may stop long-running background downloads.</value>
+  </data>
+  <data name="S027" xml:space="preserve">
+    <value>Unrestricted — the system will not stop background downloads.</value>
+  </data>
+  <data name="S028" xml:space="preserve">
+    <value>The Cloudflare check could not be completed. Please try again.</value>
+  </data>
+  <data name="S029" xml:space="preserve">
+    <value>Continue</value>
+  </data>
+  <data name="S030" xml:space="preserve">
+    <value>Complete the website check to continue. You will return to the app automatically.</value>
+  </data>
+  <data name="S031" xml:space="preserve">
+    <value>Resuming…</value>
+  </data>
+  <data name="S032" xml:space="preserve">
+    <value>Resume</value>
+  </data>
+  <data name="S033" xml:space="preserve">
+    <value>Period</value>
+  </data>
+  <data name="S034" xml:space="preserve">
+    <value>Diagnostics</value>
+  </data>
+  <data name="S035" xml:space="preserve">
+    <value>Direct connection test</value>
+  </data>
+  <data name="S036" xml:space="preserve">
+    <value>Aspect ratio</value>
+  </data>
+  <data name="S037" xml:space="preserve">
+    <value>Aspect ratio: {0}</value>
+  </data>
+  <data name="S038" xml:space="preserve">
+    <value>Downloads continue when the screen is off or the app is closed. Progress appears in a notification.</value>
+  </data>
+  <data name="S039" xml:space="preserve">
+    <value>Keep screen on</value>
+  </data>
+  <data name="S040" xml:space="preserve">
+    <value>Fill screen</value>
+  </data>
+  <data name="S041" xml:space="preserve">
+    <value>Newest</value>
+  </data>
+  <data name="S042" xml:space="preserve">
+    <value>Remove from list only</value>
+  </data>
+  <data name="S043" xml:space="preserve">
+    <value>Only while downloading with the Downloads page open.</value>
+  </data>
+  <data name="S044" xml:space="preserve">
+    <value>The file is too large.</value>
+  </data>
+  <data name="S045" xml:space="preserve">
+    <value>Getting file information…</value>
+  </data>
+  <data name="S046" xml:space="preserve">
+    <value>File not found</value>
+  </data>
+  <data name="S047" xml:space="preserve">
+    <value>Files ({0})</value>
+  </data>
+  <data name="S048" xml:space="preserve">
+    <value>File list</value>
+  </data>
+  <data name="S049" xml:space="preserve">
+    <value>Checking files…</value>
+  </data>
+  <data name="S050" xml:space="preserve">
+    <value>Delete files too</value>
+  </data>
+  <data name="S051" xml:space="preserve">
+    <value>Open file</value>
+  </data>
+  <data name="S052" xml:space="preserve">
+    <value>This video is downloaded on this phone.</value>
+  </data>
+  <data name="S053" xml:space="preserve">
+    <value>Find a movie</value>
+  </data>
+  <data name="S054" xml:space="preserve">
+    <value>Movie invitation</value>
+  </data>
+  <data name="S055" xml:space="preserve">
+    <value>Find a movie or series</value>
+  </data>
+  <data name="S056" xml:space="preserve">
+    <value>Find a movie or series and select Download on its page. Manage its progress here.</value>
+  </data>
+  <data name="S057" xml:space="preserve">
+    <value>Enter the movie's original title. You can add a year or quality, such as 2024 or 1080p.</value>
+  </data>
+  <data name="S058" xml:space="preserve">
+    <value>Continue in background</value>
+  </data>
+  <data name="S059" xml:space="preserve">
+    <value>Allow background activity</value>
+  </data>
+  <data name="S060" xml:space="preserve">
+    <value>Background downloads</value>
+  </data>
+  <data name="S061" xml:space="preserve">
+    <value>Turn on your microphone to speak.</value>
+  </data>
+  <data name="S062" xml:space="preserve">
+    <value>HDR picture</value>
+  </data>
+  <data name="S063" xml:space="preserve">
+    <value>Enable HDR picture</value>
+  </data>
+  <data name="S064" xml:space="preserve">
+    <value>HDR video uses colors and brightness suited to your display.</value>
+  </data>
+  <data name="S065" xml:space="preserve">
+    <value>HDR colors and brightness are adapted to the display automatically.</value>
+  </data>
+  <data name="S066" xml:space="preserve">
+    <value>Size</value>
+  </data>
+  <data name="S067" xml:space="preserve">
+    <value>Enter link</value>
+  </data>
+  <data name="S068" xml:space="preserve">
+    <value>Timed out gathering ICE candidates.</value>
+  </data>
+  <data name="S069" xml:space="preserve">
+    <value>Play or pause</value>
+  </data>
+  <data name="S070" xml:space="preserve">
+    <value>App not found</value>
+  </data>
+  <data name="S071" xml:space="preserve">
+    <value>Info hash</value>
+  </data>
+  <data name="S072" xml:space="preserve">
+    <value>Comments ({0})</value>
+  </data>
+  <data name="S073" xml:space="preserve">
+    <value>Invalid JSON. Paste the complete text.</value>
+  </data>
+  <data name="S074" xml:space="preserve">
+    <value>Timed out waiting for a reply.</value>
+  </data>
+  <data name="S075" xml:space="preserve">
+    <value>Channel opened</value>
+  </data>
+  <data name="S076" xml:space="preserve">
+    <value>Channel opened. Send a ping.</value>
+  </data>
+  <data name="S077" xml:space="preserve">
+    <value>Discover</value>
+  </data>
+  <data name="S078" xml:space="preserve">
+    <value>Next file</value>
+  </data>
+  <data name="S079" xml:space="preserve">
+    <value>Picture-in-picture is disabled</value>
+  </data>
+  <data name="S080" xml:space="preserve">
+    <value>Picture-in-picture</value>
+  </data>
+  <data name="S081" xml:space="preserve">
+    <value>Movie download folder</value>
+  </data>
+  <data name="S082" xml:space="preserve">
+    <value>Allow file access in Android settings to download movies to this folder.</value>
+  </data>
+  <data name="S083" xml:space="preserve">
+    <value>Most seeders</value>
+  </data>
+  <data name="S084" xml:space="preserve">
+    <value>Most leechers</value>
+  </data>
+  <data name="S085" xml:space="preserve">
+    <value>Watch</value>
+  </data>
+  <data name="S086" xml:space="preserve">
+    <value>Copy magnet link</value>
+  </data>
+  <data name="S087" xml:space="preserve">
+    <value>Local connection information is ready.</value>
+  </data>
+  <data name="S088" xml:space="preserve">
+    <value>Seeders</value>
+  </data>
+  <data name="S089" xml:space="preserve">
+    <value>Looking for peers…</value>
+  </data>
+  <data name="S090" xml:space="preserve">
+    <value>Waiting for peer information…</value>
+  </data>
+  <data name="S091" xml:space="preserve">
+    <value>Connecting to peers…</value>
+  </data>
+  <data name="S092" xml:space="preserve">
+    <value>Popular movies</value>
+  </data>
+  <data name="S093" xml:space="preserve">
+    <value>Popular games</value>
+  </data>
+  <data name="S094" xml:space="preserve">
+    <value>Remote connection information received.</value>
+  </data>
+  <data name="S095" xml:space="preserve">
+    <value>Data channel error.</value>
+  </data>
+  <data name="S096" xml:space="preserve">
+    <value>Could not open the microphone. </value>
+  </data>
+  <data name="S097" xml:space="preserve">
+    <value>Microphone is off.</value>
+  </data>
+  <data name="S098" xml:space="preserve">
+    <value>Microphone is on.</value>
+  </data>
+  <data name="S099" xml:space="preserve">
+    <value>Microphone · Off</value>
+  </data>
+  <data name="S100" xml:space="preserve">
+    <value>Microphone · On</value>
+  </data>
+  <data name="S101" xml:space="preserve">
+    <value>Microphone permission was denied.</value>
+  </data>
+  <data name="S102" xml:space="preserve">
+    <value>Turn microphone off</value>
+  </data>
+  <data name="S103" xml:space="preserve">
+    <value>Turn microphone on</value>
+  </data>
+  <data name="S104" xml:space="preserve">
+    <value>No matching results</value>
+  </data>
+  <data name="S105" xml:space="preserve">
+    <value>Sort results</value>
+  </data>
+  <data name="S106" xml:space="preserve">
+    <value>Select a result to view its files, watch it, or download it.</value>
+  </data>
+  <data name="S107" xml:space="preserve">
+    <value>Start with a title</value>
+  </data>
+  <data name="S108" xml:space="preserve">
+    <value>Enter a title</value>
+  </data>
+  <data name="S109" xml:space="preserve">
+    <value>Try a shorter or original title. Removing the year or quality may also help.</value>
+  </data>
+  <data name="S110" xml:space="preserve">
+    <value>Copied</value>
+  </data>
+  <data name="S111" xml:space="preserve">
+    <value>Copy</value>
+  </data>
+  <data name="S112" xml:space="preserve">
+    <value>Could not delete</value>
+  </data>
+  <data name="S113" xml:space="preserve">
+    <value>Deleting…</value>
+  </data>
+  <data name="S114" xml:space="preserve">
+    <value>Delete</value>
+  </data>
+  <data name="S115" xml:space="preserve">
+    <value>Could not open</value>
+  </data>
+  <data name="S116" xml:space="preserve">
+    <value>Opening…</value>
+  </data>
+  <data name="S117" xml:space="preserve">
+    <value>Open</value>
+  </data>
+  <data name="S118" xml:space="preserve">
+    <value>Paste the offer text</value>
+  </data>
+  <data name="S119" xml:space="preserve">
+    <value>Accept offer</value>
+  </data>
+  <data name="S120" xml:space="preserve">
+    <value>Create offer</value>
+  </data>
+  <data name="S121" xml:space="preserve">
+    <value>Send the offer, then paste the answer.</value>
+  </data>
+  <data name="S122" xml:space="preserve">
+    <value>Back</value>
+  </data>
+  <data name="S123" xml:space="preserve">
+    <value>Volume</value>
+  </data>
+  <data name="S124" xml:space="preserve">
+    <value>Could not start the voice engine. </value>
+  </data>
+  <data name="S125" xml:space="preserve">
+    <value>Voice engines do not match. Install the same build on both devices.</value>
+  </data>
+  <data name="S126" xml:space="preserve">
+    <value>Voice call</value>
+  </data>
+  <data name="S127" xml:space="preserve">
+    <value>You received a voice call invitation.</value>
+  </data>
+  <data name="S128" xml:space="preserve">
+    <value>Enter a folder name.</value>
+  </data>
+  <data name="S129" xml:space="preserve">
+    <value>Folder not selected</value>
+  </data>
+  <data name="S130" xml:space="preserve">
+    <value>Permission is required to write to the folder</value>
+  </data>
+  <data name="S131" xml:space="preserve">
+    <value>Choose folder</value>
+  </data>
+  <data name="S132" xml:space="preserve">
+    <value>Pause</value>
+  </data>
+  <data name="S133" xml:space="preserve">
+    <value>Pausing…</value>
+  </data>
+  <data name="S134" xml:space="preserve">
+    <value>Paused</value>
+  </data>
+  <data name="S135" xml:space="preserve">
+    <value>Ping</value>
+  </data>
+  <data name="S136" xml:space="preserve">
+    <value>Received ping #{0}; sent pong.</value>
+  </data>
+  <data name="S137" xml:space="preserve">
+    <value>Could not start the player: {0}</value>
+  </data>
+  <data name="S138" xml:space="preserve">
+    <value>Restart</value>
+  </data>
+  <data name="S139" xml:space="preserve">
+    <value>Try again</value>
+  </data>
+  <data name="S140" xml:space="preserve">
+    <value>Reload</value>
+  </data>
+  <data name="S141" xml:space="preserve">
+    <value>Searching…</value>
+  </data>
+  <data name="S142" xml:space="preserve">
+    <value>Search</value>
+  </data>
+  <data name="S143" xml:space="preserve">
+    <value>Search</value>
+  </data>
+  <data name="S144" xml:space="preserve">
+    <value>Search could not be completed</value>
+  </data>
+  <data name="S145" xml:space="preserve">
+    <value>Added</value>
+  </data>
+  <data name="S146" xml:space="preserve">
+    <value>Close image</value>
+  </data>
+  <data name="S147" xml:space="preserve">
+    <value>List period</value>
+  </data>
+  <data name="S148" xml:space="preserve">
+    <value>Loading the list…</value>
+  </data>
+  <data name="S149" xml:space="preserve">
+    <value>Close playlist</value>
+  </data>
+  <data name="S150" xml:space="preserve">
+    <value>Could not load the list</value>
+  </data>
+  <data name="S151" xml:space="preserve">
+    <value>SDP was rejected: </value>
+  </data>
+  <data name="S152" xml:space="preserve">
+    <value>Saved files and download progress</value>
+  </data>
+  <data name="S153" xml:space="preserve">
+    <value>Open your saved downloads or search by title.</value>
+  </data>
+  <data name="S154" xml:space="preserve">
+    <value>Sort</value>
+  </data>
+  <data name="S155" xml:space="preserve">
+    <value>The website has not returned a list yet. Please try again later.</value>
+  </data>
+  <data name="S156" xml:space="preserve">
+    <value>Could not connect to the website. Check your internet connection.</value>
+  </data>
+  <data name="S157" xml:space="preserve">
+    <value>Your partner chose to download</value>
+  </data>
+  <data name="S158" xml:space="preserve">
+    <value>Waiting for your partner's reply…</value>
+  </data>
+  <data name="S159" xml:space="preserve">
+    <value>Your partner's phone is downloading…</value>
+  </data>
+  <data name="S160" xml:space="preserve">
+    <value>This week</value>
+  </data>
+  <data name="S161" xml:space="preserve">
+    <value>Signaling: {0}
+ICE gathering: {1}
+ICE: {2}
+Connection: {3}
+DataChannel: {4}
+Candidates: {5}
+Selected pair: {6}
+</value>
+  </data>
+  <data name="S162" xml:space="preserve">
+    <value>The request timed out. Please try again.</value>
+  </data>
+  <data name="S163" xml:space="preserve">
+    <value>Settings</value>
+  </data>
+  <data name="S164" xml:space="preserve">
+    <value>Restore default folder</value>
+  </data>
+  <data name="S165" xml:space="preserve">
+    <value>Stream video</value>
+  </data>
+  <data name="S166" xml:space="preserve">
+    <value>Subtitle</value>
+  </data>
+  <data name="S167" xml:space="preserve">
+    <value>Subtitles</value>
+  </data>
+  <data name="S168" xml:space="preserve">
+    <value>Call ended.</value>
+  </data>
+  <data name="S169" xml:space="preserve">
+    <value>The other person ended the connection.</value>
+  </data>
+  <data name="S170" xml:space="preserve">
+    <value>Paste the invitation link you received.</value>
+  </data>
+  <data name="S171" xml:space="preserve">
+    <value>Connecting to the other person…</value>
+  </data>
+  <data name="S172" xml:space="preserve">
+    <value>End call</value>
+  </data>
+  <data name="S173" xml:space="preserve">
+    <value>The invitation is outdated or invalid. Ask for a new one.</value>
+  </data>
+  <data name="S174" xml:space="preserve">
+    <value>Invitation link</value>
+  </data>
+  <data name="S175" xml:space="preserve">
+    <value>The invitation link is invalid.</value>
+  </data>
+  <data name="S176" xml:space="preserve">
+    <value>The invitation link is invalid. Ask for a new one.</value>
+  </data>
+  <data name="S177" xml:space="preserve">
+    <value>Send an invitation link or open one you received.</value>
+  </data>
+  <data name="S178" xml:space="preserve">
+    <value>Share invitation link</value>
+  </data>
+  <data name="S179" xml:space="preserve">
+    <value>The invitation does not match.</value>
+  </data>
+  <data name="S180" xml:space="preserve">
+    <value>The invitation expired or was not found. Ask for a new link.</value>
+  </data>
+  <data name="S181" xml:space="preserve">
+    <value>Waiting for the invitation to be accepted.</value>
+  </data>
+  <data name="S182" xml:space="preserve">
+    <value>Send invitation</value>
+  </data>
+  <data name="S183" xml:space="preserve">
+    <value>Could not open the invitation. Ask for a new link.</value>
+  </data>
+  <data name="S184" xml:space="preserve">
+    <value>Accept invitation</value>
+  </data>
+  <data name="S185" xml:space="preserve">
+    <value>Description</value>
+  </data>
+  <data name="S186" xml:space="preserve">
+    <value>View description</value>
+  </data>
+  <data name="S187" xml:space="preserve">
+    <value>Checked</value>
+  </data>
+  <data name="S188" xml:space="preserve">
+    <value>The check is taking longer than expected</value>
+  </data>
+  <data name="S189" xml:space="preserve">
+    <value>Enable Picture-in-picture for WatchTorrent in your phone settings.</value>
+  </data>
+  <data name="S190" xml:space="preserve">
+    <value>Choose another writable folder on your phone or computer.</value>
+  </data>
+  <data name="S191" xml:space="preserve">
+    <value>Speed</value>
+  </data>
+  <data name="S192" xml:space="preserve">
+    <value>Fullscreen</value>
+  </data>
+  <data name="S193" xml:space="preserve">
+    <value>Stopping…</value>
+  </data>
+  <data name="S194" xml:space="preserve">
+    <value>Category</value>
+  </data>
+  <data name="S195" xml:space="preserve">
+    <value>Watch</value>
+  </data>
+  <data name="S196" xml:space="preserve">
+    <value>Watching also starts the download.</value>
+  </data>
+  <data name="S197" xml:space="preserve">
+    <value>Top 100 movies</value>
+  </data>
+  <data name="S198" xml:space="preserve">
+    <value>Top 100 games</value>
+  </data>
+  <data name="S199" xml:space="preserve">
+    <value>Torrent engine error: </value>
+  </data>
+  <data name="S200" xml:space="preserve">
+    <value>Torrent size: {0}</value>
+  </data>
+  <data name="S201" xml:space="preserve">
+    <value>Getting torrent information…</value>
+  </data>
+  <data name="S202" xml:space="preserve">
+    <value>The torrent was not found in your downloads.</value>
+  </data>
+  <data name="S203" xml:space="preserve">
+    <value>Shows torrent download progress; downloading continues with the screen off</value>
+  </data>
+  <data name="S204" xml:space="preserve">
+    <value>Torrent category</value>
+  </data>
+  <data name="S205" xml:space="preserve">
+    <value>Clear and retry</value>
+  </data>
+  <data name="S206" xml:space="preserve">
+    <value>Trending movies</value>
+  </data>
+  <data name="S207" xml:space="preserve">
+    <value>Trending games</value>
+  </data>
+  <data name="S208" xml:space="preserve">
+    <value>Trending</value>
+  </data>
+  <data name="S209" xml:space="preserve">
+    <value>Connected</value>
+  </data>
+  <data name="S210" xml:space="preserve">
+    <value>Could not connect. </value>
+  </data>
+  <data name="S211" xml:space="preserve">
+    <value>Connection</value>
+  </data>
+  <data name="S212" xml:space="preserve">
+    <value>Invalid connection information.</value>
+  </data>
+  <data name="S213" xml:space="preserve">
+    <value>Preparing the connection…</value>
+  </data>
+  <data name="S214" xml:space="preserve">
+    <value>The connection could not be restored.</value>
+  </data>
+  <data name="S215" xml:space="preserve">
+    <value>Connection lost. Check your internet connection and try again.</value>
+  </data>
+  <data name="S216" xml:space="preserve">
+    <value>Connection timed out. Try again on the same Wi-Fi network.</value>
+  </data>
+  <data name="S217" xml:space="preserve">
+    <value>Connection timed out. Try again with a new invitation.</value>
+  </data>
+  <data name="S218" xml:space="preserve">
+    <value>Connection: </value>
+  </data>
+  <data name="S219" xml:space="preserve">
+    <value>Playback position</value>
+  </data>
+  <data name="S220" xml:space="preserve">
+    <value>Could not play the video: the file is damaged or its format is unsupported.</value>
+  </data>
+  <data name="S221" xml:space="preserve">
+    <value>Invalid VoiceConnection voice key.</value>
+  </data>
+  <data name="S222" xml:space="preserve">
+    <value>VoiceConnection voice key is missing.</value>
+  </data>
+  <data name="S223" xml:space="preserve">
+    <value>VoiceConnection voice protocols do not match.</value>
+  </data>
+  <data name="S224" xml:space="preserve">
+    <value>VoiceConnection voice connection failed. </value>
+  </data>
+  <data name="S225" xml:space="preserve">
+    <value>VoiceConnection voice: {0}
+</value>
+  </data>
+  <data name="S226" xml:space="preserve">
+    <value>WatchTorrent folders</value>
+  </data>
+  <data name="S227" xml:space="preserve">
+    <value>Enter the complete WatchTorrent invitation link.</value>
+  </data>
+  <data name="S228" xml:space="preserve">
+    <value>WatchTorrent opens .wtcall files for invitations or answers.</value>
+  </data>
+  <data name="S229" xml:space="preserve">
+    <value>Update WebView in Play Store</value>
+  </data>
+  <data name="S230" xml:space="preserve">
+    <value>Error: {0}</value>
+  </data>
+  <data name="S231" xml:space="preserve">
+    <value>Error</value>
+  </data>
+  <data name="S232" xml:space="preserve">
+    <value>An error occurred: {0}</value>
+  </data>
+  <data name="S233" xml:space="preserve">
+    <value>Security check</value>
+  </data>
+  <data name="S234" xml:space="preserve">
+    <value>Foreign movies</value>
+  </data>
+  <data name="S235" xml:space="preserve">
+    <value>Load more</value>
+  </data>
+  <data name="S236" xml:space="preserve">
+    <value>New folder</value>
+  </data>
+  <data name="S237" xml:space="preserve">
+    <value>New folder…</value>
+  </data>
+  <data name="S238" xml:space="preserve">
+    <value>New downloads are saved to the selected folder.</value>
+  </data>
+  <data name="S239" xml:space="preserve">
+    <value>Close</value>
+  </data>
+  <data name="S240" xml:space="preserve">
+    <value>Colors and brightness adapt to your display's HDR capabilities. You can also change this while watching.</value>
+  </data>
+  <data name="S241" xml:space="preserve">
+    <value>Downloaded</value>
+  </data>
+  <data name="S242" xml:space="preserve">
+    <value>Could not download</value>
+  </data>
+  <data name="S243" xml:space="preserve">
+    <value>Downloaded</value>
+  </data>
+  <data name="S244" xml:space="preserve">
+    <value>Download</value>
+  </data>
+  <data name="S245" xml:space="preserve">
+    <value>Uploaded by</value>
+  </data>
+  <data name="S246" xml:space="preserve">
+    <value>Could not save download state: </value>
+  </data>
+  <data name="S247" xml:space="preserve">
+    <value>Downloads</value>
+  </data>
+  <data name="S248" xml:space="preserve">
+    <value>Keep the screen on in Downloads</value>
+  </data>
+  <data name="S249" xml:space="preserve">
+    <value>View in Downloads</value>
+  </data>
+  <data name="S250" xml:space="preserve">
+    <value>Open downloads</value>
+  </data>
+  <data name="S251" xml:space="preserve">
+    <value>Delete download</value>
+  </data>
+  <data name="S252" xml:space="preserve">
+    <value>Downloading</value>
+  </data>
+  <data name="S253" xml:space="preserve">
+    <value>Downloading · {0} left</value>
+  </data>
+  <data name="S254" xml:space="preserve">
+    <value>Downloads</value>
+  </data>
+  <data name="S255" xml:space="preserve">
+    <value>Prevents the computer from sleeping while downloads are active.</value>
+  </data>
+  <data name="S256" xml:space="preserve">
+    <value>Leechers</value>
+  </data>
+  <data name="S257" xml:space="preserve">
+    <value>[Cloudflare] Could not open Play Store: {0}</value>
+  </data>
+  <data name="S258" xml:space="preserve">
+    <value>[Cloudflare] Check failed: {0}</value>
+  </data>
+  <data name="S259" xml:space="preserve">
+    <value>[DirectVideo] Could not connect: {0}</value>
+  </data>
+  <data name="S260" xml:space="preserve">
+    <value>[KeepAlive] Notification permission: {0}</value>
+  </data>
+  <data name="S261" xml:space="preserve">
+    <value>[KeepAlive] Could not start background service: {0}</value>
+  </data>
+  <data name="S262" xml:space="preserve">
+    <value>[PiP] Could not enter picture-in-picture: {0}</value>
+  </data>
+  <data name="S263" xml:space="preserve">
+    <value>[Posters] Could not save cache: {0}</value>
+  </data>
+  <data name="S265" xml:space="preserve">
+    <value>{0}
+View download progress in Downloads.</value>
+  </data>
+  <data name="S266" xml:space="preserve">
+    <value>{0} (selected)</value>
+  </data>
+  <data name="S267" xml:space="preserve">
+    <value>Resuming from {0}</value>
+  </data>
+  <data name="S268" xml:space="preserve">
+    <value>{0} files</value>
+  </data>
+  <data name="S269" xml:space="preserve">
+    <value>Downloading {0} torrents</value>
+  </data>
+  <data name="S270" xml:space="preserve">
+    <value>{0} · downloaded</value>
+  </data>
+  <data name="S271" xml:space="preserve">
+    <value>{0} · {1}% downloaded</value>
+  </data>
+  <data name="Language" xml:space="preserve">
+    <value>Language</value>
+  </data>
+  <data name="DeviceLanguage" xml:space="preserve">
+    <value>Device language</value>
+  </data>
+  <data name="LanguageHelp" xml:space="preserve">
+    <value>The device language is used by default. Your language choice is saved automatically.</value>
+  </data>
+  <data name="LanguageSystem" xml:space="preserve">
+    <value>Device language (automatic)</value>
+  </data>
+  <data name="NotConnected" xml:space="preserve">
+    <value>Not connected</value>
+  </data>
+  <data name="Connecting" xml:space="preserve">
+    <value>Connecting</value>
+  </data>
+  <data name="Off" xml:space="preserve">
+    <value>Off</value>
+  </data>
+  <data name="Automatic" xml:space="preserve">
+    <value>Automatic</value>
+  </data>
+  <data name="Fit" xml:space="preserve">
+    <value>Fit</value>
+  </data>
+  <data name="Stretch" xml:space="preserve">
+    <value>Stretch</value>
+  </data>
+  <data name="OriginalSize" xml:space="preserve">
+    <value>Original size</value>
+  </data>
+  <data name="Largest" xml:space="preserve">
+    <value>Largest</value>
+  </data>
+  <data name="Smallest" xml:space="preserve">
+    <value>Smallest</value>
+  </data>
+  <data name="AudioTrack" xml:space="preserve">
+    <value>Audio track</value>
+  </data>
+  <data name="Buffering" xml:space="preserve">
+    <value>Buffering…</value>
+  </data>
+  <data name="GatheringIce" xml:space="preserve">
+    <value>Gathering ICE candidates…</value>
+  </data>
+  <data name="IceGather" xml:space="preserve">
+    <value>ICE gathering: </value>
+  </data>
+  <data name="IceStatus" xml:space="preserve">
+    <value>ICE: </value>
+  </data>
+  <data name="EngineStartFailed" xml:space="preserve">
+    <value>Could not start libtorrent. </value>
+  </data>
+  <data name="MagnetAppMissing" xml:space="preserve">
+    <value>No torrent app is installed to open magnet links.</value>
+  </data>
+  <data name="MagnetTooLong" xml:space="preserve">
+    <value>The magnet link is too long.</value>
+  </data>
+  <data name="Decline" xml:space="preserve">
+    <value>Decline</value>
+  </data>
+  <data name="Preparing" xml:space="preserve">
+    <value>Preparing…</value>
+  </data>
+  <data name="AddingTorrent" xml:space="preserve">
+    <value>Adding torrent…</value>
+  </data>
+  <data name="SignalFailed" xml:space="preserve">
+    <value>VoiceConnection signaling failed. </value>
+  </data>
+  <data name="InvalidSignal" xml:space="preserve">
+    <value>Invalid VoiceConnection signaling.</value>
+  </data>
+  <data name="SignalTooLarge" xml:space="preserve">
+    <value>VoiceConnection signaling packet is too large.</value>
+  </data>
+  <data name="AnswerText" xml:space="preserve">
+    <value>Paste the answer text</value>
+  </data>
+  <data name="ApplyAnswer" xml:space="preserve">
+    <value>Apply answer</value>
+  </data>
+  <data name="ExpectedStage" xml:space="preserve">
+    <value>Expected {0} at this step.</value>
+  </data>
+  <data name="LessThanMinute" xml:space="preserve">
+    <value>&lt; 1 min</value>
+  </data>
+  <data name="Minutes" xml:space="preserve">
+    <value>{0} min</value>
+  </data>
+  <data name="HoursMinutes" xml:space="preserve">
+    <value>{0} h {1} min</value>
+  </data>
+  <data name="DaysHours" xml:space="preserve">
+    <value>{0} d {1} h</value>
+  </data>
+  <data name="ResultsCount" xml:space="preserve">
+    <value>{0} results</value>
+  </data>
+  <data name="HdrMode" xml:space="preserve">
+    <value>{0} · HDR mode</value>
+  </data>
+  <data name="CatalogPeers" xml:space="preserve">
+    <value>In catalog</value>
+  </data>
+  <data name="ConnectedPeers" xml:space="preserve">
+    <value>Connected at sender</value>
+  </data>
+  <data name="PeerCounts" xml:space="preserve">
+    <value>{0} · {1} seed · {2} leech</value>
+  </data>
+  <data name="ForwardShort" xml:space="preserve">
+    <value>Forward 10 s</value>
+  </data>
+  <data name="DownloadCount">
+    <value>{0:N0} times</value>
+  </data>
+  <data name="SeederUnit">
+    <value>seeders</value>
+  </data>
+  <data name="SettingsHdrHelp" xml:space="preserve">
+    <value>Colors and brightness adapt to your display.</value>
+  </data>
+  <data name="SettingsBackgroundHelp" xml:space="preserve">
+    <value>Keep downloading with the screen off.</value>
+  </data>
+</root>

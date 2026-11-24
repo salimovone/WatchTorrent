@@ -1,16 +1,18 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <ContentPage
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:loc="clr-namespace:WatchTorrent.Localization"
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:controls="clr-namespace:WatchTorrent.Controls"
     xmlns:vm="clr-namespace:WatchTorrent.ViewModels"
     x:Class="WatchTorrent.Views.DiscoverPage"
-    Title="Kashf etish"
+    Title="{loc:Translate S077}"
     Shell.NavBarIsVisible="false"
     x:DataType="vm:DiscoverViewModel">
     <Grid RowDefinitions="Auto,*" MaximumWidthRequest="1040">
-        <VerticalStackLayout Padding="20,8,20,10" Spacing="8">
+        <VerticalStackLayout Padding="20,20,20,16" Spacing="16">
             <Grid ColumnDefinitions="*,Auto">
-                <Label Text="WatchTorrent" FontSize="20" FontFamily="OpenSansSemibold" VerticalOptions="Center" />
+                <Label Text="WatchTorrent" Style="{StaticResource PageTitle}" VerticalOptions="Center" />
                 <ImageButton
                     Grid.Column="1"
                     Source="tab_search.png"
@@ -19,52 +21,14 @@
                     HeightRequest="44"
                     Padding="10"
                     Clicked="OnSearchClicked"
-                    SemanticProperties.Description="Film yoki serial qidirish"
-                    ToolTipProperties.Text="Qidirish" />
+                    SemanticProperties.Description="{loc:Translate S055}"
+                    ToolTipProperties.Text="{loc:Translate S142}" />
             </Grid>
-            <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
-                <Border Stroke="{StaticResource StrokeColor}" StrokeShape="RoundRectangle 6" Padding="10,0">
-                    <Grid>
-                        <Picker
-                            Title="Toifa"
-                            ItemsSource="{Binding Categories}"
-                            ItemDisplayBinding="{Binding Title, x:DataType=vm:DiscoverCategory}"
-                            SelectedItem="{Binding SelectedCategory}"
-                            SemanticProperties.Description="Torrentlar toifasi" />
-                        <Label
-                            Text="⌄"
-                            FontSize="18"
-                            TextColor="{StaticResource TextMuted}"
-                            HorizontalOptions="End"
-                            VerticalOptions="Center"
-                            InputTransparent="true"
-                            IsVisible="{OnPlatform Android=True, Default=False}" />
-                    </Grid>
-                </Border>
-                <Border
-                    Grid.Column="1"
-                    WidthRequest="120"
-                    IsVisible="{Binding ShowRanges}"
-                    Stroke="{StaticResource StrokeColor}"
-                    StrokeShape="RoundRectangle 6"
-                    Padding="10,0">
-                    <Grid>
-                        <Picker
-                            Title="Davr"
-                            ItemsSource="{Binding Ranges}"
-                            ItemDisplayBinding="{Binding Title, x:DataType=vm:RangeOption}"
-                            SelectedItem="{Binding SelectedRange}"
-                            SemanticProperties.Description="Ro'yxat davri" />
-                        <Label
-                            Text="⌄"
-                            FontSize="18"
-                            TextColor="{StaticResource TextMuted}"
-                            HorizontalOptions="End"
-                            VerticalOptions="Center"
-                            InputTransparent="true"
-                            IsVisible="{OnPlatform Android=True, Default=False}" />
-                    </Grid>
-                </Border>
+            <Grid ColumnDefinitions="*,132" ColumnSpacing="10">
+                <controls:Dropdown Title="{loc:Translate S194}" AutomationId="CategoryDropdown"
+                    ItemsSource="{Binding Categories}" SelectedItem="{Binding SelectedCategory, Mode=TwoWay}" />
+                <controls:Dropdown Grid.Column="1" Title="{loc:Translate S033}" AutomationId="RangeDropdown"
+                    IsVisible="{Binding ShowRanges}" ItemsSource="{Binding Ranges}" SelectedItem="{Binding SelectedRange, Mode=TwoWay}" />
             </Grid>
         </VerticalStackLayout>
         <RefreshView Grid.Row="1" IsRefreshing="{Binding IsRefreshing}" Command="{Binding RefreshCommand}">
@@ -82,20 +46,20 @@
             VerticalOptions="Start"
             HorizontalOptions="Center">
             <ActivityIndicator IsRunning="{Binding IsBusy}" HeightRequest="28" />
-            <Label Text="Ro'yxat olinmoqda…" Style="{StaticResource BodyText}" />
+            <Label Text="{loc:Translate S148}" Style="{StaticResource BodyText}" />
         </VerticalStackLayout>
         <ScrollView Grid.Row="1" IsVisible="{Binding HasError}">
             <VerticalStackLayout Padding="24,32" Spacing="12" MaximumWidthRequest="460">
-                <Label Text="Ro'yxatni yuklab bo'lmadi" Style="{StaticResource SectionTitle}" />
+                <Label Text="{loc:Translate S150}" Style="{StaticResource SectionTitle}" />
                 <Label Text="{Binding ErrorMessage}" Style="{StaticResource BodyText}" />
-                <Button Text="Qayta yuklash" Command="{Binding RefreshCommand}" HorizontalOptions="Start" Margin="0,8,0,0" />
+                <Button Text="{loc:Translate S140}" Command="{Binding RefreshCommand}" HorizontalOptions="Start" Margin="0,8,0,0" />
                 <BoxView Style="{StaticResource Rule}" Margin="0,12" />
                 <Label
-                    Text="Saqlangan yuklamalaringizni ochishingiz yoki nom bo'yicha qidirishingiz mumkin."
+                    Text="{loc:Translate S153}"
                     Style="{StaticResource BodyText}" />
                 <FlexLayout Wrap="Wrap">
-                    <Button Text="Yuklamalarni ochish" Style="{StaticResource TextButton}" Clicked="OnDownloadsClicked" />
-                    <Button Text="Qidirish" Style="{StaticResource TextButton}" Clicked="OnSearchClicked" />
+                    <Button Text="{loc:Translate S250}" Style="{StaticResource TextButton}" Clicked="OnDownloadsClicked" />
+                    <Button Text="{loc:Translate S142}" Style="{StaticResource TextButton}" Clicked="OnSearchClicked" />
                 </FlexLayout>
             </VerticalStackLayout>
         </ScrollView>

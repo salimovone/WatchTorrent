@@ -4,6 +4,8 @@ namespace WatchTorrent.Views
 {
     public partial class DiscoverPage : ContentPage
     {
+        protected override bool OnBackButtonPressed() => Controls.DropdownMenu.Dismiss(this) || base.OnBackButtonPressed();
+
         private readonly DiscoverViewModel _viewModel;
 
         public DiscoverPage(DiscoverViewModel viewModel)

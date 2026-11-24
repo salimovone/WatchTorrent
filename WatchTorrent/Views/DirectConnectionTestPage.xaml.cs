@@ -1,3 +1,4 @@
+using L = WatchTorrent.Core.Localization.AppText;
 using WatchTorrent.Services;
 
 namespace WatchTorrent.Views;
@@ -15,7 +16,7 @@ public partial class DirectConnectionTestPage : ContentPage
         peer = null;
         old?.Dispose();
         Input.Text = Output.Text = Diagnostic.Text = "";
-        StatusLabel.Text = message;
+        StatusLabel.Text = L.Get(message);
         phase = Phase.Start;
         Refresh();
     }
@@ -24,8 +25,8 @@ public partial class DirectConnectionTestPage : ContentPage
     {
         Create.IsVisible = phase == Phase.Start;
         Input.IsVisible = Apply.IsVisible = phase is Phase.Start or Phase.Waiting;
-        Input.Placeholder = phase == Phase.Waiting ? "Answer matnini joylang" : "Offer matnini joylang";
-        Apply.Text = phase == Phase.Waiting ? "Answer qo‘llash" : "Offer qabul qilish";
+        Input.Placeholder = phase == Phase.Waiting ? L.Get("Answer matnini joylang") : L.Get("Offer matnini joylang");
+        Apply.Text = phase == Phase.Waiting ? L.Get("Answer qo‘llash") : L.Get("Offer qabul qilish");
         Copy.IsVisible = Output.IsVisible = !string.IsNullOrEmpty(Output.Text);
         Confirm.IsVisible = phase == Phase.Confirm;
         Ping.IsEnabled = peer?.Connected == true;
@@ -38,7 +39,7 @@ public partial class DirectConnectionTestPage : ContentPage
         current.Changed += () =>
         {
             if (peer != current) return;
-            if (current.Connected && phase != Phase.Open) { phase = Phase.Open; StatusLabel.Text = "Kanal ochildi. Ping yuboring."; }
+            if (current.Connected && phase != Phase.Open) { phase = Phase.Open; StatusLabel.Text = L.Get("Kanal ochildi. Ping yuboring."); }
             Refresh();
         };
         current.Ended += reason => { if (peer == current) Fail(reason); };
@@ -60,7 +61,7 @@ public partial class DirectConnectionTestPage : ContentPage
     {
         var current = Begin();
         phase = Phase.Busy;
-        StatusLabel.Text = "ICE manzillari yig‘ilmoqda…";
+        StatusLabel.Text = L.Get("ICE manzillari yig‘ilmoqda…");
         Refresh();
         try
         {
@@ -69,7 +70,7 @@ public partial class DirectConnectionTestPage : ContentPage
             Output.Text = description.Encode();
             Input.Text = "";
             phase = remote == null ? Phase.Waiting : Phase.Confirm;
-            StatusLabel.Text = remote == null ? "Offer’ni yuboring, kelgan answer’ni joylang." : "Answer’ni yuboring. U qo‘llangach, tasdiqlang.";
+            StatusLabel.Text = remote == null ? L.Get("Offer’ni yuboring, kelgan answer’ni joylang.") : L.Get("Answer’ni yuboring. U qo‘llangach, tasdiqlang.");
             Refresh();
         }
         catch (Exception ex) { if (peer == current) Fail(ex.Message); }
@@ -95,7 +96,7 @@ public partial class DirectConnectionTestPage : ContentPage
         phase = Phase.Connecting;
         Refresh();
         try { await current.WaitAsync(); if (peer == current) { phase = Phase.Open; Refresh(); } }
-        catch (Exception) { if (peer == current) Fail("Ulanish vaqti tugadi. Bir Wi-Fi tarmog‘ida qayta urinib ko‘ring."); }
+        catch (Exception) { if (peer == current) Fail(L.Get("Ulanish vaqti tugadi. Bir Wi-Fi tarmog‘ida qayta urinib ko‘ring.")); }
     }
     private async void ConfirmAnswer(object? sender, EventArgs e) => await WaitForConnection();
     private async void SendPing(object? sender, EventArgs e)

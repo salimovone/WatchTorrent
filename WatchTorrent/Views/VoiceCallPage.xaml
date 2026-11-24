@@ -1,19 +1,26 @@
 <?xml version="1.0" encoding="utf-8" ?>
-<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui" xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-    x:Class="WatchTorrent.Views.VoiceCallPage" Title="Ulanish" Shell.NavBarIsVisible="False">
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui" xmlns:loc="clr-namespace:WatchTorrent.Localization"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    x:Class="WatchTorrent.Views.VoiceCallPage" Title="{loc:Translate S211}" Shell.NavBarIsVisible="False">
     <ScrollView>
-        <VerticalStackLayout Padding="20,24" Spacing="16" MaximumWidthRequest="640">
-            <Label Text="Ulanish" Style="{StaticResource PageTitle}" />
-            <HorizontalStackLayout Spacing="10">
-                <Ellipse x:Name="Indicator" WidthRequest="10" HeightRequest="10" VerticalOptions="Center" />
-                <Label x:Name="ConnectionState" FontFamily="OpenSansSemibold" />
-            </HorizontalStackLayout>
-            <Label x:Name="StatusLabel" Style="{StaticResource BodyText}" />
-            <Button x:Name="Offer" Text="Taklif yuborish" Clicked="CreateOffer" />
-            <Button x:Name="Pick" Text="Havolani kiritish" Style="{StaticResource GhostButton}" Clicked="OpenLink" />
-            <Button x:Name="Accept" Text="Taklifni qabul qilish" Clicked="AcceptOffer" />
-            <Button x:Name="Mic" Clicked="ToggleMic" />
-            <Button x:Name="Hangup" Text="Suhbatni tugatish" Style="{StaticResource GhostButton}" Clicked="EndCall" />
+        <VerticalStackLayout Padding="20,20,20,32" Spacing="24" MaximumWidthRequest="640">
+            <Label Text="{loc:Translate S211}" Style="{StaticResource PageTitle}" />
+            <Border Style="{StaticResource Card}">
+                <VerticalStackLayout Spacing="12">
+                    <HorizontalStackLayout Spacing="10">
+                        <Ellipse x:Name="Indicator" WidthRequest="8" HeightRequest="8" VerticalOptions="Center" />
+                        <Label x:Name="ConnectionState" FontFamily="OpenSansSemibold" />
+                    </HorizontalStackLayout>
+                    <Label x:Name="StatusLabel" Style="{StaticResource BodyText}" />
+                </VerticalStackLayout>
+            </Border>
+            <VerticalStackLayout Spacing="10">
+            <Button x:Name="Offer" Text="{loc:Translate S182}" Clicked="CreateOffer" />
+            <Button x:Name="Pick" Text="{loc:Translate S067}" Style="{StaticResource GhostButton}" Clicked="OpenLink" />
+            <Button x:Name="Accept" Text="{loc:Translate S184}" Clicked="AcceptOffer" />
+            <Button x:Name="Mic" Style="{StaticResource GhostButton}" Clicked="ToggleMic" />
+            <Button x:Name="Hangup" Text="{loc:Translate S172}" Style="{StaticResource TextButton}" TextColor="{StaticResource Leech}" Clicked="EndCall" />
+            </VerticalStackLayout>
         </VerticalStackLayout>
     </ScrollView>
 </ContentPage>

@@ -1,3 +1,4 @@
+using L = WatchTorrent.Core.Localization.AppText;
 using System.Security.Cryptography;
 
 namespace WatchTorrent.Services;
@@ -18,7 +19,8 @@ internal sealed class VoiceCall
     public bool Active => peer != null;
     public bool Connected => peer?.Connected == true;
     public bool Microphone => peer?.Microphone == true;
-    public string Status { get; private set; } = "Taklif havolasini yuboring yoki kelgan havolani oching.";
+    private string status = "Taklif havolasini yuboring yoki kelgan havolani oching.";
+    public string Status { get => L.Get(status); private set => status = value; }
 
     private void SetStatus(string text) { Status = text; Changed?.Invoke(); }
 
@@ -26,7 +28,7 @@ internal sealed class VoiceCall
     {
         var bytes = new byte[65537];
         int length = await stream.ReadAtLeastAsync(bytes, bytes.Length, false);
-        if (length == bytes.Length) throw new InvalidDataException("Fayl juda katta.");
+        if (length == bytes.Length) throw new InvalidDataException(L.Get("Fayl juda katta."));
         ImportOffer(System.Text.Encoding.UTF8.GetString(bytes, 0, length));
     }
 
@@ -37,11 +39,13 @@ internal sealed class VoiceCall
         var file = SignalFile.Parse(text, "offer");
         if (file.Format != Format || !ValidId(file.CallId) || file.ReplyKey == null ||
             !Convert.TryFromBase64String(file.ReplyKey, new byte[32], out var size) || size != 32 ||
-            !file.Sdp.Contains("m=audio ") || !file.Sdp.Contains("m=application "))
-            throw new InvalidDataException("Taklif eskirgan yoki buzilgan. Yangi taklif so‘rang.");
-        if (Active) { SetStatus("Avval joriy suhbatni tugating."); return; }
+            (file.AudioEngine == null && !file.Sdp.Contains("m=audio ")) || !file.Sdp.Contains("m=application "))
+            throw new InvalidDataException(L.Get("Taklif eskirgan yoki buzilgan. Yangi taklif so‘rang."));
+        if (file.AudioEngine != DirectPeer.VoiceEngine)
+            throw new InvalidDataException(L.Get("Ovoz dvigatellari mos kelmadi. Ikkala qurilmaga bir xil build o‘rnating."));
+        if (Active) { SetStatus(L.Get("Avval joriy suhbatni tugating.")); return; }
         invitation = file;
-        SetStatus("Ovozli suhbatga taklif keldi.");
+        SetStatus(L.Get("Ovozli suhbatga taklif keldi."));
     }
 
     private static bool ValidId(string? id) => id?.Length == 32 && id.All(Uri.IsHexDigit);
@@ -62,13 +66,13 @@ internal sealed class VoiceCall
             };
             current.Changed += () => { if (peer == current) Changed?.Invoke(); };
             current.Ended += reason => { if (peer == current) End(reason); };
-            SetStatus("Ulanish tayyorlanmoqda…");
+            SetStatus(L.Get("Ulanish tayyorlanmoqda…"));
             var local = await current.DescribeAsync(accept ? invite : null);
             current.Token.ThrowIfCancellationRequested();
             if (accept)
             {
                 var answer = local with { Format = Format, CallId = invite!.CallId };
-                SetStatus("Suhbatdoshingizga ulanmoqda…");
+                SetStatus(L.Get("Suhbatdoshingizga ulanmoqda…"));
                 await VoiceAnswerExchange.SendAsync(Convert.FromBase64String(invite.ReplyKey!), invite.CallId!, answer.Encode(), current.Token);
             }
             else
@@ -80,14 +84,14 @@ internal sealed class VoiceCall
                 var link = await InviteLink.CreateAsync(secret, file.Encode(), current.Token);
                 using var expiration = CancellationTokenSource.CreateLinkedTokenSource(current.Token);
                 expiration.CancelAfter(TimeSpan.FromMinutes(10));
-                SetStatus("Taklif qabul qilinishi kutilmoqda.");
+                SetStatus(L.Get("Taklif qabul qilinishi kutilmoqda."));
                 var waiting = VoiceAnswerExchange.WaitAsync(key, id, expiration.Token);
                 try
                 {
-                    await Share.Default.RequestAsync(new ShareTextRequest { Title = "Taklif havolasini yuborish", Text = link });
+                    await Share.Default.RequestAsync(new ShareTextRequest { Title = L.Get("Taklif havolasini yuborish"), Text = link });
                     var answer = SignalFile.Parse(await waiting, "answer");
                     current.Token.ThrowIfCancellationRequested();
-                    if (answer.CallId != id) throw new InvalidDataException("Taklif mos kelmadi.");
+                    if (answer.CallId != id) throw new InvalidDataException(L.Get("Taklif mos kelmadi."));
                     current.Apply(answer);
                 }
                 finally
@@ -97,13 +101,13 @@ internal sealed class VoiceCall
                 }
             }
             await current.WaitAsync();
-            if (peer == current) SetStatus("Gapirish uchun mikrofoningizni yoqing.");
+            if (peer == current) SetStatus(L.Get("Gapirish uchun mikrofoningizni yoqing."));
         }
         catch (Exception ex)
         {
             if (peer == current) End(ex is TimeoutException or OperationCanceledException
-                ? "Ulanish vaqti tugadi. Yangi taklif bilan qayta urinib ko‘ring."
-                : "Ulanib bo‘lmadi. " + ex.Message);
+                ? L.Get("Ulanish vaqti tugadi. Yangi taklif bilan qayta urinib ko‘ring.")
+                : L.Get("Ulanib bo‘lmadi. ") + ex.Message);
         }
     }
 
@@ -116,14 +120,14 @@ internal sealed class VoiceCall
         {
             if (enable && await Permissions.RequestAsync<Permissions.Microphone>() != PermissionStatus.Granted)
             {
-                if (peer == current) SetStatus("Mikrofonga ruxsat berilmadi.");
+                if (peer == current) SetStatus(L.Get("Mikrofonga ruxsat berilmadi."));
                 return;
             }
             if (peer != current || !current.Connected) return;
-            current.SetMicrophone(enable);
-            SetStatus(enable ? "Mikrofon yoqilgan." : "Mikrofon o‘chiq.");
+            await current.SetMicrophoneAsync(enable);
+            SetStatus(enable ? L.Get("Mikrofon yoqilgan.") : L.Get("Mikrofon o‘chiq."));
         }
-        catch (Exception ex) { if (peer == current) SetStatus("Mikrofon ochilmadi. " + ex.Message); }
+        catch (Exception ex) { if (peer == current) SetStatus(L.Get("Mikrofon ochilmadi. ") + ex.Message); }
     }
 
     public void End(string message = "Suhbat tugadi.")

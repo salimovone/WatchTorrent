@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="WatchTorrentSplashTheme" parent="Maui.SplashTheme">
+        <item name="android:statusBarColor">@color/maui_splash_color</item>
+        <item name="android:navigationBarColor">@color/maui_splash_color</item>
+        <item name="android:windowLightStatusBar">false</item>
+        <item name="android:windowLightNavigationBar">false</item>
+    </style>
+</resources>

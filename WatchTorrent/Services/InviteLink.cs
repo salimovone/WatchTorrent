@@ -1,3 +1,4 @@
+using L = WatchTorrent.Core.Localization.AppText;
 using System.IO.Compression;
 using System.Text;
 using System.Security.Cryptography;
@@ -30,15 +31,15 @@ internal static class InviteLink
             if (!link.StartsWith(prefix, StringComparison.OrdinalIgnoreCase)) continue;
             string code = link[prefix.Length..];
             if (code.Length != 22 || code.Any(c => !char.IsAsciiLetterOrDigit(c) && c != '-' && c != '_'))
-                throw new InvalidDataException("Taklif havolasi buzilgan.");
+                throw new InvalidDataException(L.Get("Taklif havolasi buzilgan."));
             var secret = Convert.FromBase64String(code.Replace('-', '+').Replace('_', '/') + "==");
             return await VoiceAnswerExchange.FetchOfferAsync(secret);
         }
         if (link.Length > 32768 || !link.StartsWith(Prefix, StringComparison.OrdinalIgnoreCase))
-            throw new InvalidDataException("WatchTorrent taklif havolasini to‘liq kiriting.");
+            throw new InvalidDataException(L.Get("WatchTorrent taklif havolasini to‘liq kiriting."));
         var token = link[Prefix.Length..];
         if (token.Length == 0 || token.Any(c => !char.IsAsciiLetterOrDigit(c) && c != '-' && c != '_'))
-            throw new InvalidDataException("Taklif havolasi buzilgan.");
+            throw new InvalidDataException(L.Get("Taklif havolasi buzilgan."));
         try
         {
             string base64 = token.Replace('-', '+').Replace('_', '/').PadRight((token.Length + 3) / 4 * 4, '=');
@@ -50,6 +51,6 @@ internal static class InviteLink
                 return Encoding.UTF8.GetString(plain, 0, written);
         }
         catch (FormatException) { }
-        throw new InvalidDataException("Taklif havolasi buzilgan. Yangi havola so‘rang.");
+        throw new InvalidDataException(L.Get("Taklif havolasi buzilgan. Yangi havola so‘rang."));
     }
 }

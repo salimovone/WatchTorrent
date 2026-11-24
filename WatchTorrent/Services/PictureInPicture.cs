@@ -1,3 +1,4 @@
+using L = WatchTorrent.Core.Localization.AppText;
 using System.Runtime.Versioning;
 #if ANDROID
 using System.Diagnostics;
@@ -128,7 +129,7 @@ namespace WatchTorrent.Services
             }
             catch (Java.Lang.RuntimeException ex)
             {
-                Debug.WriteLine($"[PiP] Kichik oynaga o'tib bo'lmadi: {ex}");
+                Debug.WriteLine(L.F("S262", ex));
 
                 return false;
             }
@@ -222,11 +223,11 @@ namespace WatchTorrent.Services
         {
             var actions = new List<RemoteAction>
             {
-                CreateAction(activity, PictureInPictureCommand.Rewind, Resource.Drawable.ic_rewind, "10 s orqaga"),
+                CreateAction(activity, PictureInPictureCommand.Rewind, Resource.Drawable.ic_rewind, L.Get("10 s orqaga")),
                 _isPlaying
-                    ? CreateAction(activity, PictureInPictureCommand.PlayPause, Resource.Drawable.ic_pause, "Pauza")
-                    : CreateAction(activity, PictureInPictureCommand.PlayPause, Resource.Drawable.ic_play, "Davom ettirish"),
-                CreateAction(activity, PictureInPictureCommand.Forward, Resource.Drawable.ic_forward, "10 s oldinga")
+                    ? CreateAction(activity, PictureInPictureCommand.PlayPause, Resource.Drawable.ic_pause, L.Get("Pauza"))
+                    : CreateAction(activity, PictureInPictureCommand.PlayPause, Resource.Drawable.ic_play, L.Get("Davom ettirish")),
+                CreateAction(activity, PictureInPictureCommand.Forward, Resource.Drawable.ic_forward, L.Get("10 s oldinga"))
             };
 
             var builder = new PictureInPictureParams.Builder();

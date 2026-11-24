@@ -4,6 +4,8 @@ namespace WatchTorrent.Views
 {
     public partial class SearchPage : ContentPage
     {
+        protected override bool OnBackButtonPressed() => Controls.DropdownMenu.Dismiss(this) || base.OnBackButtonPressed();
+
         private readonly SearchViewModel _viewModel;
 
         public SearchPage(SearchViewModel viewModel)

@@ -1,3 +1,4 @@
+using L = WatchTorrent.Core.Localization.AppText;
 using System.Net.Http;
 using TorrentReader.Http;
 
@@ -30,20 +31,20 @@ namespace WatchTorrent.Services
         {
             if (duration.TotalMinutes < 1)
             {
-                return "< 1 daq";
+                return L.Get("< 1 daq");
             }
 
             if (duration.TotalHours < 1)
             {
-                return $"{(int)duration.TotalMinutes} daq";
+                return L.F("Minutes", (int)duration.TotalMinutes);
             }
 
             if (duration.TotalDays < 1)
             {
-                return $"{(int)duration.TotalHours} soat {duration.Minutes} daq";
+                return L.F("HoursMinutes", (int)duration.TotalHours, duration.Minutes);
             }
 
-            return $"{(int)duration.TotalDays} kun {duration.Hours} soat";
+            return L.F("DaysHours", (int)duration.TotalDays, duration.Hours);
         }
 
         /// <summary>Foydalanuvchiga ko'rsatiladigan xato matni.</summary>
@@ -51,10 +52,10 @@ namespace WatchTorrent.Services
         {
             return exception switch
             {
-                CloudflareChallengeException => "Cloudflare tekshiruvidan o'tib bo'lmadi. Qayta urinib ko'ring.",
-                HttpRequestException => "Saytga ulanib bo'lmadi. Internet aloqasini tekshiring.",
-                TaskCanceledException => "So'rov vaqti tugadi. Qayta urinib ko'ring.",
-                _ => $"Xatolik yuz berdi: {exception.Message}"
+                CloudflareChallengeException => L.Get("Cloudflare tekshiruvidan o'tib bo'lmadi. Qayta urinib ko'ring."),
+                HttpRequestException => L.Get("Saytga ulanib bo'lmadi. Internet aloqasini tekshiring."),
+                TaskCanceledException => L.Get("So'rov vaqti tugadi. Qayta urinib ko'ring."),
+                _ => L.F("S232", exception.Message)
             };
         }
     }

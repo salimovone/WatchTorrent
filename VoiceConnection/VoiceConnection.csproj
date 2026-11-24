@@ -1,0 +1,24 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFrameworks>net10.0;net10.0-android</TargetFrameworks>
+    <TargetFrameworks Condition="'$(WatchTorrentTarget)' != '' And $(WatchTorrentTarget.Contains('-android'))">net10.0-android</TargetFrameworks>
+    <TargetFrameworks Condition="'$(WatchTorrentTarget)' != '' And !$(WatchTorrentTarget.Contains('-android'))">net10.0</TargetFrameworks>
+    <SupportedOSPlatformVersion Condition="$(TargetFramework.Contains('-android'))">28.0</SupportedOSPlatformVersion>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+  </PropertyGroup>
+  <ItemGroup Condition="$(TargetFramework.Contains('-android'))">
+    <AndroidLibrary Include="../native/artifacts/voice/ntgcalls-3.0.7.aar" Bind="false" />
+    <AndroidJavaSource Include="Android/VoiceBridge.java" Bind="true" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="../native/voice/bridge.cpp" Link="Native/bridge.cpp" />
+    <None Include="../native/voice/bridge.h" Link="Native/bridge.h" />
+    <None Include="../native/voice/*.cmake" Link="Native/%(Filename)%(Extension)" />
+    <None Include="../native/voice/CMakeLists.txt" Link="Native/CMakeLists.txt" />
+    <None Include="../native/voice/upstream.json" Link="Native/upstream.json" />
+    <None Include="../native/voice/README.md" Link="Native/README.md" />
+    <None Include="../scripts/build-voice.ps1" Link="Native/build-voice.ps1" />
+  </ItemGroup>
+</Project>

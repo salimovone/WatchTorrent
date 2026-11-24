@@ -1,6 +1,6 @@
 # WatchTorrent
 
-Windows, Android va iOS uchun MAUI torrent player. Barcha platformalar ilova ichidagi **libtorrent-rasterbar 2.1.2** orqali yuklaydi. Tashqi torrent dasturi, server yoki Web UI login kerak emas.
+Windows va Android uchun MAUI torrent player. Yuklash ilova ichidagi **libtorrent-rasterbar 2.1.2** orqali ishlaydi. Tashqi torrent dasturi, server yoki Web UI login kerak emas. iOS targeti mavjud, lekin yangi VoiceConnection ovoz adapteri hali qo‘shilmagani uchun iOS app build hozir bloklangan.
 
 ## Projectlar
 
@@ -10,6 +10,7 @@ Windows, Android va iOS uchun MAUI torrent player. Barcha platformalar ilova ich
 - `native`: libtorrent ustidagi kichik C ABI; Windows DLL, Android SO, iOS statik archive.
 - `TorrentReader`: katalog/qidiruv/sahifa ma'lumotlari.
 - `WatchTorrent.EngineTests`: magnet, UI pending holati, engine komandalar va stream testlari.
+- `VoiceConnection`: Windows/Android uchun asosiy native NTgCalls/WebRTC ovoz dvigateli. Build va real telefon sinovlari: [VoiceConnection](native/voice/README.md). Eski managed ovoz yo‘li olib tashlangan.
 
 ## Build
 
@@ -19,6 +20,7 @@ Windows (Visual Studio 2026 C++ toolchain):
 
 ```powershell
 ./scripts/build-native.ps1 -Target Windows
+./scripts/build-voice.ps1 -Target Windows
 ./scripts/build.ps1 -Target Tests
 ./scripts/build.ps1 -Target Windows -RestoreWorkloads
 ```
@@ -27,22 +29,26 @@ Android uchun JDK 17, SDK API/build-tools 36.0.0 va NDK **27.2.12479018** kerak.
 
 ```powershell
 ./scripts/build-native.ps1 -Target AndroidArm64
+./scripts/build-voice.ps1 -Target Android
 ./scripts/build.ps1 -Target Android -AndroidRid android-arm64 -RestoreWorkloads
 ```
 
 32-bit ARM uchun `AndroidArm` / `android-arm`; x64 emulator uchun `AndroidX64` / `android-x64` ni ishlating. Har APK o'z arxitekturasiga mos SO'ni ichiga oladi. SO 16 KB page alignment bilan link qilinadi. NDK C++ runtime va native dependency'lar SO ichiga statik link qilinadi.
 
-Mac + Xcode bilan:
+Mac + Xcode bilan torrent native kutubxonalarini yig‘ish mumkin. VoiceConnection iOS adapteri tayyor bo‘lmaguncha iOS app build yakunlanmaydi:
 
 ```powershell
 ./scripts/build-native.ps1 -Target iOS
 ./scripts/build-native.ps1 -Target iOSSimulatorArm64
-./scripts/build.ps1 -Target iOSSimulator -RestoreWorkloads
 ```
 
 Intel Mac simulator uchun `iOSSimulatorX64` mavjud. iOS archive'iga libtorrent, Boost va OpenSSL statik dependency'lari ham birlashtiriladi; MAUI uni `__Internal` P/Invoke orqali chaqiradi. iPhone/App Store buildlari Apple signing/provisioning talab qiladi. Simulator va unsigned CI compile uchun ular kerak emas. Xcode versiyasi o'rnatilgan iOS workloadiga mos bo'lishi kerak.
 
 Native natijalar `native/artifacts/<rid>/`, tayyor app `artifacts/` ichiga chiqadi; ular Git'ga qo'shilmaydi. Native kutubxona yo'q bo'lsa, app build tushunarli xato bilan to'xtaydi. Litsenziyalar native artifact bilan saqlanadi. Lokal .NET SDK `.tools/dotnet` ichida bo'lsa, `build.ps1`ga `-DotNetPath ./.tools/dotnet/dotnet.exe` qo'shing.
+
+## Interfeys tili
+
+Sozlamalar → Til bo‘limida `Telefon tili (avtomatik)`, `O‘zbekcha` yoki `English` tanlanadi. Birinchi ochilishda qurilma tili olinadi; o‘zbekcha va inglizchadan boshqa tillarda inglizcha ishlatiladi. Qo‘lda tanlangan til saqlanadi va qayta ochilganda ham qo‘llanadi. `Telefon tili`ga qaytish qo‘lda tanlovni o‘chiradi. Matnlar app’ni qayta ishga tushirmasdan almashadi; yuklamalar, playback va ovozli suhbat saqlanadi. Tarjima resurslari app ichida, tashqi tarjima xizmati kerak emas.
 
 ## Yuklash va playback
 

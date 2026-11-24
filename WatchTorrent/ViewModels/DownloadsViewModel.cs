@@ -1,3 +1,4 @@
+using L = WatchTorrent.Core.Localization.AppText;
 using System.Collections.ObjectModel;
 using WatchTorrent.Services;
 using WatchTorrent.Views;
@@ -31,7 +32,7 @@ namespace WatchTorrent.ViewModels
 
         public string DownloadDirectory => _service.DownloadDirectory;
         public string EngineStatus =>
-            _service.ConnectionStatus;
+            L.Get(_service.ConnectionStatus);
 
         public Command<DownloadItem> ToggleCommand { get; }
 
@@ -57,31 +58,33 @@ namespace WatchTorrent.ViewModels
             }
             catch (Exception ex)
             {
-                await Shell.Current.DisplayAlertAsync("Xatolik", ex.Message, "OK");
+                await Shell.Current.DisplayAlertAsync(L.Get("Xatolik"), ex.Message, "OK");
             }
         }
 
         private async Task RemoveAsync(DownloadItem item)
         {
             if (item == null || item.IsBusy) return;
+            var keepFiles = L.Get(RemoveKeepFiles);
+            var deleteFiles = L.Get(RemoveWithFiles);
             var choice = await Shell.Current.DisplayActionSheetAsync(
-                $"\"{item.Name}\" o'chirilsinmi?",
-                "Bekor qilish",
-                RemoveWithFiles,
-                RemoveKeepFiles);
+                L.F("S001", item.Name),
+                L.Get("Bekor qilish"),
+                deleteFiles,
+                keepFiles);
 
-            if (choice != RemoveKeepFiles && choice != RemoveWithFiles)
+            if (choice != keepFiles && choice != deleteFiles)
             {
                 return;
             }
 
             try
             {
-                await _service.RemoveAsync(item, deleteFiles: choice == RemoveWithFiles);
+                await _service.RemoveAsync(item, deleteFiles: choice == deleteFiles);
             }
             catch (Exception ex)
             {
-                await Shell.Current.DisplayAlertAsync("O'chirib bo'lmadi", ex.Message, "OK");
+                await Shell.Current.DisplayAlertAsync(L.Get("O'chirib bo'lmadi"), ex.Message, "OK");
             }
         }
 
@@ -93,7 +96,7 @@ namespace WatchTorrent.ViewModels
             }
             catch (Exception ex)
             {
-                await Shell.Current.DisplayAlertAsync("Ochib bo'lmadi", ex.Message, "OK");
+                await Shell.Current.DisplayAlertAsync(L.Get("Ochib bo'lmadi"), ex.Message, "OK");
             }
         }
     }

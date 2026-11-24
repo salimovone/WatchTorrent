@@ -2,6 +2,7 @@
 <Shell
     x:Class="WatchTorrent.AppShell"
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:loc="clr-namespace:WatchTorrent.Localization"
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
     xmlns:views="clr-namespace:WatchTorrent.Views"
     Title="WatchTorrent"
@@ -9,25 +10,25 @@
 
     <TabBar>
         <ShellContent
-            Title="Kashf etish"
+            Title="{loc:Translate S077}"
             Icon="tab_home.png"
             Route="discover"
             ContentTemplate="{DataTemplate views:DiscoverPage}" />
 
-        <Tab x:Name="VoiceTab" Title="Ulanish" Icon="tab_connection.png" Route="connection">
-            <ShellContent x:Name="ConnectionTab" Title="Ulanish" Route="call">
+        <Tab x:Name="VoiceTab" Title="{loc:Translate S211}" Icon="tab_connection.png" Route="connection">
+            <ShellContent x:Name="ConnectionTab" Title="{loc:Translate S211}" Route="call">
                 <views:VoiceCallPage />
             </ShellContent>
         </Tab>
 
         <ShellContent
-            Title="Yuklamalar"
+            Title="{loc:Translate S247}"
             Icon="tab_downloads.png"
             Route="downloads"
             ContentTemplate="{DataTemplate views:DownloadsPage}" />
 
         <ShellContent
-            Title="Sozlamalar"
+            Title="{loc:Translate S163}"
             Icon="tab_settings.png"
             Route="settings"
             ContentTemplate="{DataTemplate views:SettingsPage}" />

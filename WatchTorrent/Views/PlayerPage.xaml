@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <ContentPage
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:loc="clr-namespace:WatchTorrent.Localization"
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
     xmlns:vm="clr-namespace:WatchTorrent.ViewModels"
     xmlns:vlc="clr-namespace:LibVLCSharp.MAUI;assembly=LibVLCSharp.MAUI"
@@ -56,7 +57,7 @@
                 BackgroundColor="#99000000"
                 Opacity="0"
                 InputTransparent="true">
-                <Label Text="2x" TextColor="White" FontFamily="OpenSansSemibold" FontSize="14" />
+                <Label Text="{loc:Translate S005}" TextColor="White" FontFamily="OpenSansSemibold" FontSize="14" />
             </Border>
             <Border
                 x:Name="LevelIndicator"
@@ -105,8 +106,8 @@
                     <ImageButton
                         Source="ic_back.png"
                         Style="{StaticResource PlayerIconButton}"
-                        SemanticProperties.Description="Orqaga"
-                        ToolTipProperties.Text="Orqaga"
+                        SemanticProperties.Description="{loc:Translate S122}"
+                        ToolTipProperties.Text="{loc:Translate S122}"
                         Clicked="OnBackClicked" />
                     <Label
                         Grid.Column="1"
@@ -123,8 +124,8 @@
                             Source="ic_playlist.png"
                             Style="{StaticResource PlayerIconButton}"
                             IsVisible="{Binding HasPlaylist}"
-                            SemanticProperties.Description="Fayllar ro'yxati"
-                            ToolTipProperties.Text="Fayllar ro'yxati"
+                            SemanticProperties.Description="{loc:Translate S048}"
+                            ToolTipProperties.Text="{loc:Translate S048}"
                             Clicked="OnPlaylistClicked" />
                         <HorizontalStackLayout Spacing="2" IsVisible="{Binding ShowTransport}">
                             <Button
@@ -142,40 +143,40 @@
                             <ImageButton
                                 Source="ic_audio.png"
                                 Style="{StaticResource PlayerIconButton}"
-                                SemanticProperties.Description="Ovoz"
-                                ToolTipProperties.Text="Ovoz"
+                                SemanticProperties.Description="{loc:Translate S123}"
+                                ToolTipProperties.Text="{loc:Translate S123}"
                                 Clicked="OnAudioClicked" />
                             <ImageButton
                                 Source="ic_subtitles.png"
                                 Style="{StaticResource PlayerIconButton}"
-                                SemanticProperties.Description="Subtitrlar"
-                                ToolTipProperties.Text="Subtitrlar"
+                                SemanticProperties.Description="{loc:Translate S167}"
+                                ToolTipProperties.Text="{loc:Translate S167}"
                                 Clicked="OnSubtitlesClicked" />
                             <ImageButton
                                 Source="ic_aspect.png"
                                 Style="{StaticResource PlayerIconButton}"
-                                SemanticProperties.Description="Ekran formati"
-                                ToolTipProperties.Text="Ekran formati"
+                                SemanticProperties.Description="{loc:Translate S036}"
+                                ToolTipProperties.Text="{loc:Translate S036}"
                                 Clicked="OnAspectClicked" />
                             <ImageButton
                                 Source="ic_speed.png"
                                 Style="{StaticResource PlayerIconButton}"
-                                SemanticProperties.Description="Tezlik"
-                                ToolTipProperties.Text="Tezlik"
+                                SemanticProperties.Description="{loc:Translate S191}"
+                                ToolTipProperties.Text="{loc:Translate S191}"
                                 Clicked="OnSpeedClicked" />
                             <ImageButton
                                 x:Name="PipButton"
                                 Source="ic_pip.png"
                                 Style="{StaticResource PlayerIconButton}"
-                                SemanticProperties.Description="Kichik oynada ko‘rish"
-                                ToolTipProperties.Text="Kichik oynada ko‘rish"
+                                SemanticProperties.Description="{loc:Translate S080}"
+                                ToolTipProperties.Text="{loc:Translate S080}"
                                 Clicked="OnPipClicked" />
                             <ImageButton
                                 x:Name="FullScreenButton"
                                 Source="ic_fullscreen.png"
                                 Style="{StaticResource PlayerIconButton}"
-                                SemanticProperties.Description="To'liq ekran"
-                                ToolTipProperties.Text="To'liq ekran"
+                                SemanticProperties.Description="{loc:Translate S192}"
+                                ToolTipProperties.Text="{loc:Translate S192}"
                                 Clicked="OnFullScreenClicked" />
                         </HorizontalStackLayout>
                     </HorizontalStackLayout>
@@ -190,8 +191,8 @@
                         Source="ic_rewind.png"
                         Style="{StaticResource PlayerTransportButton}"
                         VerticalOptions="Center"
-                        SemanticProperties.Description="10 soniya orqaga"
-                        ToolTipProperties.Text="10 soniya orqaga"
+                        SemanticProperties.Description="{loc:Translate S004}"
+                        ToolTipProperties.Text="{loc:Translate S004}"
                         Clicked="OnRewindClicked" />
                     <ImageButton
                         Source="{Binding PlayPauseIcon}"
@@ -200,15 +201,15 @@
                         HeightRequest="80"
                         CornerRadius="40"
                         Padding="18"
-                        SemanticProperties.Description="Ijro yoki pauza"
-                        ToolTipProperties.Text="Ijro yoki pauza"
+                        SemanticProperties.Description="{loc:Translate S069}"
+                        ToolTipProperties.Text="{loc:Translate S069}"
                         Clicked="OnPlayPauseClicked" />
                     <ImageButton
                         Source="ic_forward.png"
                         Style="{StaticResource PlayerTransportButton}"
                         VerticalOptions="Center"
-                        SemanticProperties.Description="10 soniya oldinga"
-                        ToolTipProperties.Text="10 soniya oldinga"
+                        SemanticProperties.Description="{loc:Translate S003}"
+                        ToolTipProperties.Text="{loc:Translate S003}"
                         Clicked="OnForwardClicked" />
                 </HorizontalStackLayout>
                 <Grid
@@ -237,7 +238,7 @@
                                 InputTransparent="true" />
                             <Slider
                                 x:Name="SeekBar"
-                                SemanticProperties.Description="Videodagi vaqt"
+                                SemanticProperties.Description="{loc:Translate S219}"
                                 Minimum="0"
                                 Maximum="1"
                                 MinimumTrackColor="{StaticResource Accent}"
@@ -253,8 +254,8 @@
                             Source="ic_next.png"
                             Style="{StaticResource PlayerIconButton}"
                             IsVisible="{Binding HasNext}"
-                            SemanticProperties.Description="Keyingi fayl"
-                            ToolTipProperties.Text="Keyingi fayl"
+                            SemanticProperties.Description="{loc:Translate S078}"
+                            ToolTipProperties.Text="{loc:Translate S078}"
                             Clicked="OnNextClicked" />
                     </Grid>
                     <Label
@@ -287,7 +288,7 @@
                     <ActivityIndicator x:Name="PartnerSpinner" Color="{StaticResource Accent}" />
                     <Image Source="tab_connection.png" WidthRequest="18" HeightRequest="18" HorizontalOptions="Center" VerticalOptions="Center"/>
                 </Grid>
-                <Label Text="Sherigingizning telefoni yuklamoqda…" TextColor="White" FontSize="13" />
+                <Label Text="{loc:Translate S159}" TextColor="White" FontSize="13" />
             </VerticalStackLayout>
             <Border
                 Margin="20,0,0,96"
@@ -300,7 +301,7 @@
                 IsVisible="{Binding HasResumeNotice}">
                 <HorizontalStackLayout Spacing="12">
                     <Label Text="{Binding ResumeNotice}" TextColor="White" FontSize="13" VerticalOptions="Center" />
-                    <Button Text="Boshidan" Style="{StaticResource SmallButton}" Clicked="OnRestartClicked" />
+                    <Button Text="{loc:Translate S019}" Style="{StaticResource SmallButton}" Clicked="OnRestartClicked" />
                 </HorizontalStackLayout>
             </Border>
             <VerticalStackLayout
@@ -311,10 +312,10 @@
                 IsVisible="{Binding HasError}">
                 <Label Text="{Binding ErrorMessage}" TextColor="White" FontSize="15" HorizontalTextAlignment="Center" />
                 <Button
-                    Text="Orqaga"
+                    Text="{loc:Translate S122}"
                     HorizontalOptions="Center"
-                    SemanticProperties.Description="Orqaga"
-                    ToolTipProperties.Text="Orqaga"
+                    SemanticProperties.Description="{loc:Translate S122}"
+                    ToolTipProperties.Text="{loc:Translate S122}"
                     Clicked="OnBackClicked" />
             </VerticalStackLayout>
             <Grid x:Name="PlaylistOverlay" IsVisible="False" ColumnDefinitions="*,Auto">
@@ -335,8 +336,8 @@
                             Grid.Column="1"
                             Source="ic_close.png"
                             Style="{StaticResource PlayerIconButton}"
-                            SemanticProperties.Description="Ro'yxatni yopish"
-                            ToolTipProperties.Text="Ro'yxatni yopish"
+                            SemanticProperties.Description="{loc:Translate S149}"
+                            ToolTipProperties.Text="{loc:Translate S149}"
                             Clicked="OnPlaylistCloseClicked" />
                     </Grid>
                     <CollectionView

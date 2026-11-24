@@ -1,17 +1,17 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <ContentPage
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:loc="clr-namespace:WatchTorrent.Localization"
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
     xmlns:vm="clr-namespace:WatchTorrent.ViewModels"
     xmlns:services="clr-namespace:WatchTorrent.Services"
     x:Class="WatchTorrent.Views.DownloadsPage"
-    Title="Yuklamalar"
+    Title="{loc:Translate S247}"
     Shell.NavBarIsVisible="false"
     x:DataType="vm:DownloadsViewModel">
     <Grid RowDefinitions="Auto,*" MaximumWidthRequest="1040">
-        <VerticalStackLayout Padding="20,24,20,20" Spacing="6">
-            <Label Text="Yuklamalar" Style="{StaticResource PageTitle}" />
-            <Label Text="Saqlangan fayllar va yuklash jarayoni" Style="{StaticResource BodyText}" />
+        <VerticalStackLayout Padding="20,20,20,16" Spacing="8">
+            <Label Text="{loc:Translate S247}" Style="{StaticResource PageTitle}" />
             <Label Text="{Binding EngineStatus}" Style="{StaticResource Muted}" />
             <VerticalStackLayout BindableLayout.ItemsSource="{Binding PartnerDownloads}" Spacing="6">
                 <BindableLayout.ItemTemplate>
@@ -41,7 +41,7 @@
                                             FontSize="15"
                                             MaxLines="2"
                                             LineBreakMode="TailTruncation" />
-                                        <Label Text="Batafsil ›" FontSize="12" TextColor="{StaticResource Accent}" />
+                                        <Label Text="{loc:Translate S012}" FontSize="12" TextColor="{StaticResource Accent}" />
                                     </VerticalStackLayout>
                                     <ImageButton
                                         Grid.Column="1"
@@ -54,8 +54,8 @@
                                         Command="{Binding RemoveCommand, Source={RelativeSource AncestorType={x:Type vm:DownloadsViewModel}}}"
                                         CommandParameter="{Binding .}"
                                         IsEnabled="{Binding CanInteract}"
-                                        SemanticProperties.Description="Yuklamani o'chirish"
-                                        ToolTipProperties.Text="O'chirish" />
+                                        SemanticProperties.Description="{loc:Translate S251}"
+                                        ToolTipProperties.Text="{loc:Translate S114}" />
                                 </Grid>
                                 <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12">
                                     <Label Text="{Binding StatusText}" Style="{StaticResource Muted}" />
@@ -78,7 +78,7 @@
                                 <Label Text="{Binding TransferText}" Style="{StaticResource Muted}" IsVisible="{Binding IsRunning}" />
                                 <FlexLayout Wrap="Wrap" JustifyContent="Start">
                                     <Button
-                                        Text="Tomosha qilish"
+                                        Text="{loc:Translate S195}"
                                         Margin="0,0,8,0"
                                         FontSize="13"
                                         Command="{Binding WatchCommand, Source={RelativeSource AncestorType={x:Type vm:DownloadsViewModel}}}"
@@ -92,7 +92,7 @@
                                         Command="{Binding ToggleCommand, Source={RelativeSource AncestorType={x:Type vm:DownloadsViewModel}}}"
                                         CommandParameter="{Binding .}" />
                                     <Button
-                                        Text="Faylni ochish"
+                                        Text="{loc:Translate S051}"
                                         Style="{StaticResource SmallButton}"
                                         IsVisible="{Binding IsComplete}"
                                         Command="{Binding OpenCommand, Source={RelativeSource AncestorType={x:Type vm:DownloadsViewModel}}}"
@@ -106,7 +106,7 @@
         </CollectionView>
         <VerticalStackLayout
             Grid.Row="1"
-            Padding="24,36"
+            Padding="20,24"
             Spacing="14"
             IsVisible="{Binding IsEmpty}"
             VerticalOptions="Start"
@@ -118,11 +118,11 @@
                 Opacity="0.5"
                 HorizontalOptions="Start"
                 Margin="0,0,0,8" />
-            <Label Text="Birinchi yuklamangiz shu yerda bo'ladi" Style="{StaticResource SectionTitle}" />
+            <Label Text="{loc:Translate S018}" Style="{StaticResource SectionTitle}" />
             <Label
-                Text="Film yoki serialni toping va uning sahifasida «Yuklab olish»ni tanlang. Jarayonni shu yerdan boshqarasiz."
+                Text="{loc:Translate S056}"
                 Style="{StaticResource BodyText}" />
-            <Button Text="Film qidirish" Clicked="OnSearchClicked" HorizontalOptions="Start" Margin="0,6,0,0" />
+            <Button Text="{loc:Translate S053}" Style="{StaticResource GhostButton}" Clicked="OnSearchClicked" HorizontalOptions="Start" Margin="0,6,0,0" />
         </VerticalStackLayout>
     </Grid>
 </ContentPage>

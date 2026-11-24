@@ -1,3 +1,4 @@
+using L = WatchTorrent.Core.Localization.AppText;
 using System.Diagnostics;
 using TorrentReader.Http;
 using WatchTorrent.Services;
@@ -94,7 +95,7 @@ namespace WatchTorrent.Views
             }
             catch (Exception ex)
             {
-                Debug.WriteLine($"[Cloudflare] Play Market ochilmadi: {ex}");
+                Debug.WriteLine(L.F("S257", ex));
             }
         }
 
@@ -179,7 +180,7 @@ namespace WatchTorrent.Views
             }
             catch (Exception ex)
             {
-                Debug.WriteLine($"[Cloudflare] Tekshirishda xato: {ex}");
+                Debug.WriteLine(L.F("S258", ex));
             }
             finally
             {

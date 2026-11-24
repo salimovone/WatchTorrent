@@ -1,88 +1,175 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <ContentPage
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:loc="clr-namespace:WatchTorrent.Localization"
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:controls="clr-namespace:WatchTorrent.Controls"
     xmlns:vm="clr-namespace:WatchTorrent.ViewModels"
     x:Class="WatchTorrent.Views.SettingsPage"
-    Title="Sozlamalar"
+    Title="{loc:Translate S163}"
     Shell.NavBarIsVisible="false"
     x:DataType="vm:SettingsViewModel">
+    <ContentPage.Resources>
+        <Style x:Key="SettingCard" TargetType="Border">
+            <Setter Property="BackgroundColor" Value="{StaticResource Surface}" />
+            <Setter Property="Stroke" Value="{StaticResource StrokeColor}" />
+            <Setter Property="StrokeThickness" Value="1" />
+            <Setter Property="StrokeShape" Value="RoundRectangle 10" />
+            <Setter Property="Padding" Value="14,0" />
+            <Setter Property="MinimumHeightRequest" Value="48" />
+            <Setter Property="HeightRequest" Value="48" />
+        </Style>
+        <Style x:Key="SettingSwitch" TargetType="Switch">
+            <Setter Property="MinimumHeightRequest" Value="44" />
+            <Setter Property="HeightRequest" Value="44" />
+            <Setter Property="VerticalOptions" Value="Center" />
+        </Style>
+        <Style x:Key="SettingName" TargetType="Label">
+            <Setter Property="FontFamily" Value="OpenSansSemibold" />
+            <Setter Property="FontSize" Value="14" />
+            <Setter Property="TextColor" Value="{StaticResource TextPrimary}" />
+            <Setter Property="VerticalOptions" Value="Center" />
+        </Style>
+        <Style x:Key="SettingDescription" TargetType="Label">
+            <Setter Property="FontSize" Value="12" />
+            <Setter Property="TextColor" Value="{StaticResource TextMuted}" />
+            <Setter Property="Opacity" Value="0.85" />
+            <Setter Property="LineHeight" Value="1.2" />
+            <Setter Property="Margin" Value="14,0" />
+        </Style>
+        <Style x:Key="SettingHit" TargetType="Button">
+            <Setter Property="BackgroundColor" Value="Transparent" />
+            <Setter Property="TextColor" Value="Transparent" />
+            <Setter Property="BorderWidth" Value="0" />
+            <Setter Property="CornerRadius" Value="10" />
+            <Setter Property="MinimumHeightRequest" Value="48" />
+            <Setter Property="HeightRequest" Value="48" />
+            <Setter Property="Padding" Value="0" />
+        </Style>
+        <Style x:Key="SettingReset" TargetType="Button" BasedOn="{StaticResource GhostButton}">
+            <Setter Property="BackgroundColor" Value="Transparent" />
+            <Setter Property="TextColor" Value="{StaticResource TextMuted}" />
+            <Setter Property="FontSize" Value="13" />
+            <Setter Property="BorderColor" Value="{StaticResource StrokeColor}" />
+            <Setter Property="BorderWidth" Value="1" />
+            <Setter Property="MinimumHeightRequest" Value="48" />
+            <Setter Property="HeightRequest" Value="48" />
+        </Style>
+    </ContentPage.Resources>
+    <Grid>
     <ScrollView>
-        <VerticalStackLayout Padding="20,24,20,32" Spacing="24" MaximumWidthRequest="800">
-            <Label Text="Sozlamalar" Style="{StaticResource PageTitle}" />
+        <VerticalStackLayout Padding="20,20,20,32" Spacing="28" MaximumWidthRequest="680" HorizontalOptions="Fill">
+            <Label Text="{loc:Translate S163}" Style="{StaticResource PageTitle}" />
             <VerticalStackLayout Spacing="12">
-                <Label Text="Tomosha qilish" Style="{StaticResource SectionTitle}" />
-                <Border Style="{StaticResource Card}">
-                    <VerticalStackLayout Spacing="6">
+                <Label Text="{loc:Translate Language}" Style="{StaticResource SectionTitle}" />
+                    <VerticalStackLayout Spacing="8">
+                        <controls:Dropdown x:Name="LanguagePicker" Title="{loc:Translate Language}"
+                            AutomationId="LanguagePicker"
+                            HeightRequest="48" TrailingIcon="{Binding LanguageFlag}"
+                            SemanticProperties.Hint="{loc:Translate LanguageHelp}"
+                            ItemsSource="{Binding LanguageOptions}" SelectedIndex="{Binding LanguageIndex, Mode=TwoWay}" />
+                        <Label Text="{loc:Translate LanguageHelp}" Style="{StaticResource SettingDescription}" />
+                    </VerticalStackLayout>
+            </VerticalStackLayout>
+            <VerticalStackLayout Spacing="12">
+                <Label Text="{loc:Translate S195}" Style="{StaticResource SectionTitle}" />
+                    <VerticalStackLayout Spacing="8">
+                        <Border Style="{StaticResource SettingCard}">
                         <Grid ColumnDefinitions="*,Auto" ColumnSpacing="16">
-                            <Label Text="HDR tasvir" FontFamily="OpenSansSemibold" VerticalOptions="Center" />
+                            <Label Text="{loc:Translate S062}" Style="{StaticResource SettingName}" />
                             <Switch
+                                Style="{StaticResource SettingSwitch}"
                                 Grid.Column="1"
+                                AutomationId="HdrSwitch"
                                 IsToggled="{Binding HdrOutput}"
                                 IsVisible="{Binding CanSwitchHdr}"
                                 OnColor="{StaticResource Accent}"
-                                SemanticProperties.Description="HDR tasvirni yoqish" />
+                                SemanticProperties.Description="{loc:Translate S063}" />
                         </Grid>
-                        <Label Text="{Binding HdrDescription}" Style="{StaticResource BodyText}" />
+                        </Border>
+                        <Label Text="{Binding HdrDescription}" Style="{StaticResource SettingDescription}" />
                     </VerticalStackLayout>
-                </Border>
             </VerticalStackLayout>
             <VerticalStackLayout Spacing="12">
-                <Label Text="Yuklash" Style="{StaticResource SectionTitle}" />
-                <Border Style="{StaticResource Card}">
+                <Label Text="{loc:Translate S254}" Style="{StaticResource SectionTitle}" />
                     <VerticalStackLayout Spacing="16">
-                        <VerticalStackLayout Spacing="4">
+                        <VerticalStackLayout Spacing="8">
+                            <Border Style="{StaticResource SettingCard}">
                             <Grid ColumnDefinitions="*,Auto" ColumnSpacing="16">
-                                <Label Text="Fonda davom ettirish" FontFamily="OpenSansSemibold" VerticalOptions="Center" />
+                                <Label Text="{loc:Translate S058}" Style="{StaticResource SettingName}" />
                                 <Switch
+                                    Style="{StaticResource SettingSwitch}"
                                     Grid.Column="1"
+                                    AutomationId="BackgroundDownloadsSwitch"
                                     IsToggled="{Binding BackgroundDownloads}"
                                     OnColor="{StaticResource Accent}"
-                                    SemanticProperties.Description="Fonda yuklash" />
+                                    SemanticProperties.Description="{loc:Translate S060}" />
                             </Grid>
-                            <Label Text="{Binding BackgroundDownloadsDescription}" Style="{StaticResource BodyText}" />
+                            </Border>
+                            <Label Text="{Binding BackgroundDownloadsDescription}" Style="{StaticResource SettingDescription}" />
                         </VerticalStackLayout>
-                        <BoxView Style="{StaticResource Rule}" />
-                        <VerticalStackLayout Spacing="4">
+                        <VerticalStackLayout Spacing="8">
+                            <Border Style="{StaticResource SettingCard}">
                             <Grid ColumnDefinitions="*,Auto" ColumnSpacing="16">
-                                <Label Text="Ekranni ochiq tutish" FontFamily="OpenSansSemibold" VerticalOptions="Center" />
+                                <Label Text="{loc:Translate S039}" Style="{StaticResource SettingName}" />
                                 <Switch
+                                    Style="{StaticResource SettingSwitch}"
                                     Grid.Column="1"
+                                    AutomationId="KeepScreenOnSwitch"
                                     IsToggled="{Binding KeepScreenOnInDownloads}"
                                     OnColor="{StaticResource Accent}"
-                                    SemanticProperties.Description="Yuklamalar sahifasida ekran o'chmasin" />
+                                    SemanticProperties.Description="{loc:Translate S248}" />
                             </Grid>
+                            </Border>
                             <Label
-                                Text="Faqat yuklash davom etayotganda va Yuklamalar sahifasi ochiq bo'lganda."
-                                Style="{StaticResource BodyText}" />
+                                Text="{loc:Translate S043}"
+                                Style="{StaticResource SettingDescription}" />
                         </VerticalStackLayout>
-                        <VerticalStackLayout Spacing="10" IsVisible="{Binding HasBatterySetting}">
-                            <BoxView Style="{StaticResource Rule}" />
-                            <Label Text="Batareya ruxsati" FontFamily="OpenSansSemibold" />
-                            <Label Text="{Binding BatteryStatus}" Style="{StaticResource BodyText}" />
-                            <Button
-                                Text="Fonda ishlashga ruxsat berish"
-                                Style="{StaticResource GhostButton}"
-                                HorizontalOptions="Start"
-                                IsVisible="{Binding IsBatteryUnrestricted, Converter={StaticResource InvertBool}}"
-                                Command="{Binding RequestBatteryExemptionCommand}" />
+                        <VerticalStackLayout Spacing="8" IsVisible="{Binding HasBatterySetting}">
+                            <Grid>
+                                <Border Style="{StaticResource SettingCard}" InputTransparent="True">
+                                    <Grid ColumnDefinitions="*,24" ColumnSpacing="12">
+                                        <Label Text="{loc:Translate S013}" Style="{StaticResource SettingName}" />
+                                        <Image Grid.Column="1" Source="ic_chevron_right.png" WidthRequest="20" HeightRequest="20" Aspect="AspectFit" VerticalOptions="Center" HorizontalOptions="End"
+                                            IsVisible="{Binding IsBatteryUnrestricted, Converter={StaticResource InvertBool}}" />
+                                        <Image Grid.Column="1" Source="ic_setting_check.png" WidthRequest="20" HeightRequest="20" Aspect="AspectFit" VerticalOptions="Center" HorizontalOptions="End"
+                                            IsVisible="{Binding IsBatteryUnrestricted}" />
+                                    </Grid>
+                                </Border>
+                                <Button Style="{StaticResource SettingHit}" AutomationId="BatteryPermissionButton"
+                                    SemanticProperties.Description="{loc:Translate S059}"
+                                    IsVisible="{Binding IsBatteryUnrestricted, Converter={StaticResource InvertBool}}"
+                                    Command="{Binding RequestBatteryExemptionCommand}" />
+                            </Grid>
+                            <Label Text="{Binding BatteryStatus}" Style="{StaticResource SettingDescription}" />
                         </VerticalStackLayout>
                     </VerticalStackLayout>
-                </Border>
             </VerticalStackLayout>
-            <VerticalStackLayout Spacing="8">
-                <Label Text="Kinolar saqlanadigan papka" Style="{StaticResource SectionTitle}" />
-                <Label Text="{Binding DownloadDirectory}" Style="{StaticResource Muted}" LineBreakMode="CharacterWrap" />
-                <Button Text="Papkani tanlash" Style="{StaticResource GhostButton}" HorizontalOptions="Start" Clicked="ChooseFolder" />
-                <Button Text="Standart papkaga qaytish" Style="{StaticResource TextButton}" HorizontalOptions="Start" IsVisible="{Binding UsesCustomDirectory}" Clicked="RestoreFolder" />
-                <Label Text="Yangi yuklamalar tanlangan papkaga saqlanadi." Style="{StaticResource Muted}" />
+            <VerticalStackLayout Spacing="12">
+                <Label Text="{loc:Translate S081}" Style="{StaticResource SectionTitle}" />
+                    <VerticalStackLayout Spacing="8">
+                        <Grid>
+                            <Border Style="{StaticResource SettingCard}" InputTransparent="True">
+                                <Grid ColumnDefinitions="*,24" ColumnSpacing="12">
+                                    <Label Text="{loc:Translate S131}" Style="{StaticResource SettingName}" />
+                                    <Image Grid.Column="1" Source="ic_chevron_right.png" WidthRequest="20" HeightRequest="20" Aspect="AspectFit" VerticalOptions="Center" HorizontalOptions="End" />
+                                </Grid>
+                            </Border>
+                            <Button Style="{StaticResource SettingHit}" AutomationId="ChooseFolderButton"
+                                SemanticProperties.Description="{loc:Translate S131}" Clicked="ChooseFolder" />
+                        </Grid>
+                        <Label Text="{Binding DownloadDirectory}" Style="{StaticResource SettingDescription}" LineBreakMode="CharacterWrap" />
+                        <Label Text="{loc:Translate S238}" Style="{StaticResource SettingDescription}" />
+                    </VerticalStackLayout>
+                    <Button Text="{loc:Translate S164}" Style="{StaticResource SettingReset}"
+                        AutomationId="RestoreFolderButton" IsVisible="{Binding UsesCustomDirectory}" Clicked="RestoreFolder" />
             </VerticalStackLayout>
-            <BoxView Style="{StaticResource Rule}" />
-            <Label Text="{Binding AppVersion}" Style="{StaticResource Muted}" SemanticProperties.Hint="Direct ulanish testi">
+            <Label Text="{Binding AppVersion}" Style="{StaticResource SettingDescription}" SemanticProperties.Hint="{loc:Translate S035}">
                 <Label.GestureRecognizers>
                     <TapGestureRecognizer Tapped="OpenDirectConnectionTest" />
                 </Label.GestureRecognizers>
             </Label>
         </VerticalStackLayout>
     </ScrollView>
+    </Grid>
 </ContentPage>

@@ -1,3 +1,4 @@
+using L = WatchTorrent.Core.Localization.AppText;
 using System.IO.Compression;
 using System.Net;
 using System.Net.Sockets;
@@ -142,7 +143,7 @@ internal static class VoiceAnswerExchange
                     return offer;
             }
         }
-        throw new InvalidDataException("Taklif muddati tugagan yoki topilmadi. Yangi havola so‘rang.");
+        throw new InvalidDataException(L.Get("Taklif muddati tugagan yoki topilmadi. Yangi havola so‘rang."));
     }
 
     public static async Task SendAsync(byte[] key, string id, string answer, CancellationToken token)

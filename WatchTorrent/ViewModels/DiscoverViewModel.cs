@@ -1,3 +1,4 @@
+using L = WatchTorrent.Core.Localization.AppText;
 using TorrentReader;
 using TorrentReader.Providers;
 using TorrentReader.Search.Models;
@@ -25,20 +26,20 @@ namespace WatchTorrent.ViewModels
 
             Categories = new[]
             {
-                new DiscoverCategory("Trendda", true, (c, range) => c.GetTrendingAsync(range)),
-                new DiscoverCategory("Mashhur kinolar", true, (c, range) => c.GetPopularMoviesAsync(range)),
-                new DiscoverCategory("Trend kinolar", true, (c, range) => c.GetTrendingMoviesAsync(range)),
-                new DiscoverCategory("Xorijiy kinolar", true, (c, range) => c.GetPopularForeignMoviesAsync(range)),
-                new DiscoverCategory("Top 100 kinolar", false, (c, _) => c.GetTop100MoviesAsync()),
-                new DiscoverCategory("Mashhur o'yinlar", true, (c, range) => c.GetPopularGamesAsync(range)),
-                new DiscoverCategory("Trend o'yinlar", true, (c, range) => c.GetTrendingGamesAsync(range)),
-                new DiscoverCategory("Top 100 o'yinlar", false, (c, _) => c.GetTop100GamesAsync())
+                new DiscoverCategory(L.Get("Trendda"), true, (c, range) => c.GetTrendingAsync(range)),
+                new DiscoverCategory(L.Get("Mashhur kinolar"), true, (c, range) => c.GetPopularMoviesAsync(range)),
+                new DiscoverCategory(L.Get("Trend kinolar"), true, (c, range) => c.GetTrendingMoviesAsync(range)),
+                new DiscoverCategory(L.Get("Xorijiy kinolar"), true, (c, range) => c.GetPopularForeignMoviesAsync(range)),
+                new DiscoverCategory(L.Get("Top 100 kinolar"), false, (c, _) => c.GetTop100MoviesAsync()),
+                new DiscoverCategory(L.Get("Mashhur o'yinlar"), true, (c, range) => c.GetPopularGamesAsync(range)),
+                new DiscoverCategory(L.Get("Trend o'yinlar"), true, (c, range) => c.GetTrendingGamesAsync(range)),
+                new DiscoverCategory(L.Get("Top 100 o'yinlar"), false, (c, _) => c.GetTop100GamesAsync())
             };
 
             Ranges = new[]
             {
-                new RangeOption("Bugun", TorrentPopularityRange.Today),
-                new RangeOption("Shu hafta", TorrentPopularityRange.Week)
+                new RangeOption(L.Get("Bugun"), TorrentPopularityRange.Today),
+                new RangeOption(L.Get("Shu hafta"), TorrentPopularityRange.Week)
             };
 
             _selectedCategory = Categories[0];
@@ -99,7 +100,7 @@ namespace WatchTorrent.ViewModels
 
         public string? ErrorMessage
         {
-            get => _errorMessage;
+            get => L.Get(_errorMessage);
             private set
             {
                 if (SetProperty(ref _errorMessage, value))

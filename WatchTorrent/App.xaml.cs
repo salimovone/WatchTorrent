@@ -25,6 +25,7 @@ namespace WatchTorrent
             _ = InitializeDownloadsAsync();
 
             window.Stopped += async (_, _) => await _downloads.SaveAsync();
+            window.Resumed += (_, _) => Localization.AppLanguage.RefreshSystemLanguage();
 
             return window;
         }

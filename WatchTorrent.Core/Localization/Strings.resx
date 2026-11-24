@@ -1,0 +1,960 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <data name="S001" xml:space="preserve">
+    <value>"{0}" o'chirilsinmi?</value>
+  </data>
+  <data name="S002" xml:space="preserve">
+    <value>10 s orqaga</value>
+  </data>
+  <data name="S003" xml:space="preserve">
+    <value>10 soniya oldinga</value>
+  </data>
+  <data name="S004" xml:space="preserve">
+    <value>10 soniya orqaga</value>
+  </data>
+  <data name="S005" xml:space="preserve">
+    <value>2x</value>
+  </data>
+  <data name="S006" xml:space="preserve">
+    <value>A answer’ni qo‘lladi</value>
+  </data>
+  <data name="S007" xml:space="preserve">
+    <value>Answer’ni yuboring. U qo‘llangach, tasdiqlang.</value>
+  </data>
+  <data name="S008" xml:space="preserve">
+    <value>Avval joriy suhbatni tugating.</value>
+  </data>
+  <data name="S009" xml:space="preserve">
+    <value>Avval ulaning.</value>
+  </data>
+  <data name="S010" xml:space="preserve">
+    <value>Barcha {0} ta faylni ko'rsatish</value>
+  </data>
+  <data name="S011" xml:space="preserve">
+    <value>Batafsil</value>
+  </data>
+  <data name="S012" xml:space="preserve">
+    <value>Batafsil ›</value>
+  </data>
+  <data name="S013" xml:space="preserve">
+    <value>Batareya ruxsati</value>
+  </data>
+  <data name="S014" xml:space="preserve">
+    <value>Bekor qilish</value>
+  </data>
+  <data name="S015" xml:space="preserve">
+    <value>Bir telefonda offer yarating, ikkinchisida uni qabul qiling.</value>
+  </data>
+  <data name="S016" xml:space="preserve">
+    <value>Birga ko‘rish yoki keyinroq yuklab olishni tanlang.</value>
+  </data>
+  <data name="S017" xml:space="preserve">
+    <value>Birga tomosha qilish</value>
+  </data>
+  <data name="S018" xml:space="preserve">
+    <value>Birinchi yuklamangiz shu yerda bo'ladi</value>
+  </data>
+  <data name="S019" xml:space="preserve">
+    <value>Boshidan</value>
+  </data>
+  <data name="S020" xml:space="preserve">
+    <value>Boshlanmoqda…</value>
+  </data>
+  <data name="S021" xml:space="preserve">
+    <value>Boshqa ilovada ochish</value>
+  </data>
+  <data name="S022" xml:space="preserve">
+    <value>Boshqa internet tarmog'ida urinib ko'ring yoki Android System WebView'ni yangilang. Telefon sanasi va vaqti ham to'g'ri bo'lishi kerak.</value>
+  </data>
+  <data name="S023" xml:space="preserve">
+    <value>Bu filmda subtitr topilmadi.</value>
+  </data>
+  <data name="S024" xml:space="preserve">
+    <value>Bu torrentda video fayl yo'q.</value>
+  </data>
+  <data name="S025" xml:space="preserve">
+    <value>Bugun</value>
+  </data>
+  <data name="S026" xml:space="preserve">
+    <value>Cheklangan — tizim uzoq vaqt fonda qolgan yuklashni to'xtatib qo'yishi mumkin.</value>
+  </data>
+  <data name="S027" xml:space="preserve">
+    <value>Cheklanmagan — tizim fondagi yuklashni to'xtatmaydi.</value>
+  </data>
+  <data name="S028" xml:space="preserve">
+    <value>Cloudflare tekshiruvidan o'tib bo'lmadi. Qayta urinib ko'ring.</value>
+  </data>
+  <data name="S029" xml:space="preserve">
+    <value>Davom etish</value>
+  </data>
+  <data name="S030" xml:space="preserve">
+    <value>Davom etish uchun sayt tekshiruvini bajaring. Tugagach ilovaga avtomatik qaytasiz.</value>
+  </data>
+  <data name="S031" xml:space="preserve">
+    <value>Davom ettirilmoqda…</value>
+  </data>
+  <data name="S032" xml:space="preserve">
+    <value>Davom ettirish</value>
+  </data>
+  <data name="S033" xml:space="preserve">
+    <value>Davr</value>
+  </data>
+  <data name="S034" xml:space="preserve">
+    <value>Diagnostika</value>
+  </data>
+  <data name="S035" xml:space="preserve">
+    <value>Direct ulanish testi</value>
+  </data>
+  <data name="S036" xml:space="preserve">
+    <value>Ekran formati</value>
+  </data>
+  <data name="S037" xml:space="preserve">
+    <value>Ekran formati: {0}</value>
+  </data>
+  <data name="S038" xml:space="preserve">
+    <value>Ekran o'chganda yoki ilova yopilganda ham yuklash davom etadi — bildirishnomada holati ko'rinadi.</value>
+  </data>
+  <data name="S039" xml:space="preserve">
+    <value>Ekranni ochiq tutish</value>
+  </data>
+  <data name="S040" xml:space="preserve">
+    <value>Ekranni to'ldirish</value>
+  </data>
+  <data name="S041" xml:space="preserve">
+    <value>Eng yangi</value>
+  </data>
+  <data name="S042" xml:space="preserve">
+    <value>Faqat ro'yxatdan</value>
+  </data>
+  <data name="S043" xml:space="preserve">
+    <value>Faqat yuklash davom etayotganda va Yuklamalar sahifasi ochiq bo'lganda.</value>
+  </data>
+  <data name="S044" xml:space="preserve">
+    <value>Fayl juda katta.</value>
+  </data>
+  <data name="S045" xml:space="preserve">
+    <value>Fayl ma'lumoti olinmoqda…</value>
+  </data>
+  <data name="S046" xml:space="preserve">
+    <value>Fayl topilmadi</value>
+  </data>
+  <data name="S047" xml:space="preserve">
+    <value>Fayllar ({0})</value>
+  </data>
+  <data name="S048" xml:space="preserve">
+    <value>Fayllar ro'yxati</value>
+  </data>
+  <data name="S049" xml:space="preserve">
+    <value>Fayllar tekshirilmoqda…</value>
+  </data>
+  <data name="S050" xml:space="preserve">
+    <value>Fayllari bilan birga</value>
+  </data>
+  <data name="S051" xml:space="preserve">
+    <value>Faylni ochish</value>
+  </data>
+  <data name="S052" xml:space="preserve">
+    <value>Film bu telefonga yuklangan.</value>
+  </data>
+  <data name="S053" xml:space="preserve">
+    <value>Film qidirish</value>
+  </data>
+  <data name="S054" xml:space="preserve">
+    <value>Film taklifi</value>
+  </data>
+  <data name="S055" xml:space="preserve">
+    <value>Film yoki serial qidirish</value>
+  </data>
+  <data name="S056" xml:space="preserve">
+    <value>Film yoki serialni toping va uning sahifasida «Yuklab olish»ni tanlang. Jarayonni shu yerdan boshqarasiz.</value>
+  </data>
+  <data name="S057" xml:space="preserve">
+    <value>Filmning asl nomini yozing. Kerak bo'lsa yil yoki sifatni ham qo'shing — masalan, 2024 yoki 1080p.</value>
+  </data>
+  <data name="S058" xml:space="preserve">
+    <value>Fonda davom ettirish</value>
+  </data>
+  <data name="S059" xml:space="preserve">
+    <value>Fonda ishlashga ruxsat berish</value>
+  </data>
+  <data name="S060" xml:space="preserve">
+    <value>Fonda yuklash</value>
+  </data>
+  <data name="S061" xml:space="preserve">
+    <value>Gapirish uchun mikrofoningizni yoqing.</value>
+  </data>
+  <data name="S062" xml:space="preserve">
+    <value>HDR tasvir</value>
+  </data>
+  <data name="S063" xml:space="preserve">
+    <value>HDR tasvirni yoqish</value>
+  </data>
+  <data name="S064" xml:space="preserve">
+    <value>HDR videolar ekraningizga mos rang va yorqinlikda ko'rsatiladi.</value>
+  </data>
+  <data name="S065" xml:space="preserve">
+    <value>HDR videolarning rang va yorqinligi ekranga avtomatik moslanadi.</value>
+  </data>
+  <data name="S066" xml:space="preserve">
+    <value>Hajmi</value>
+  </data>
+  <data name="S067" xml:space="preserve">
+    <value>Havolani kiritish</value>
+  </data>
+  <data name="S068" xml:space="preserve">
+    <value>ICE manzillarini yig‘ish vaqti tugadi.</value>
+  </data>
+  <data name="S069" xml:space="preserve">
+    <value>Ijro yoki pauza</value>
+  </data>
+  <data name="S070" xml:space="preserve">
+    <value>Ilova topilmadi</value>
+  </data>
+  <data name="S071" xml:space="preserve">
+    <value>Info hash</value>
+  </data>
+  <data name="S072" xml:space="preserve">
+    <value>Izohlar ({0})</value>
+  </data>
+  <data name="S073" xml:space="preserve">
+    <value>JSON buzilgan. To‘liq matnni kiriting.</value>
+  </data>
+  <data name="S074" xml:space="preserve">
+    <value>Javob kutilgan vaqt tugadi.</value>
+  </data>
+  <data name="S075" xml:space="preserve">
+    <value>Kanal ochildi</value>
+  </data>
+  <data name="S076" xml:space="preserve">
+    <value>Kanal ochildi. Ping yuboring.</value>
+  </data>
+  <data name="S077" xml:space="preserve">
+    <value>Kashf etish</value>
+  </data>
+  <data name="S078" xml:space="preserve">
+    <value>Keyingi fayl</value>
+  </data>
+  <data name="S079" xml:space="preserve">
+    <value>Kichik oyna o'chirilgan</value>
+  </data>
+  <data name="S080" xml:space="preserve">
+    <value>Kichik oynada ko‘rish</value>
+  </data>
+  <data name="S081" xml:space="preserve">
+    <value>Kinolar saqlanadigan papka</value>
+  </data>
+  <data name="S082" xml:space="preserve">
+    <value>Kinoni shu papkaga yuklash uchun Android sozlamalarida fayllarga kirishga ruxsat bering.</value>
+  </data>
+  <data name="S083" xml:space="preserve">
+    <value>Ko'p manbali</value>
+  </data>
+  <data name="S084" xml:space="preserve">
+    <value>Ko'p yuklanayotgan</value>
+  </data>
+  <data name="S085" xml:space="preserve">
+    <value>Ko‘rish</value>
+  </data>
+  <data name="S086" xml:space="preserve">
+    <value>Magnetni nusxalash</value>
+  </data>
+  <data name="S087" xml:space="preserve">
+    <value>Mahalliy ulanish ma’lumoti tayyor.</value>
+  </data>
+  <data name="S088" xml:space="preserve">
+    <value>Manbalar</value>
+  </data>
+  <data name="S089" xml:space="preserve">
+    <value>Manbalar qidirilmoqda…</value>
+  </data>
+  <data name="S090" xml:space="preserve">
+    <value>Manbalardan ma'lumot kutilmoqda…</value>
+  </data>
+  <data name="S091" xml:space="preserve">
+    <value>Manbalarga ulanmoqda…</value>
+  </data>
+  <data name="S092" xml:space="preserve">
+    <value>Mashhur kinolar</value>
+  </data>
+  <data name="S093" xml:space="preserve">
+    <value>Mashhur o'yinlar</value>
+  </data>
+  <data name="S094" xml:space="preserve">
+    <value>Masofaviy ulanish ma’lumoti qabul qilindi.</value>
+  </data>
+  <data name="S095" xml:space="preserve">
+    <value>Ma’lumot kanalida xato.</value>
+  </data>
+  <data name="S096" xml:space="preserve">
+    <value>Mikrofon ochilmadi. </value>
+  </data>
+  <data name="S097" xml:space="preserve">
+    <value>Mikrofon o‘chiq.</value>
+  </data>
+  <data name="S098" xml:space="preserve">
+    <value>Mikrofon yoqilgan.</value>
+  </data>
+  <data name="S099" xml:space="preserve">
+    <value>Mikrofon · O‘chiq</value>
+  </data>
+  <data name="S100" xml:space="preserve">
+    <value>Mikrofon · Yoqilgan</value>
+  </data>
+  <data name="S101" xml:space="preserve">
+    <value>Mikrofonga ruxsat berilmadi.</value>
+  </data>
+  <data name="S102" xml:space="preserve">
+    <value>Mikrofonni o‘chirish</value>
+  </data>
+  <data name="S103" xml:space="preserve">
+    <value>Mikrofonni yoqish</value>
+  </data>
+  <data name="S104" xml:space="preserve">
+    <value>Mos natija topilmadi</value>
+  </data>
+  <data name="S105" xml:space="preserve">
+    <value>Natijalarni saralash</value>
+  </data>
+  <data name="S106" xml:space="preserve">
+    <value>Natijani tanlagach, fayllarni ko'rish, tomosha qilish yoki yuklab olish mumkin.</value>
+  </data>
+  <data name="S107" xml:space="preserve">
+    <value>Nomidan boshlang</value>
+  </data>
+  <data name="S108" xml:space="preserve">
+    <value>Nomini yozing</value>
+  </data>
+  <data name="S109" xml:space="preserve">
+    <value>Nomni qisqaroq yoki asl tilida yozib ko'ring. Yil va sifatni olib tashlash ham yordam berishi mumkin.</value>
+  </data>
+  <data name="S110" xml:space="preserve">
+    <value>Nusxalandi</value>
+  </data>
+  <data name="S111" xml:space="preserve">
+    <value>Nusxalash</value>
+  </data>
+  <data name="S112" xml:space="preserve">
+    <value>O'chirib bo'lmadi</value>
+  </data>
+  <data name="S113" xml:space="preserve">
+    <value>O'chirilmoqda…</value>
+  </data>
+  <data name="S114" xml:space="preserve">
+    <value>O'chirish</value>
+  </data>
+  <data name="S115" xml:space="preserve">
+    <value>Ochib bo'lmadi</value>
+  </data>
+  <data name="S116" xml:space="preserve">
+    <value>Ochilmoqda…</value>
+  </data>
+  <data name="S117" xml:space="preserve">
+    <value>Ochish</value>
+  </data>
+  <data name="S118" xml:space="preserve">
+    <value>Offer matnini joylang</value>
+  </data>
+  <data name="S119" xml:space="preserve">
+    <value>Offer qabul qilish</value>
+  </data>
+  <data name="S120" xml:space="preserve">
+    <value>Offer yaratish</value>
+  </data>
+  <data name="S121" xml:space="preserve">
+    <value>Offer’ni yuboring, kelgan answer’ni joylang.</value>
+  </data>
+  <data name="S122" xml:space="preserve">
+    <value>Orqaga</value>
+  </data>
+  <data name="S123" xml:space="preserve">
+    <value>Ovoz</value>
+  </data>
+  <data name="S124" xml:space="preserve">
+    <value>Ovoz dvigateli ochilmadi. </value>
+  </data>
+  <data name="S125" xml:space="preserve">
+    <value>Ovoz dvigatellari mos kelmadi. Ikkala qurilmaga bir xil build o‘rnating.</value>
+  </data>
+  <data name="S126" xml:space="preserve">
+    <value>Ovozli aloqa</value>
+  </data>
+  <data name="S127" xml:space="preserve">
+    <value>Ovozli suhbatga taklif keldi.</value>
+  </data>
+  <data name="S128" xml:space="preserve">
+    <value>Papka nomini kiriting.</value>
+  </data>
+  <data name="S129" xml:space="preserve">
+    <value>Papka tanlanmadi</value>
+  </data>
+  <data name="S130" xml:space="preserve">
+    <value>Papkaga yozish uchun ruxsat kerak</value>
+  </data>
+  <data name="S131" xml:space="preserve">
+    <value>Papkani tanlash</value>
+  </data>
+  <data name="S132" xml:space="preserve">
+    <value>Pauza</value>
+  </data>
+  <data name="S133" xml:space="preserve">
+    <value>Pauza qilinmoqda…</value>
+  </data>
+  <data name="S134" xml:space="preserve">
+    <value>Pauzada</value>
+  </data>
+  <data name="S135" xml:space="preserve">
+    <value>Ping</value>
+  </data>
+  <data name="S136" xml:space="preserve">
+    <value>Ping #{0} olindi, pong yuborildi.</value>
+  </data>
+  <data name="S137" xml:space="preserve">
+    <value>Playerni ishga tushirib bo'lmadi: {0}</value>
+  </data>
+  <data name="S138" xml:space="preserve">
+    <value>Qayta boshlash</value>
+  </data>
+  <data name="S139" xml:space="preserve">
+    <value>Qayta urinish</value>
+  </data>
+  <data name="S140" xml:space="preserve">
+    <value>Qayta yuklash</value>
+  </data>
+  <data name="S141" xml:space="preserve">
+    <value>Qidirilmoqda…</value>
+  </data>
+  <data name="S142" xml:space="preserve">
+    <value>Qidirish</value>
+  </data>
+  <data name="S143" xml:space="preserve">
+    <value>Qidiruv</value>
+  </data>
+  <data name="S144" xml:space="preserve">
+    <value>Qidiruv yakunlanmadi</value>
+  </data>
+  <data name="S145" xml:space="preserve">
+    <value>Qo'shilgan</value>
+  </data>
+  <data name="S146" xml:space="preserve">
+    <value>Rasmni yopish</value>
+  </data>
+  <data name="S147" xml:space="preserve">
+    <value>Ro'yxat davri</value>
+  </data>
+  <data name="S148" xml:space="preserve">
+    <value>Ro'yxat olinmoqda…</value>
+  </data>
+  <data name="S149" xml:space="preserve">
+    <value>Ro'yxatni yopish</value>
+  </data>
+  <data name="S150" xml:space="preserve">
+    <value>Ro'yxatni yuklab bo'lmadi</value>
+  </data>
+  <data name="S151" xml:space="preserve">
+    <value>SDP qabul qilinmadi: </value>
+  </data>
+  <data name="S152" xml:space="preserve">
+    <value>Saqlangan fayllar va yuklash jarayoni</value>
+  </data>
+  <data name="S153" xml:space="preserve">
+    <value>Saqlangan yuklamalaringizni ochishingiz yoki nom bo'yicha qidirishingiz mumkin.</value>
+  </data>
+  <data name="S154" xml:space="preserve">
+    <value>Saralash</value>
+  </data>
+  <data name="S155" xml:space="preserve">
+    <value>Sayt hozircha ro'yxatni qaytarmadi. Birozdan so'ng qayta urinib ko'ring.</value>
+  </data>
+  <data name="S156" xml:space="preserve">
+    <value>Saytga ulanib bo'lmadi. Internet aloqasini tekshiring.</value>
+  </data>
+  <data name="S157" xml:space="preserve">
+    <value>Sherigingiz yuklab olishni tanladi</value>
+  </data>
+  <data name="S158" xml:space="preserve">
+    <value>Sherigingizning javobi kutilmoqda…</value>
+  </data>
+  <data name="S159" xml:space="preserve">
+    <value>Sherigingizning telefoni yuklamoqda…</value>
+  </data>
+  <data name="S160" xml:space="preserve">
+    <value>Shu hafta</value>
+  </data>
+  <data name="S161" xml:space="preserve">
+    <value>Signaling: {0}
+ICE yig‘ish: {1}
+ICE: {2}
+Ulanish: {3}
+DataChannel: {4}
+Manzillar: {5}
+Tanlangan juftlik: {6}
+</value>
+  </data>
+  <data name="S162" xml:space="preserve">
+    <value>So'rov vaqti tugadi. Qayta urinib ko'ring.</value>
+  </data>
+  <data name="S163" xml:space="preserve">
+    <value>Sozlamalar</value>
+  </data>
+  <data name="S164" xml:space="preserve">
+    <value>Standart papkaga qaytish</value>
+  </data>
+  <data name="S165" xml:space="preserve">
+    <value>Stream qilib ko‘rish</value>
+  </data>
+  <data name="S166" xml:space="preserve">
+    <value>Subtitr</value>
+  </data>
+  <data name="S167" xml:space="preserve">
+    <value>Subtitrlar</value>
+  </data>
+  <data name="S168" xml:space="preserve">
+    <value>Suhbat tugadi.</value>
+  </data>
+  <data name="S169" xml:space="preserve">
+    <value>Suhbatdosh aloqani tugatdi.</value>
+  </data>
+  <data name="S170" xml:space="preserve">
+    <value>Suhbatdoshingiz yuborgan havolani joylang.</value>
+  </data>
+  <data name="S171" xml:space="preserve">
+    <value>Suhbatdoshingizga ulanmoqda…</value>
+  </data>
+  <data name="S172" xml:space="preserve">
+    <value>Suhbatni tugatish</value>
+  </data>
+  <data name="S173" xml:space="preserve">
+    <value>Taklif eskirgan yoki buzilgan. Yangi taklif so‘rang.</value>
+  </data>
+  <data name="S174" xml:space="preserve">
+    <value>Taklif havolasi</value>
+  </data>
+  <data name="S175" xml:space="preserve">
+    <value>Taklif havolasi buzilgan.</value>
+  </data>
+  <data name="S176" xml:space="preserve">
+    <value>Taklif havolasi buzilgan. Yangi havola so‘rang.</value>
+  </data>
+  <data name="S177" xml:space="preserve">
+    <value>Taklif havolasini yuboring yoki kelgan havolani oching.</value>
+  </data>
+  <data name="S178" xml:space="preserve">
+    <value>Taklif havolasini yuborish</value>
+  </data>
+  <data name="S179" xml:space="preserve">
+    <value>Taklif mos kelmadi.</value>
+  </data>
+  <data name="S180" xml:space="preserve">
+    <value>Taklif muddati tugagan yoki topilmadi. Yangi havola so‘rang.</value>
+  </data>
+  <data name="S181" xml:space="preserve">
+    <value>Taklif qabul qilinishi kutilmoqda.</value>
+  </data>
+  <data name="S182" xml:space="preserve">
+    <value>Taklif yuborish</value>
+  </data>
+  <data name="S183" xml:space="preserve">
+    <value>Taklifni ochib bo‘lmadi. Yangi havola so‘rang.</value>
+  </data>
+  <data name="S184" xml:space="preserve">
+    <value>Taklifni qabul qilish</value>
+  </data>
+  <data name="S185" xml:space="preserve">
+    <value>Tavsif</value>
+  </data>
+  <data name="S186" xml:space="preserve">
+    <value>Tavsifni ko'rish</value>
+  </data>
+  <data name="S187" xml:space="preserve">
+    <value>Tekshirilgan</value>
+  </data>
+  <data name="S188" xml:space="preserve">
+    <value>Tekshiruv uzoq davom etyapti</value>
+  </data>
+  <data name="S189" xml:space="preserve">
+    <value>Telefon sozlamalarida WatchTorrent uchun «Picture-in-picture» (tasvir ichida tasvir) ruxsatini yoqing.</value>
+  </data>
+  <data name="S190" xml:space="preserve">
+    <value>Telefon yoki kompyuterdagi yozish mumkin bo‘lgan boshqa papkani tanlang.</value>
+  </data>
+  <data name="S191" xml:space="preserve">
+    <value>Tezlik</value>
+  </data>
+  <data name="S192" xml:space="preserve">
+    <value>To'liq ekran</value>
+  </data>
+  <data name="S193" xml:space="preserve">
+    <value>To'xtatilmoqda…</value>
+  </data>
+  <data name="S194" xml:space="preserve">
+    <value>Toifa</value>
+  </data>
+  <data name="S195" xml:space="preserve">
+    <value>Tomosha qilish</value>
+  </data>
+  <data name="S196" xml:space="preserve">
+    <value>Tomosha qilish yuklamani ham boshlaydi.</value>
+  </data>
+  <data name="S197" xml:space="preserve">
+    <value>Top 100 kinolar</value>
+  </data>
+  <data name="S198" xml:space="preserve">
+    <value>Top 100 o'yinlar</value>
+  </data>
+  <data name="S199" xml:space="preserve">
+    <value>Torrent engine xatosi: </value>
+  </data>
+  <data name="S200" xml:space="preserve">
+    <value>Torrent hajmi: {0}</value>
+  </data>
+  <data name="S201" xml:space="preserve">
+    <value>Torrent ma'lumoti olinmoqda…</value>
+  </data>
+  <data name="S202" xml:space="preserve">
+    <value>Torrent yuklamalar ro'yxatida topilmadi.</value>
+  </data>
+  <data name="S203" xml:space="preserve">
+    <value>Torrent yuklanayotganini ko'rsatadi (ekran o'chganda ham yuklash davom etadi)</value>
+  </data>
+  <data name="S204" xml:space="preserve">
+    <value>Torrentlar toifasi</value>
+  </data>
+  <data name="S205" xml:space="preserve">
+    <value>Tozalab qayta urinish</value>
+  </data>
+  <data name="S206" xml:space="preserve">
+    <value>Trend kinolar</value>
+  </data>
+  <data name="S207" xml:space="preserve">
+    <value>Trend o'yinlar</value>
+  </data>
+  <data name="S208" xml:space="preserve">
+    <value>Trendda</value>
+  </data>
+  <data name="S209" xml:space="preserve">
+    <value>Ulangan</value>
+  </data>
+  <data name="S210" xml:space="preserve">
+    <value>Ulanib bo‘lmadi. </value>
+  </data>
+  <data name="S211" xml:space="preserve">
+    <value>Ulanish</value>
+  </data>
+  <data name="S212" xml:space="preserve">
+    <value>Ulanish ma’lumoti noto‘g‘ri.</value>
+  </data>
+  <data name="S213" xml:space="preserve">
+    <value>Ulanish tayyorlanmoqda…</value>
+  </data>
+  <data name="S214" xml:space="preserve">
+    <value>Ulanish tiklanmadi.</value>
+  </data>
+  <data name="S215" xml:space="preserve">
+    <value>Ulanish uzildi. Internetni tekshirib, qayta urinib ko‘ring.</value>
+  </data>
+  <data name="S216" xml:space="preserve">
+    <value>Ulanish vaqti tugadi. Bir Wi-Fi tarmog‘ida qayta urinib ko‘ring.</value>
+  </data>
+  <data name="S217" xml:space="preserve">
+    <value>Ulanish vaqti tugadi. Yangi taklif bilan qayta urinib ko‘ring.</value>
+  </data>
+  <data name="S218" xml:space="preserve">
+    <value>Ulanish: </value>
+  </data>
+  <data name="S219" xml:space="preserve">
+    <value>Videodagi vaqt</value>
+  </data>
+  <data name="S220" xml:space="preserve">
+    <value>Videoni o'ynatib bo'lmadi: fayl buzilgan yoki format qo'llab-quvvatlanmaydi.</value>
+  </data>
+  <data name="S221" xml:space="preserve">
+    <value>VoiceConnection ovoz kaliti noto‘g‘ri.</value>
+  </data>
+  <data name="S222" xml:space="preserve">
+    <value>VoiceConnection ovoz kaliti yo‘q.</value>
+  </data>
+  <data name="S223" xml:space="preserve">
+    <value>VoiceConnection ovoz protokoli mos kelmadi.</value>
+  </data>
+  <data name="S224" xml:space="preserve">
+    <value>VoiceConnection ovoz ulanishi ishlamadi. </value>
+  </data>
+  <data name="S225" xml:space="preserve">
+    <value>VoiceConnection ovoz: {0}
+</value>
+  </data>
+  <data name="S226" xml:space="preserve">
+    <value>WatchTorrent papkalari</value>
+  </data>
+  <data name="S227" xml:space="preserve">
+    <value>WatchTorrent taklif havolasini to‘liq kiriting.</value>
+  </data>
+  <data name="S228" xml:space="preserve">
+    <value>WatchTorrent taklif yoki javob uchun .wtcall faylini ochadi.</value>
+  </data>
+  <data name="S229" xml:space="preserve">
+    <value>WebView'ni Play Market'da yangilash</value>
+  </data>
+  <data name="S230" xml:space="preserve">
+    <value>Xato: {0}</value>
+  </data>
+  <data name="S231" xml:space="preserve">
+    <value>Xatolik</value>
+  </data>
+  <data name="S232" xml:space="preserve">
+    <value>Xatolik yuz berdi: {0}</value>
+  </data>
+  <data name="S233" xml:space="preserve">
+    <value>Xavfsizlik tekshiruvi</value>
+  </data>
+  <data name="S234" xml:space="preserve">
+    <value>Xorijiy kinolar</value>
+  </data>
+  <data name="S235" xml:space="preserve">
+    <value>Yana yuklash</value>
+  </data>
+  <data name="S236" xml:space="preserve">
+    <value>Yangi papka</value>
+  </data>
+  <data name="S237" xml:space="preserve">
+    <value>Yangi papka…</value>
+  </data>
+  <data name="S238" xml:space="preserve">
+    <value>Yangi yuklamalar tanlangan papkaga saqlanadi.</value>
+  </data>
+  <data name="S239" xml:space="preserve">
+    <value>Yopish</value>
+  </data>
+  <data name="S240" xml:space="preserve">
+    <value>Yorqinlik va ranglar ekranning HDR imkoniyatiga moslanadi. Video ichida ham almashtirish mumkin.</value>
+  </data>
+  <data name="S241" xml:space="preserve">
+    <value>Yuklab bo'lindi</value>
+  </data>
+  <data name="S242" xml:space="preserve">
+    <value>Yuklab bo'lmadi</value>
+  </data>
+  <data name="S243" xml:space="preserve">
+    <value>Yuklab olingan</value>
+  </data>
+  <data name="S244" xml:space="preserve">
+    <value>Yuklab olish</value>
+  </data>
+  <data name="S245" xml:space="preserve">
+    <value>Yuklagan</value>
+  </data>
+  <data name="S246" xml:space="preserve">
+    <value>Yuklama holati saqlanmadi: </value>
+  </data>
+  <data name="S247" xml:space="preserve">
+    <value>Yuklamalar</value>
+  </data>
+  <data name="S248" xml:space="preserve">
+    <value>Yuklamalar sahifasida ekran o'chmasin</value>
+  </data>
+  <data name="S249" xml:space="preserve">
+    <value>Yuklamalarda ko'rish</value>
+  </data>
+  <data name="S250" xml:space="preserve">
+    <value>Yuklamalarni ochish</value>
+  </data>
+  <data name="S251" xml:space="preserve">
+    <value>Yuklamani o'chirish</value>
+  </data>
+  <data name="S252" xml:space="preserve">
+    <value>Yuklanmoqda</value>
+  </data>
+  <data name="S253" xml:space="preserve">
+    <value>Yuklanmoqda · {0} qoldi</value>
+  </data>
+  <data name="S254" xml:space="preserve">
+    <value>Yuklash</value>
+  </data>
+  <data name="S255" xml:space="preserve">
+    <value>Yuklash davom etayotganda kompyuter uyqu rejimiga o'tmaydi.</value>
+  </data>
+  <data name="S256" xml:space="preserve">
+    <value>Yuklayotgan</value>
+  </data>
+  <data name="S257" xml:space="preserve">
+    <value>[Cloudflare] Play Market ochilmadi: {0}</value>
+  </data>
+  <data name="S258" xml:space="preserve">
+    <value>[Cloudflare] Tekshirishda xato: {0}</value>
+  </data>
+  <data name="S259" xml:space="preserve">
+    <value>[DirectVideo] Ulab bo'lmadi: {0}</value>
+  </data>
+  <data name="S260" xml:space="preserve">
+    <value>[KeepAlive] Bildirishnoma ruxsati: {0}</value>
+  </data>
+  <data name="S261" xml:space="preserve">
+    <value>[KeepAlive] Fon xizmati boshlanmadi: {0}</value>
+  </data>
+  <data name="S262" xml:space="preserve">
+    <value>[PiP] Kichik oynaga o'tib bo'lmadi: {0}</value>
+  </data>
+  <data name="S263" xml:space="preserve">
+    <value>[Posters] Kesh saqlanmadi: {0}</value>
+  </data>
+  <data name="S265" xml:space="preserve">
+    <value>{0}
+Yuklanish foizini Yuklamalar bo‘limida ko‘rishingiz mumkin.</value>
+  </data>
+  <data name="S266" xml:space="preserve">
+    <value>{0} (tanlangan)</value>
+  </data>
+  <data name="S267" xml:space="preserve">
+    <value>{0} dan davom etilmoqda</value>
+  </data>
+  <data name="S268" xml:space="preserve">
+    <value>{0} ta fayl</value>
+  </data>
+  <data name="S269" xml:space="preserve">
+    <value>{0} ta torrent yuklanmoqda</value>
+  </data>
+  <data name="S270" xml:space="preserve">
+    <value>{0} · yuklab bo'lingan</value>
+  </data>
+  <data name="S271" xml:space="preserve">
+    <value>{0} · {1}% yuklangan</value>
+  </data>
+  <data name="Language" xml:space="preserve">
+    <value>Til</value>
+  </data>
+  <data name="DeviceLanguage" xml:space="preserve">
+    <value>Telefon tili</value>
+  </data>
+  <data name="LanguageHelp" xml:space="preserve">
+    <value>Dastlab telefon tili ishlatiladi. Til tanlovi avtomatik saqlanadi.</value>
+  </data>
+  <data name="LanguageSystem" xml:space="preserve">
+    <value>Telefon tili (avtomatik)</value>
+  </data>
+  <data name="NotConnected" xml:space="preserve">
+    <value>Ulanmagan</value>
+  </data>
+  <data name="Connecting" xml:space="preserve">
+    <value>Ulanmoqda</value>
+  </data>
+  <data name="Off" xml:space="preserve">
+    <value>O‘chiq</value>
+  </data>
+  <data name="Automatic" xml:space="preserve">
+    <value>Avtomatik</value>
+  </data>
+  <data name="Fit" xml:space="preserve">
+    <value>Moslashtirish</value>
+  </data>
+  <data name="Stretch" xml:space="preserve">
+    <value>Cho'zish</value>
+  </data>
+  <data name="OriginalSize" xml:space="preserve">
+    <value>Asl o'lcham</value>
+  </data>
+  <data name="Largest" xml:space="preserve">
+    <value>Eng katta</value>
+  </data>
+  <data name="Smallest" xml:space="preserve">
+    <value>Eng kichik</value>
+  </data>
+  <data name="AudioTrack" xml:space="preserve">
+    <value>Audio yo'lak</value>
+  </data>
+  <data name="Buffering" xml:space="preserve">
+    <value>Buferlanmoqda…</value>
+  </data>
+  <data name="GatheringIce" xml:space="preserve">
+    <value>ICE manzillari yig‘ilmoqda…</value>
+  </data>
+  <data name="IceGather" xml:space="preserve">
+    <value>ICE yig‘ish: </value>
+  </data>
+  <data name="IceStatus" xml:space="preserve">
+    <value>ICE: </value>
+  </data>
+  <data name="EngineStartFailed" xml:space="preserve">
+    <value>libtorrent ishga tushmadi. </value>
+  </data>
+  <data name="MagnetAppMissing" xml:space="preserve">
+    <value>Magnet havolani ochadigan torrent ilovasi o'rnatilmagan.</value>
+  </data>
+  <data name="MagnetTooLong" xml:space="preserve">
+    <value>Magnet havolasi juda uzun.</value>
+  </data>
+  <data name="Decline" xml:space="preserve">
+    <value>Rad etish</value>
+  </data>
+  <data name="Preparing" xml:space="preserve">
+    <value>Tayyorlanmoqda…</value>
+  </data>
+  <data name="AddingTorrent" xml:space="preserve">
+    <value>Torrent qo'shilmoqda…</value>
+  </data>
+  <data name="SignalFailed" xml:space="preserve">
+    <value>VoiceConnection signaling ishlamadi. </value>
+  </data>
+  <data name="InvalidSignal" xml:space="preserve">
+    <value>VoiceConnection signaling noto‘g‘ri.</value>
+  </data>
+  <data name="SignalTooLarge" xml:space="preserve">
+    <value>VoiceConnection signaling paketi juda katta.</value>
+  </data>
+  <data name="AnswerText" xml:space="preserve">
+    <value>Answer matnini joylang</value>
+  </data>
+  <data name="ApplyAnswer" xml:space="preserve">
+    <value>Answer qo‘llash</value>
+  </data>
+  <data name="ExpectedStage" xml:space="preserve">
+    <value>Bu bosqichda {0} kerak.</value>
+  </data>
+  <data name="LessThanMinute" xml:space="preserve">
+    <value>&lt; 1 daq</value>
+  </data>
+  <data name="Minutes" xml:space="preserve">
+    <value>{0} daq</value>
+  </data>
+  <data name="HoursMinutes" xml:space="preserve">
+    <value>{0} soat {1} daq</value>
+  </data>
+  <data name="DaysHours" xml:space="preserve">
+    <value>{0} kun {1} soat</value>
+  </data>
+  <data name="ResultsCount" xml:space="preserve">
+    <value>{0} ta natija</value>
+  </data>
+  <data name="HdrMode" xml:space="preserve">
+    <value>{0} · HDR rejimi</value>
+  </data>
+  <data name="CatalogPeers" xml:space="preserve">
+    <value>Katalogda</value>
+  </data>
+  <data name="ConnectedPeers" xml:space="preserve">
+    <value>Yuboruvchida ulangan</value>
+  </data>
+  <data name="PeerCounts" xml:space="preserve">
+    <value>{0} · {1} seed · {2} leech</value>
+  </data>
+  <data name="ForwardShort" xml:space="preserve">
+    <value>10 s oldinga</value>
+  </data>
+  <data name="DownloadCount">
+    <value>{0:N0} marta</value>
+  </data>
+  <data name="SeederUnit">
+    <value>manba</value>
+  </data>
+  <data name="SettingsHdrHelp" xml:space="preserve">
+    <value>Rang va yorqinlik ekranga moslanadi.</value>
+  </data>
+  <data name="SettingsBackgroundHelp" xml:space="preserve">
+    <value>Ekran o‘chganda ham yuklash davom etadi.</value>
+  </data>
+</root>

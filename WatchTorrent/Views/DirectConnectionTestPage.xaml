@@ -1,17 +1,18 @@
 <?xml version="1.0" encoding="utf-8" ?>
-<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui" xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-    x:Class="WatchTorrent.Views.DirectConnectionTestPage" Title="Direct ulanish testi">
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui" xmlns:loc="clr-namespace:WatchTorrent.Localization"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    x:Class="WatchTorrent.Views.DirectConnectionTestPage" Title="{loc:Translate S035}">
     <ScrollView><VerticalStackLayout Padding="20" Spacing="12" MaximumWidthRequest="720">
         <Label x:Name="StatusLabel" />
-        <Button x:Name="Create" Text="Offer yaratish" Clicked="CreateOffer" />
-        <Editor x:Name="Input" Placeholder="Offer matnini joylang" HeightRequest="96" />
-        <Button x:Name="Apply" Text="Offer qabul qilish" Clicked="ApplyRemote" />
+        <Button x:Name="Create" Text="{loc:Translate S120}" Clicked="CreateOffer" />
+        <Editor x:Name="Input" Placeholder="{loc:Translate S118}" HeightRequest="96" />
+        <Button x:Name="Apply" Text="{loc:Translate S119}" Clicked="ApplyRemote" />
         <Editor x:Name="Output" IsReadOnly="True" HeightRequest="96" />
-        <Button x:Name="Copy" Text="Nusxalash" Clicked="CopySignal" />
-        <Button x:Name="Confirm" Text="A answer’ni qo‘lladi" Clicked="ConfirmAnswer" />
-        <Button x:Name="Ping" Text="Ping" Clicked="SendPing" />
-        <Button Text="Qayta boshlash" Style="{StaticResource GhostButton}" Clicked="Reset" />
-        <Label Text="Diagnostika" Style="{StaticResource SectionTitle}" />
+        <Button x:Name="Copy" Text="{loc:Translate S111}" Clicked="CopySignal" />
+        <Button x:Name="Confirm" Text="{loc:Translate S006}" Clicked="ConfirmAnswer" />
+        <Button x:Name="Ping" Text="{loc:Translate S135}" Clicked="SendPing" />
+        <Button Text="{loc:Translate S138}" Style="{StaticResource GhostButton}" Clicked="Reset" />
+        <Label Text="{loc:Translate S034}" Style="{StaticResource SectionTitle}" />
         <Label x:Name="Diagnostic" Style="{StaticResource Muted}" />
     </VerticalStackLayout></ScrollView>
 </ContentPage>

@@ -33,7 +33,7 @@
         <Setter Property="FontFamily" Value="OpenSansSemibold" />
         <Setter Property="FontSize" Value="14" />
         <Setter Property="BorderWidth" Value="0" />
-        <Setter Property="CornerRadius" Value="8" />
+        <Setter Property="CornerRadius" Value="10" />
         <Setter Property="Padding" Value="18,10" />
         <Setter Property="MinimumHeightRequest" Value="48" />
         <Setter Property="MinimumWidthRequest" Value="44" />
@@ -502,7 +502,7 @@
         <Setter Property="BackgroundColor" Value="{StaticResource Surface}" />
         <Setter Property="Stroke" Value="{StaticResource StrokeColor}" />
         <Setter Property="StrokeThickness" Value="0" />
-        <Setter Property="StrokeShape" Value="RoundRectangle 8" />
+        <Setter Property="StrokeShape" Value="RoundRectangle 12" />
         <Setter Property="Padding" Value="16" />
     </Style>
     <Style TargetType="Border" CanCascade="true" x:Key="Pill">
@@ -526,10 +526,9 @@
         <Setter Property="TextColor" Value="{StaticResource TextPrimary}" />
     </Style>
     <Style TargetType="Button" CanCascade="true" x:Key="GhostButton">
-        <Setter Property="BackgroundColor" Value="Transparent" />
+        <Setter Property="BackgroundColor" Value="{StaticResource Surface2}" />
         <Setter Property="TextColor" Value="{StaticResource TextPrimary}" />
-        <Setter Property="BorderColor" Value="{StaticResource StrokeColor}" />
-        <Setter Property="BorderWidth" Value="1" />
+        <Setter Property="BorderWidth" Value="0" />
     </Style>
     <Style TargetType="Button" CanCascade="true" BasedOn="{StaticResource GhostButton}" x:Key="SmallButton">
         <Setter Property="FontSize" Value="13" />
@@ -575,13 +574,13 @@
     </Style>
     <Style TargetType="Label" CanCascade="true" x:Key="PageTitle">
         <Setter Property="FontFamily" Value="OpenSansSemibold" />
-        <Setter Property="FontSize" Value="26" />
+        <Setter Property="FontSize" Value="24" />
         <Setter Property="LineBreakMode" Value="WordWrap" />
     </Style>
     <Style TargetType="Label" CanCascade="true" x:Key="BodyText">
         <Setter Property="FontSize" Value="14" />
         <Setter Property="TextColor" Value="{StaticResource TextMuted}" />
-        <Setter Property="LineHeight" Value="1.3" />
+        <Setter Property="LineHeight" Value="1.2" />
     </Style>
     <Style TargetType="Button" CanCascade="true" x:Key="TextButton">
         <Setter Property="BackgroundColor" Value="Transparent" />

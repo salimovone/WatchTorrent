@@ -1,3 +1,4 @@
+using L = WatchTorrent.Core.Localization.AppText;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
 using LibVLCSharp.Shared;
@@ -17,7 +18,7 @@ namespace WatchTorrent.ViewModels
         private static readonly float[] Speeds = { 0.5f, 0.75f, 1f, 1.25f, 1.5f, 2f };
 
         // Format tugmasi shu tartibda aylantiradi; tanlov keyingi filmlar uchun ham eslab qolinadi.
-        private static readonly string[] AspectModes = { "Asl o'lcham", "Ekranni to'ldirish", "Cho'zish", "16:9", "4:3" };
+        private static readonly string[] AspectModes = { L.Get("Asl o'lcham"), L.Get("Ekranni to'ldirish"), L.Get("Cho'zish"), "16:9", "4:3" };
 
         private const string AspectModeKey = "player.aspect_mode";
 
@@ -149,7 +150,7 @@ namespace WatchTorrent.ViewModels
         private float _rateWhenStarted = 1;
 
         private string _title = string.Empty;
-        private string _statusText = "Tayyorlanmoqda…";
+        private string _statusText = L.Get("Tayyorlanmoqda…");
         private bool _isLoading = true;
         private bool _isBuffering;
         private string? _errorMessage;
@@ -187,7 +188,7 @@ namespace WatchTorrent.ViewModels
         /// <summary>HDR/SDR tugmasi faqat HDR videolarda va almashtirish mumkin bo'lgan qurilmada.</summary>
         public bool ShowHdrToggle => IsHdrVideo && HdrDisplay.CanSwitch && ShowTransport;
 
-        public string HdrToggleText => IsHdrOutput ? "HDR" : "SDR";
+        public string HdrToggleText => L.Get(IsHdrOutput ? "HDR" : "SDR");
 
         /// <summary>Video MediaCodec'dan to'g'ridan-to'g'ri ekranga chiqadi (HDR rejimi) — sahifa sirtni o'zi joylashtiradi.</summary>
         public bool IsDirectOutput => _output == VideoOutput.Hdr;
@@ -203,7 +204,7 @@ namespace WatchTorrent.ViewModels
 
         public string StatusText
         {
-            get => _statusText;
+            get => L.Get(_statusText);
             private set => SetProperty(ref _statusText, value);
         }
 
@@ -233,7 +234,7 @@ namespace WatchTorrent.ViewModels
 
         public string? ErrorMessage
         {
-            get => _errorMessage;
+            get => L.Get(_errorMessage);
             private set
             {
                 if (SetProperty(ref _errorMessage, value))
@@ -278,13 +279,13 @@ namespace WatchTorrent.ViewModels
 
         public string PositionText
         {
-            get => _positionText;
+            get => L.Get(_positionText);
             private set => SetProperty(ref _positionText, value);
         }
 
         public string DurationText
         {
-            get => _durationText;
+            get => L.Get(_durationText);
             private set => SetProperty(ref _durationText, value);
         }
 
@@ -331,7 +332,7 @@ namespace WatchTorrent.ViewModels
 
         public bool HasNext => CurrentIndex >= 0 && CurrentIndex < Playlist.Count - 1;
 
-        public string PlaylistHeader => $"Fayllar ({Playlist.Count})";
+        public string PlaylistHeader => L.Get(L.F("S047", Playlist.Count));
 
         private int CurrentIndex => Playlist.IndexOf(Playlist.FirstOrDefault(item => item.IsCurrent)!);
 
@@ -420,23 +421,23 @@ namespace WatchTorrent.ViewModels
                 {
                     if (_magnet == null)
                     {
-                        throw new InvalidOperationException("Torrent yuklamalar ro'yxatida topilmadi.");
+                        throw new InvalidOperationException(L.Get("Torrent yuklamalar ro'yxatida topilmadi."));
                     }
 
                     // Ro'yxatda bor torrent ham shu yo'ldan o'tadi — magnet'dagi web-seed manzillari tiklanadi.
                     created = _downloads.FindByMagnet(_magnet) == null;
-                    StatusText = "Torrent qo'shilmoqda…";
+                    StatusText = L.Get("Torrent qo'shilmoqda…");
                     _item = await _downloads.AddAsync(_magnet, Title);
                 }
 
-                StatusText = "Torrent ma'lumoti olinmoqda…";
+                StatusText = L.Get("Torrent ma'lumoti olinmoqda…");
                 await _downloads.WaitForMetadataAsync(_item, token);
 
                 var playable = MediaFiles.GetPlayable(_item.Manager.Files);
 
                 if (playable.Count == 0)
                 {
-                    throw new InvalidOperationException("Bu torrentda video fayl yo'q.");
+                    throw new InvalidOperationException(L.Get("Bu torrentda video fayl yo'q."));
                 }
 
                 _watchOnly = created;
@@ -545,7 +546,7 @@ namespace WatchTorrent.ViewModels
 
         public void ShowError(Exception exception)
         {
-            ErrorMessage = $"Playerni ishga tushirib bo'lmadi: {exception.Message}";
+            ErrorMessage = L.F("S137", exception.Message);
         }
 
         public void TogglePlay()
@@ -684,7 +685,7 @@ namespace WatchTorrent.ViewModels
             }
 
             var current = Player.AudioTrack;
-            var index = await ChooseAsync("Audio yo'lak", tracks.Select(track => MarkCurrent(track.Name, track.Id == current)));
+            var index = await ChooseAsync(L.Get("Audio yo'lak"), tracks.Select(track => track.Name), Array.FindIndex(tracks, track => track.Id == current));
 
             if (index >= 0 && Player != null)
             {
@@ -707,14 +708,14 @@ namespace WatchTorrent.ViewModels
 
             if (tracks.Length == 0)
             {
-                await Shell.Current.DisplayAlertAsync("Subtitr", "Bu filmda subtitr topilmadi.", "OK");
+                await Shell.Current.DisplayAlertAsync(L.Get("Subtitr"), L.Get("Bu filmda subtitr topilmadi."), "OK");
 
                 return;
             }
 
             var current = Player.Spu;
-            var names = tracks.Select(track => MarkCurrent(track.Id == -1 ? "O'chirish" : track.Name, track.Id == current));
-            var index = await ChooseAsync("Subtitr", names);
+            var names = tracks.Select(track => track.Id == -1 ? L.Instance["Off"] : track.Name);
+            var index = await ChooseAsync(L.Get("Subtitr"), names, Array.FindIndex(tracks, track => track.Id == current));
 
             if (index >= 0 && Player != null)
             {
@@ -733,7 +734,7 @@ namespace WatchTorrent.ViewModels
 
             ApplyAspectMode();
 
-            return AspectModes[_aspectMode];
+            return L.Get(AspectModes[_aspectMode]);
         }
 
         /// <summary>"To'ldirish" va "Cho'zish" ekran nisbatiga bog'liq — oyna o'lchami o'zgarganda qayta qo'llanadi.</summary>
@@ -823,7 +824,7 @@ namespace WatchTorrent.ViewModels
 
             EndHoldSpeed();
             var current = _rateTransition?.Target ?? Player.Rate;
-            var index = await ChooseAsync("Tezlik", Speeds.Select(speed => MarkCurrent($"{speed:0.##}x", Math.Abs(speed - current) < 0.01)));
+            var index = await ChooseAsync(L.Get("Tezlik"), Speeds.Select(speed => $"{speed:0.##}×"), Array.FindIndex(Speeds, speed => Math.Abs(speed - current) < 0.01));
 
             if (index >= 0)
             {
@@ -1036,7 +1037,7 @@ namespace WatchTorrent.ViewModels
             // To'liq yuklangan fayl to'g'ridan-to'g'ri diskdan o'ynatiladi — eng tez va silliq yo'l (StartMedia).
             if (!file.BitField.AllTrue || !File.Exists(file.FullPath))
             {
-                StatusText = "Buferlanmoqda…";
+                StatusText = L.Get("Buferlanmoqda…");
                 _streamRequested = true;
 
                 Stream stream;
@@ -1114,7 +1115,7 @@ namespace WatchTorrent.ViewModels
                 _media.AddOption($":start-time={(startMs / 1000.0).ToString(System.Globalization.CultureInfo.InvariantCulture)}");
             }
 
-            StatusText = "Ochilmoqda…";
+            StatusText = L.Get("Ochilmoqda…");
             if (Session != null) _media.AddOption(":start-paused");
             Player!.Play(_media);
         }
@@ -1132,7 +1133,7 @@ namespace WatchTorrent.ViewModels
 
             var label = HdrProbe.GetLabel(_dynamicRange);
 
-            return IsHdrOutput ? $"{label} · HDR rejimi" : $"{label} → SDR";
+            return IsHdrOutput ? L.F("HdrMode", label) : $"{label} → SDR";
         }
 
         /// <summary>
@@ -1345,7 +1346,7 @@ namespace WatchTorrent.ViewModels
             IsBuffering = false;
             IsPlaying = false;
             IsLoading = true;
-            StatusText = "Ochilmoqda…";
+            StatusText = L.Get("Ochilmoqda…");
             PositionSeconds = 0;
             DurationSeconds = 1;
             PositionText = "0:00";
@@ -1369,7 +1370,7 @@ namespace WatchTorrent.ViewModels
                     OnPlaying();
                     break;
                 case VLCState.Error when !HasError:
-                    ErrorMessage = "Videoni o'ynatib bo'lmadi: fayl buzilgan yoki format qo'llab-quvvatlanmaydi.";
+                    ErrorMessage = L.Get("Videoni o'ynatib bo'lmadi: fayl buzilgan yoki format qo'llab-quvvatlanmaydi.");
                     break;
                 case VLCState.Ended when _hasStartedPlaying:
                     OnEndReached();
@@ -1407,7 +1408,7 @@ namespace WatchTorrent.ViewModels
 
             if (_resumeMs > 0)
             {
-                ResumeNotice = $"{FormatTime(_resumeMs)} dan davom etilmoqda";
+                ResumeNotice = L.F("S267", FormatTime(_resumeMs));
                 _ = HideResumeNoticeAsync();
             }
 
@@ -1545,7 +1546,7 @@ namespace WatchTorrent.ViewModels
             }
 
             var bitfield = _file.BitField;
-            StreamInfo = $"{transfer} · {100.0 * bitfield.TrueCount / Math.Max(1, bitfield.Length):0}% yuklangan";
+            StreamInfo = L.F("S271", transfer, L.V(100.0 * bitfield.TrueCount / Math.Max(1, bitfield.Length), "0", 0));
 
             if (Player is { } player && bitfield.Length > 0)
             {
@@ -1581,17 +1582,20 @@ namespace WatchTorrent.ViewModels
             }
         }
 
-        private static async Task<int> ChooseAsync(string title, IEnumerable<string> options)
-        {
-            var names = options.ToArray();
-            var choice = await Shell.Current.DisplayActionSheetAsync(title, "Bekor qilish", null, names);
+        public Func<IReadOnlyList<string>, int, Task<int>>? SelectOptionAsync { get; set; }
 
-            return choice == null ? -1 : Array.IndexOf(names, choice);
+        private Task<int> ChooseAsync(string title, IEnumerable<string> options, int selected = -1)
+        {
+            return SelectOptionAsync?.Invoke(options.ToArray(), selected) ?? Task.FromResult(-1);
         }
 
-        private static string MarkCurrent(string name, bool isCurrent)
+        public async Task ChooseAspectAsync()
         {
-            return isCurrent ? $"{name} (tanlangan)" : name;
+            var index = await ChooseAsync(L.Get("Ekran formati"), AspectModes.Select(mode => L.Get(mode)), _aspectMode);
+            if (index < 0) return;
+            _aspectMode = index;
+            Preferences.Default.Set(AspectModeKey, index);
+            ApplyAspectMode();
         }
 
         private static string FormatTime(long milliseconds)

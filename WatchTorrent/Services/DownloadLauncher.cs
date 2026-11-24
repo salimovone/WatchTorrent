@@ -1,3 +1,4 @@
+using L = WatchTorrent.Core.Localization.AppText;
 #if WINDOWS
 using System.Diagnostics;
 #endif
@@ -22,7 +23,7 @@ namespace WatchTorrent.Services
 #else
             if (mainFile == null || !File.Exists(mainFile))
             {
-                throw new FileNotFoundException("Fayl topilmadi", mainFile);
+                throw new FileNotFoundException(L.Get("Fayl topilmadi"), mainFile);
             }
 
             await Launcher.Default.OpenAsync(new OpenFileRequest(item.Name, new ReadOnlyFile(mainFile)));

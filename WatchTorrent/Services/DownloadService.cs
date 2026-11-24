@@ -1,3 +1,4 @@
+using L = WatchTorrent.Core.Localization.AppText;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
 using WatchTorrent.Core;
@@ -19,7 +20,7 @@ public sealed class DownloadService : ViewModels.ObservableObject, IDisposable
     public ObservableCollection<ViewModels.PartnerDownload> PartnerDownloads { get; } = [];
     public string DownloadDirectory { get; private set; }
     private string _connectionStatus = string.Empty;
-    public string ConnectionStatus { get => _connectionStatus; private set => SetProperty(ref _connectionStatus, value); }
+    public string ConnectionStatus { get => L.Get(_connectionStatus); private set => SetProperty(ref _connectionStatus, value); }
 
     public DownloadService(TorrentPageCache pages)
     {
@@ -115,7 +116,7 @@ public sealed class DownloadService : ViewModels.ObservableObject, IDisposable
         }
         catch (Exception ex)
         {
-            ConnectionStatus = "libtorrent ishga tushmadi. " + ex.Message;
+            ConnectionStatus = L.Get("libtorrent ishga tushmadi. ") + ex.Message;
             throw;
         }
     }
@@ -142,7 +143,7 @@ public sealed class DownloadService : ViewModels.ObservableObject, IDisposable
             if (Environment.TickCount64 - _lastSave > 30_000)
             {
                 try { await SaveAsync(); _lastSave = Environment.TickCount64; }
-                catch (Exception ex) { ConnectionStatus = "Yuklama holati saqlanmadi: " + ex.Message; }
+                catch (Exception ex) { ConnectionStatus = L.Get("Yuklama holati saqlanmadi: ") + ex.Message; }
             }
         }
         finally { _refreshing = false; }
@@ -173,14 +174,14 @@ public sealed class DownloadService : ViewModels.ObservableObject, IDisposable
     public Task ResumeAsync(DownloadItem item) => SetPausedAsync(item, false);
     private async Task SetPausedAsync(DownloadItem item, bool paused)
     {
-        if (!item.TryBeginOperation(paused ? "Pauza qilinmoqda…" : "Davom ettirilmoqda…")) return;
+        if (!item.TryBeginOperation(paused ? L.Get("Pauza qilinmoqda…") : L.Get("Davom ettirilmoqda…"))) return;
         try { await _engine!.SetPausedAsync(item.Manager, paused); }
         finally { item.EndOperation(); }
     }
 
     public async Task RemoveAsync(DownloadItem item, bool deleteFiles)
     {
-        if (!item.TryBeginOperation("O'chirilmoqda…")) return;
+        if (!item.TryBeginOperation(L.Get("O'chirilmoqda…"))) return;
         try
         {
             await _engine!.RemoveAsync(item.Manager, deleteFiles);
@@ -230,7 +231,7 @@ public sealed class DownloadService : ViewModels.ObservableObject, IDisposable
         catch(ObjectDisposedException) when(_engine==null) { }
         catch(Exception ex)
         {
-            ConnectionStatus="Yuklama holati saqlanmadi: "+ex.Message;
+            ConnectionStatus=L.Get("Yuklama holati saqlanmadi: ")+ex.Message;
             Debug.WriteLine(ex);
         }
     }

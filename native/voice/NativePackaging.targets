@@ -1,0 +1,18 @@
+<Project>
+  <PropertyGroup>
+    <VoiceNativeRoot Condition="'$(VoiceNativeRoot)' == ''">$(MSBuildThisFileDirectory)../artifacts/voice</VoiceNativeRoot>
+  </PropertyGroup>
+  <ItemGroup Condition="$(TargetFramework.Contains('-windows'))">
+    <Content Include="$(VoiceNativeRoot)/win-x64/*.dll" Link="%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+    <Content Include="$(VoiceNativeRoot)/licenses/*" Link="licenses/voice/%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+  </ItemGroup>
+  <ItemGroup Condition="$(TargetFramework.Contains('-android'))">
+    <MauiAsset Include="$(VoiceNativeRoot)/licenses/*" LogicalName="licenses/voice/%(Filename)%(Extension)" />
+  </ItemGroup>
+  <Target Name="VerifyVoiceConnectionNative" BeforeTargets="PrepareForBuild" Condition="'$(DesignTimeBuild)' != 'true' And '$(TargetFramework)' != ''">
+    <Error Condition="$(TargetFramework.Contains('-windows')) And !Exists('$(VoiceNativeRoot)/win-x64/voiceconnection_native.dll')" Text="Missing VoiceConnection native DLL. Run scripts/build-voice.ps1 -Target Windows." />
+    <Error Condition="$(TargetFramework.Contains('-windows')) And !Exists('$(VoiceNativeRoot)/win-x64/ntgcalls.dll')" Text="Missing VoiceConnection NTgCalls dependency. Run scripts/build-voice.ps1 -Target Windows." />
+    <Error Condition="$(TargetFramework.Contains('-android')) And !Exists('$(VoiceNativeRoot)/ntgcalls-3.0.7.aar')" Text="Missing VoiceConnection Android AAR. Run scripts/build-voice.ps1 -Target Android." />
+    <Error Condition="$(TargetFramework.Contains('-ios'))" Text="VoiceConnection native iOS support is not implemented; the old voice backend has been removed." />
+  </Target>
+</Project>

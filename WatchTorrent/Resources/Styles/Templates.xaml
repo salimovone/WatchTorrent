@@ -2,6 +2,7 @@
 <ResourceDictionary
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:loc="clr-namespace:WatchTorrent.Localization"
     xmlns:vm="clr-namespace:WatchTorrent.ViewModels"
     xmlns:search="clr-namespace:TorrentReader.Search.Models;assembly=TorrentReader"
     xmlns:controls="clr-namespace:WatchTorrent.Controls"
@@ -11,9 +12,9 @@
     <converters:TorrentLabelConverter x:Key="TorrentLabel" />
     <DataTemplate x:Key="TorrentRowTemplate" x:DataType="search:SearchResultItem">
         <Grid
-            Padding="20,12,20,0"
+            Padding="20,14,20,0"
             RowDefinitions="Auto,Auto"
-            RowSpacing="12"
+            RowSpacing="14"
             ColumnDefinitions="64,*,16"
             ColumnSpacing="14">
             <VisualStateManager.VisualStateGroups>
@@ -29,7 +30,7 @@
             <Border
                 HeightRequest="92"
                 StrokeThickness="0"
-                StrokeShape="RoundRectangle 4"
+                StrokeShape="RoundRectangle 8"
                 BackgroundColor="{StaticResource Surface2}">
                 <Grid>
                     <Image Source="ic_film.png" WidthRequest="24" HeightRequest="24" Opacity="0.3" />
@@ -52,10 +53,14 @@
                     LineBreakMode="TailTruncation" />
                 <FlexLayout Wrap="Wrap" AlignItems="Center">
                     <Label Text="{Binding Size}" FontSize="12" TextColor="{StaticResource TextMuted}" Margin="0,0,14,0" />
-                    <Label
-                        Text="{Binding AmountSeeders, StringFormat='{0:N0} manba'}"
-                        FontSize="12"
-                        TextColor="{StaticResource Seed}" />
+                    <Label FontSize="12" TextColor="{StaticResource TextMuted}">
+                        <Label.Text>
+                            <MultiBinding StringFormat="{}{0:N0} {1}">
+                                <Binding Path="AmountSeeders" />
+                                <loc:Translate Key="SeederUnit" />
+                            </MultiBinding>
+                        </Label.Text>
+                    </Label>
                 </FlexLayout>
             </VerticalStackLayout>
             <Label Grid.Column="2" Text="›" FontSize="23" TextColor="{StaticResource TextMuted}" VerticalOptions="Center" />

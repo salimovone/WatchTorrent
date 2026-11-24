@@ -1,10 +1,12 @@
+using L = WatchTorrent.Core.Localization.AppText;
 using WatchTorrent.Views;
 
 namespace WatchTorrent
 {
     using Services;
-    public partial class AppShell : Shell
+    public partial class AppShell : Shell, WatchTorrent.Core.Localization.ILocalized
     {
+        void WatchTorrent.Core.Localization.ILocalized.LanguageChanged() => ShowConnection(Call.Connected);
         internal Services.VoiceCall Call { get; } = new();
         internal async Task OpenInvitationAsync(Stream stream)
         {
@@ -14,7 +16,7 @@ namespace WatchTorrent
 
         internal void ShowConnection(bool connected)
         {
-            VoiceTab.Title = connected ? "Ulangan" : "Ulanish";
+            VoiceTab.Title = connected ? L.Get("Ulangan") : L.Get("Ulanish");
             ConnectionTab.Title = VoiceTab.Title;
         }
 
@@ -73,12 +75,12 @@ namespace WatchTorrent
                 if (answer == "download")
                 {
                     await EnsureMovieDownloadAsync(movie);
-                    await VisiblePage.DisplayAlertAsync("Sherigingiz yuklab olishni tanladi", $"{title}\nYuklanish foizini Yuklamalar bo‘limida ko‘rishingiz mumkin.", "OK");
+                    await VisiblePage.DisplayAlertAsync(L.Get("Sherigingiz yuklab olishni tanladi"), L.F("S265", title), "OK");
                 }
             }
             catch (OperationCanceledException) { }
-            catch (TimeoutException) { await VisiblePage.DisplayAlertAsync("Film taklifi", "Javob kutilgan vaqt tugadi.", "OK"); }
-            catch (Exception ex) { await VisiblePage.DisplayAlertAsync("Film taklifi", ex.Message, "OK"); }
+            catch (TimeoutException) { await VisiblePage.DisplayAlertAsync(L.Get("Film taklifi"), L.Get("Javob kutilgan vaqt tugadi."), "OK"); }
+            catch (Exception ex) { await VisiblePage.DisplayAlertAsync(L.Get("Film taklifi"), ex.Message, "OK"); }
             finally { outgoing = null; if (session?.Id != movie.Session) Call.Send(new(movie.Session, "cancel")); }
             return null;
         }
@@ -119,7 +121,7 @@ namespace WatchTorrent
             {
                 if (session?.Id == movie.Session) session.Close();
                 Call.Send(new(movie.Session, "decline"));
-                await VisiblePage.DisplayAlertAsync("Film taklifi", ex.Message, "OK");
+                await VisiblePage.DisplayAlertAsync(L.Get("Film taklifi"), ex.Message, "OK");
             }
         }
 
@@ -158,6 +160,7 @@ namespace WatchTorrent
         {
             this.downloads = downloads;
             InitializeComponent();
+            WatchTorrent.Core.Localization.AppText.Register(this);
             Call.MovieReceived += OnMovieReceived;
             Call.ControlReceived += OnControl;
             Call.Changed += () =>

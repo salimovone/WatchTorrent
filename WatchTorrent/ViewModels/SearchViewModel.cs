@@ -1,3 +1,4 @@
+using L = WatchTorrent.Core.Localization.AppText;
 using System.Collections.ObjectModel;
 using TorrentReader;
 using TorrentReader.Search;
@@ -25,11 +26,11 @@ namespace WatchTorrent.ViewModels
 
             SortOptions = new[]
             {
-                new SortOption("Eng yangi", SearchSortByType.Time, SortOrderType.Descending),
-                new SortOption("Ko'p manbali", SearchSortByType.Seeders, SortOrderType.Descending),
-                new SortOption("Ko'p yuklanayotgan", SearchSortByType.Leechers, SortOrderType.Descending),
-                new SortOption("Eng katta", SearchSortByType.Size, SortOrderType.Descending),
-                new SortOption("Eng kichik", SearchSortByType.Size, SortOrderType.Ascending)
+                new SortOption(L.Get("Eng yangi"), SearchSortByType.Time, SortOrderType.Descending),
+                new SortOption(L.Get("Ko'p manbali"), SearchSortByType.Seeders, SortOrderType.Descending),
+                new SortOption(L.Get("Ko'p yuklanayotgan"), SearchSortByType.Leechers, SortOrderType.Descending),
+                new SortOption(L.Get("Eng katta"), SearchSortByType.Size, SortOrderType.Descending),
+                new SortOption(L.Get("Eng kichik"), SearchSortByType.Size, SortOrderType.Ascending)
             };
 
             _selectedSort = SortOptions[0];
@@ -100,7 +101,7 @@ namespace WatchTorrent.ViewModels
 
         public string? ErrorMessage
         {
-            get => _errorMessage;
+            get => L.Get(_errorMessage);
             private set
             {
                 if (SetProperty(ref _errorMessage, value))
@@ -120,7 +121,7 @@ namespace WatchTorrent.ViewModels
         public bool HasResults => Items.Count > 0;
         public bool HasInitialError => HasError && !HasResults;
         public bool HasMoreError => HasError && HasResults;
-        public string Summary => HasResults ? $"{Items.Count} ta natija" : string.Empty;
+        public string Summary => HasResults ? L.F("ResultsCount", Items.Count) : string.Empty;
 
         public Command SearchCommand { get; }
 

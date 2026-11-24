@@ -1,3 +1,4 @@
+using L = WatchTorrent.Core.Localization.AppText;
 #if ANDROID
 using System.Diagnostics;
 #elif WINDOWS
@@ -56,7 +57,7 @@ namespace WatchTorrent.Services
             var total = active.Sum(item => item.TotalBytes);
             var downloaded = active.Sum(item => item.DownloadedBytes);
             var rate = active.Sum(item => item.Manager.Monitor.DownloadRate);
-            var title = active.Count == 1 ? active[0].Name : $"{active.Count} ta torrent yuklanmoqda";
+            var title = active.Count == 1 ? active[0].Name : L.F("S269", active.Count);
             var text = total > 0
                 ? $"{100.0 * downloaded / total:0.0}% · {Formatting.Bytes(downloaded)} / {Formatting.Bytes(total)} · ↓ {Formatting.Speed(rate)}"
                 : $"↓ {Formatting.Speed(rate)}";
@@ -80,7 +81,7 @@ namespace WatchTorrent.Services
             catch (Exception ex)
             {
                 // Android 12+: ilova fonda bo'lsa fon xizmatini boshlashga ruxsat yo'q — keyingi soniyada qayta uriniladi.
-                Debug.WriteLine($"[KeepAlive] Fon xizmati boshlanmadi: {ex.Message}");
+                Debug.WriteLine(L.F("S261", ex.Message));
             }
 #elif WINDOWS
             if (!_isRunning)
@@ -124,7 +125,7 @@ namespace WatchTorrent.Services
             }
             catch (Exception ex)
             {
-                Debug.WriteLine($"[KeepAlive] Bildirishnoma ruxsati: {ex.Message}");
+                Debug.WriteLine(L.F("S260", ex.Message));
             }
         }
 #elif WINDOWS

@@ -3,5 +3,5 @@
     <color name="colorPrimary">#111213</color>
     <color name="colorPrimaryDark">#111213</color>
     <color name="colorAccent">#B6FF2E</color>
-    <color name="maui_splash_color">#0D1A66</color>
+    <color name="maui_splash_color">#111213</color>
 </resources>

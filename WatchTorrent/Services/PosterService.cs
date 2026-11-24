@@ -1,3 +1,4 @@
+using L = WatchTorrent.Core.Localization.AppText;
 using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.Net.Http;
@@ -124,7 +125,7 @@ namespace WatchTorrent.Services
                 }
                 catch (Exception ex)
                 {
-                    Debug.WriteLine($"[Posters] Kesh saqlanmadi: {ex.Message}");
+                    Debug.WriteLine(L.F("S263", ex.Message));
                 }
             });
         }

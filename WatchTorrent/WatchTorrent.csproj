@@ -42,11 +42,13 @@
 		<TargetPlatformMinVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'windows'">10.0.17763.0</TargetPlatformMinVersion>
 	</PropertyGroup>
 
+
 	<!-- VideoLAN's native-library targets inspect RuntimeIdentifiers (plural),
 	     while device builds pass a single RuntimeIdentifier with -r. Bridge the
 	     values before NuGet targets run so libvlc and libc++ are packaged. -->
 	<PropertyGroup Condition="$(TargetFramework.Contains('-android')) And '$(RuntimeIdentifier)' != '' And '$(RuntimeIdentifiers)' == ''">
 		<RuntimeIdentifiers>$(RuntimeIdentifier)</RuntimeIdentifiers>
+		<EmbedAssembliesIntoApk>true</EmbedAssembliesIntoApk>
 	</PropertyGroup>
 
 	<ItemGroup>
@@ -54,7 +56,7 @@
 		<MauiIcon Condition="!$(TargetFramework.Contains('-android'))" Include="Resources\AppIcon\appicon.png" Resize="true" />
 
 		<!-- Splash Screen -->
-		<MauiSplashScreen Condition="!$(TargetFramework.Contains('-android'))" Include="Resources\Splash\splash.png" Resize="true" Color="#0D1A66" BaseSize="108,108" />
+		<MauiSplashScreen Condition="!$(TargetFramework.Contains('-android'))" Include="Resources\Splash\splash.png" Resize="true" Color="#111213" BaseSize="108,108" />
 
 		<!-- Images -->
 		<MauiImage Include="Resources\Images\*" />
@@ -81,6 +83,7 @@
 	</ItemGroup>
 	<ItemGroup Condition="$(TargetFramework.Contains('-windows'))">
 		<PackageReference Include="VideoLAN.LibVLC.Windows" Version="3.0.24" />
+		<!-- The video player's PCM output still uses NAudio; voice uses VoiceConnection. -->
 		<PackageReference Include="NAudio.WinMM" Version="2.2.1" />
 	</ItemGroup>
 	<ItemGroup Condition="$(TargetFramework.Contains('-ios'))">
@@ -96,7 +99,9 @@
 	  <ProjectReference Include="..\TorrentReader\TorrentReader.csproj" />
       <ProjectReference Include="..\WatchTorrent.Core\WatchTorrent.Core.csproj" />
       <ProjectReference Include="..\WatchTorrent.Libtorrent\WatchTorrent.Libtorrent.csproj" />
+      <ProjectReference Include="..\VoiceConnection\VoiceConnection.csproj" />
 	</ItemGroup>
 
   <Import Project="../native/NativePackaging.targets" />
+  <Import Project="../native/voice/NativePackaging.targets" />
 </Project>

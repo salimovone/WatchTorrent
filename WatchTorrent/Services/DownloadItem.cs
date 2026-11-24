@@ -1,3 +1,4 @@
+using L = WatchTorrent.Core.Localization.AppText;
 using WatchTorrent.Core;
 
 using WatchTorrent.ViewModels;
@@ -45,25 +46,25 @@ namespace WatchTorrent.Services
 
         public string ProgressText
         {
-            get => _progressText;
+            get => L.Get(_progressText);
             private set => SetProperty(ref _progressText, value);
         }
 
         public string StatusText
         {
-            get => _operation ?? _statusText;
+            get => L.Get(_operation ?? _statusText);
             private set => SetProperty(ref _statusText, value);
         }
 
         public string SizeText
         {
-            get => _sizeText;
+            get => L.Get(_sizeText);
             private set => SetProperty(ref _sizeText, value);
         }
 
         public string TransferText
         {
-            get => _transferText;
+            get => L.Get(_transferText);
             private set => SetProperty(ref _transferText, value);
         }
 
@@ -97,7 +98,7 @@ namespace WatchTorrent.Services
         public bool CanToggle => !IsComplete;
         public void SetConnectionError(string message)
         {
-            StatusText = "Torrent engine xatosi: " + message;
+            StatusText = L.Get("Torrent engine xatosi: ") + message;
             TransferText = string.Empty;
         }
         public bool TryBeginOperation(string text)
@@ -126,7 +127,7 @@ namespace WatchTorrent.Services
 
         public long DownloadedBytes { get; private set; }
 
-        public string ToggleText => _operation ?? (IsRunning ? "Pauza" : "Davom ettirish");
+        public string ToggleText => L.Get(_operation ?? (IsRunning ? L.Get("Pauza") : L.Get("Davom ettirish")));
 
         public void Refresh()
         {
@@ -157,18 +158,18 @@ namespace WatchTorrent.Services
         {
             if (isComplete && manager.State is TorrentState.Stopped or TorrentState.Stopping or TorrentState.Seeding)
             {
-                return "Yuklab bo'lindi";
+                return L.Get("Yuklab bo'lindi");
             }
 
             return manager.State switch
             {
-                TorrentState.Metadata => manager.OpenConnections == 0 ? "Manbalarga ulanmoqda…" : "Fayl ma'lumoti olinmoqda…",
-                TorrentState.Starting or TorrentState.FetchingHashes => "Boshlanmoqda…",
-                TorrentState.Hashing or TorrentState.HashingPaused => "Fayllar tekshirilmoqda…",
+                TorrentState.Metadata => manager.OpenConnections == 0 ? L.Get("Manbalarga ulanmoqda…") : L.Get("Fayl ma'lumoti olinmoqda…"),
+                TorrentState.Starting or TorrentState.FetchingHashes => L.Get("Boshlanmoqda…"),
+                TorrentState.Hashing or TorrentState.HashingPaused => L.Get("Fayllar tekshirilmoqda…"),
                 TorrentState.Downloading => GetDownloadingText(manager.Monitor.DownloadRate, remainingBytes, manager.OpenConnections),
-                TorrentState.Stopping => "To'xtatilmoqda…",
-                TorrentState.Stopped or TorrentState.Paused => "Pauzada",
-                TorrentState.Error => $"Xato: {manager.Error?.Exception?.Message ?? manager.Error?.Reason.ToString()}",
+                TorrentState.Stopping => L.Get("To'xtatilmoqda…"),
+                TorrentState.Stopped or TorrentState.Paused => L.Get("Pauzada"),
+                TorrentState.Error => L.F("S230", manager.Error?.Exception?.Message ?? manager.Error?.Reason.ToString()),
                 _ => manager.State.ToString()
             };
         }
@@ -177,10 +178,10 @@ namespace WatchTorrent.Services
         {
             if (rate <= 0)
             {
-                return connections == 0 ? "Manbalar qidirilmoqda…" : "Manbalardan ma'lumot kutilmoqda…";
+                return connections == 0 ? L.Get("Manbalar qidirilmoqda…") : L.Get("Manbalardan ma'lumot kutilmoqda…");
             }
 
-            return $"Yuklanmoqda · {Formatting.Duration(TimeSpan.FromSeconds(remainingBytes / rate))} qoldi";
+            return L.F("S253", Formatting.Duration(TimeSpan.FromSeconds(remainingBytes / rate)));
         }
     }
 }

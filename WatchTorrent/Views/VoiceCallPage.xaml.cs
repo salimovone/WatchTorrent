@@ -1,11 +1,17 @@
+using L = WatchTorrent.Core.Localization.AppText;
 using WatchTorrent.Services;
 
 namespace WatchTorrent.Views;
 
-public partial class VoiceCallPage : ContentPage
+public partial class VoiceCallPage : ContentPage, WatchTorrent.Core.Localization.ILocalized
 {
     private VoiceCall call = null!;
-    public VoiceCallPage() => InitializeComponent();
+    public VoiceCallPage()
+    {
+        InitializeComponent();
+        WatchTorrent.Core.Localization.AppText.Register(this);
+    }
+    void WatchTorrent.Core.Localization.ILocalized.LanguageChanged() { if (call != null) Render(); }
 
     internal void Bind(VoiceCall service)
     {
@@ -16,15 +22,15 @@ public partial class VoiceCallPage : ContentPage
 
     private void Render()
     {
-        ConnectionState.Text = call.Connected ? "Ulangan" : call.Active ? "Ulanmoqda" : "Ulanmagan";
+        ConnectionState.Text = call.Connected ? L.Get("Ulangan") : call.Active ? L.Get("Ulanmoqda") : L.Get("Ulanmagan");
         Indicator.Fill = new SolidColorBrush(call.Connected ? Color.FromArgb("#b6ff2e") : call.Active ? Colors.Orange : Colors.Gray);
         StatusLabel.Text = call.Status;
         Offer.IsVisible = Pick.IsVisible = !call.Active && !call.Pending;
         Accept.IsVisible = call.Pending;
         Hangup.IsVisible = call.Active || call.Pending;
-        Hangup.Text = call.Connected ? "Suhbatni tugatish" : "Bekor qilish";
+        Hangup.Text = call.Connected ? L.Get("Suhbatni tugatish") : L.Get("Bekor qilish");
         Mic.IsVisible = call.Connected;
-        Mic.Text = call.Microphone ? "Mikrofon · Yoqilgan" : "Mikrofon · O‘chiq";
+        Mic.Text = call.Microphone ? L.Get("Mikrofon · Yoqilgan") : L.Get("Mikrofon · O‘chiq");
     }
 
     private async void CreateOffer(object? sender, EventArgs e) => await call.StartAsync(false);
@@ -41,10 +47,10 @@ public partial class VoiceCallPage : ContentPage
     {
         try
         {
-            var link = await DisplayPromptAsync("Taklif havolasi", "Suhbatdoshingiz yuborgan havolani joylang.",
-                "Ochish", "Bekor qilish", "https://…", maxLength: 32768);
+            var link = await DisplayPromptAsync(L.Get("Taklif havolasi"), L.Get("Suhbatdoshingiz yuborgan havolani joylang."),
+                L.Get("Ochish"), L.Get("Bekor qilish"), "https://…", maxLength: 32768);
             if (!string.IsNullOrWhiteSpace(link)) await call.ImportLinkAsync(link);
         }
-        catch (Exception ex) { await DisplayAlertAsync("Ulanish", ex.Message, "Yopish"); }
+        catch (Exception ex) { await DisplayAlertAsync(L.Get("Ulanish"), ex.Message, L.Get("Yopish")); }
     }
 }

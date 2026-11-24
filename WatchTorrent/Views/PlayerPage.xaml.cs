@@ -1,3 +1,4 @@
+using L = WatchTorrent.Core.Localization.AppText;
 using WatchTorrent.Controls;
 using WatchTorrent.Services;
 using WatchTorrent.ViewModels;
@@ -17,6 +18,8 @@ namespace WatchTorrent.Views
         private CancellationTokenSource? _singleTap;
         private long _lastTapAt;
         private double _lastTapX;
+        private View? _menuAnchor;
+        private bool _menuOpen;
         private bool _isDraggingSeek;
         private bool _isUpdatingSeekBar;
         private bool _controlsVisible = true;
@@ -30,7 +33,7 @@ namespace WatchTorrent.Views
             MicButton.IsVisible = call?.Connected == true;
             bool on = call?.Microphone == true;
             MicButton.Source = on ? "ic_mic_on.png" : "ic_mic_off.png";
-            SemanticProperties.SetDescription(MicButton, on ? "Mikrofonni o‘chirish" : "Mikrofonni yoqish");
+            SemanticProperties.SetDescription(MicButton, on ? L.Get("Mikrofonni o‘chirish") : L.Get("Mikrofonni yoqish"));
         }
         private async void OnMicClicked(object? sender, EventArgs args)
         {
@@ -44,6 +47,7 @@ namespace WatchTorrent.Views
             BindingContext = _viewModel = viewModel;
             _viewModel.CloseRequested += async (_, _) => await LeaveAsync();
             _viewModel.PlayerChanged += OnPlayerChanged;
+            _viewModel.SelectOptionAsync = SelectPlayerOptionAsync;
 #if ANDROID
             _viewModel.WaitForVideoSurface = () => _videoSurfaceReady;
 #endif
@@ -162,6 +166,7 @@ namespace WatchTorrent.Views
 
         protected override bool OnBackButtonPressed()
         {
+            if (DropdownMenu.Dismiss(this)) return true;
             // Fayllar ro'yxati ochiq bo'lsa "orqaga" avval uni yopadi.
             if (PlaylistOverlay.IsVisible)
             {
@@ -482,7 +487,7 @@ namespace WatchTorrent.Views
                     await Task.Delay(ControlsTimeout, hideControls.Token);
 
                     // Pauza, yuklanish va seek paytida boshqaruv ko'rinib turadi.
-                    if (_viewModel.IsPlaying && !_viewModel.IsLoading && !_isDraggingSeek)
+                    if (_viewModel.IsPlaying && !_viewModel.IsLoading && !_isDraggingSeek && !_menuOpen)
                     {
                         SetControlsVisible(false);
 
@@ -520,20 +525,32 @@ namespace WatchTorrent.Views
 
         private async void OnAudioClicked(object? sender, EventArgs e)
         {
+            _menuAnchor = sender as View;
             ShowControls();
             await _viewModel.ChooseAudioAsync();
         }
 
         private async void OnSubtitlesClicked(object? sender, EventArgs e)
         {
+            _menuAnchor = sender as View;
             ShowControls();
             await _viewModel.ChooseSubtitleAsync();
         }
 
-        private void OnAspectClicked(object? sender, EventArgs e)
+        private async void OnAspectClicked(object? sender, EventArgs e)
         {
+            _menuAnchor = sender as View;
             ShowControls();
-            _ = ShowOsdAsync($"Ekran formati: {_viewModel.CycleAspectMode()}");
+            await _viewModel.ChooseAspectAsync();
+        }
+
+        private async Task<int> SelectPlayerOptionAsync(IReadOnlyList<string> options, int selected)
+        {
+            if (_menuAnchor == null) return -1;
+            _menuOpen = true;
+            _hideControls?.Cancel();
+            try { return await DropdownMenu.ShowAsync(_menuAnchor, options, selected); }
+            finally { _menuOpen = false; ShowControls(); }
         }
 
         private async void OnHdrClicked(object? sender, EventArgs e)
@@ -546,6 +563,7 @@ namespace WatchTorrent.Views
 
         private async void OnSpeedClicked(object? sender, EventArgs e)
         {
+            _menuAnchor = sender as View;
             ShowControls();
             await _viewModel.ChooseSpeedAsync();
         }
@@ -568,10 +586,10 @@ namespace WatchTorrent.Views
             ShowControls();
 
             var openSettings = await DisplayAlertAsync(
-                "Kichik oyna o'chirilgan",
-                "Telefon sozlamalarida WatchTorrent uchun «Picture-in-picture» (tasvir ichida tasvir) ruxsatini yoqing.",
-                "Sozlamalar",
-                "Bekor qilish");
+                L.Get("Kichik oyna o'chirilgan"),
+                L.Get("Telefon sozlamalarida WatchTorrent uchun «Picture-in-picture» (tasvir ichida tasvir) ruxsatini yoqing."),
+                L.Get("Sozlamalar"),
+                L.Get("Bekor qilish"));
 
             if (openSettings)
             {
@@ -837,6 +855,12 @@ namespace WatchTorrent.Views
 
         private async void OnPreviewKeyDown(object sender, Microsoft.UI.Xaml.Input.KeyRoutedEventArgs e)
         {
+            if (_menuOpen)
+            {
+                if (e.Key == global::Windows.System.VirtualKey.Escape) DropdownMenu.Dismiss(this);
+                e.Handled = e.Key == global::Windows.System.VirtualKey.Escape;
+                return;
+            }
             if (PlaylistOverlay.IsVisible)
             {
                 // Ro'yxat ochiq: strelkalar ro'yxat bo'ylab yuradi, Esc uni yopadi.

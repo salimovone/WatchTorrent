@@ -1,3 +1,4 @@
+using L = WatchTorrent.Core.Localization.AppText;
 using Foundation;
 using UIKit;
 using WatchTorrent.Services;
@@ -38,7 +39,7 @@ public class SceneDelegate : MauiUISceneDelegate
                 if (shell.CurrentPage is not VoiceCallPage) await shell.GoToAsync("//connection/call");
                 await shell.Call.ImportLinkAsync(text);
             }
-            catch (Exception ex) { await shell.DisplayAlertAsync("Ovozli aloqa", ex.Message, "Yopish"); }
+            catch (Exception ex) { await shell.DisplayAlertAsync(L.Get("Ovozli aloqa"), ex.Message, L.Get("Yopish")); }
         }
     }
 }

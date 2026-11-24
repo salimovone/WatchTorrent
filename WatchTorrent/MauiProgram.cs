@@ -11,6 +11,7 @@ namespace WatchTorrent
     {
         public static MauiApp CreateMauiApp()
         {
+            Localization.AppLanguage.Initialize();
 #if ANDROID
             Microsoft.Maui.Handlers.PickerHandler.Mapper.AppendToMapping("WatchTorrentInput", (handler, _) =>
                 handler.PlatformView.BackgroundTintList = Android.Content.Res.ColorStateList.ValueOf(Android.Graphics.Color.Transparent));

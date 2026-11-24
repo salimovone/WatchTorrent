@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../../../VoiceConnection/VoiceConnection.csproj" />
+    <ProjectReference Include="../../../WatchTorrent.Core/WatchTorrent.Core.csproj" />
+    <PackageReference Include="SIPSorcery" Version="10.0.17" />
+    <Compile Include="../../../WatchTorrent/Services/DirectPeer.cs" Link="App/DirectPeer.cs" />
+    <Compile Include="../../../WatchTorrent/Services/NativeVoiceAudio.cs" Link="App/NativeVoiceAudio.cs" />
+    <Compile Include="../../../WatchTorrent/Services/DirectPeerProbe.cs" Link="App/DirectPeerProbe.cs" />
+  </ItemGroup>
+</Project>

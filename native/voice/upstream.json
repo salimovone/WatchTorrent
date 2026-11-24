@@ -1,0 +1,15 @@
+{
+  "repository": "https://github.com/pytgcalls/ntgcalls.git",
+  "revision": "6cbf3c5404e00f72dcefb85c6b8fb856f7078557",
+  "version": "3.0.7",
+  "protocol": "13.0.0",
+  "license": "LGPL-3.0",
+  "android": {
+    "url": "https://repo.maven.apache.org/maven2/io/github/pytgcalls/ntgcalls/3.0.7/ntgcalls-3.0.7.aar",
+    "sha256": "d8c6c108c359b0623a4473dcb4f579439c4feb6d9811c27c12d28dd478ca6360"
+  },
+  "windows": {
+    "url": "https://github.com/pytgcalls/ntgcalls/releases/download/v3.0.7/ntgcalls.windows-x86_64-shared_libs.zip",
+    "sha256": "6141e736ba7fa718917b411893209d9266f11b26d0fb6560d3720d25264b48d4"
+  }
+}

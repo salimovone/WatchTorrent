@@ -6,14 +6,15 @@ using TorrentReader.Search.Models;
 namespace WatchTorrent.ViewModels
 {
     /// <summary>Gorizontal "chip" ro'yxatidagi bitta tanlov (ChipTemplate shu turga bog'langan).</summary>
-    public class ChipOption
+    public class ChipOption : ObservableObject
     {
         public ChipOption(string title)
         {
-            Title = title;
+            sourceTitle = title;
         }
 
-        public string Title { get; }
+        private readonly string sourceTitle;
+        public string Title => WatchTorrent.Core.Localization.AppText.Get(sourceTitle);
     }
 
     public class DiscoverCategory : ChipOption

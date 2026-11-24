@@ -1,3 +1,4 @@
+using L = WatchTorrent.Core.Localization.AppText;
 using System.Runtime.Versioning;
 using Android.App;
 using Android.Content;
@@ -59,7 +60,7 @@ namespace WatchTorrent
         {
             var notification = BuildNotification(
                 this,
-                intent?.GetStringExtra(TitleExtra) ?? "Yuklanmoqda",
+                intent?.GetStringExtra(TitleExtra) ?? L.Get("Yuklanmoqda"),
                 intent?.GetStringExtra(TextExtra) ?? string.Empty,
                 intent?.GetIntExtra(ProgressExtra, -1) ?? -1);
 
@@ -177,9 +178,9 @@ namespace WatchTorrent
             }
 
             // Past ahamiyat: ovoz va tebranishsiz, faqat bildirishnomalar panelida.
-            var channel = new NotificationChannel(ChannelId, "Yuklamalar", NotificationImportance.Low)
+            var channel = new NotificationChannel(ChannelId, L.Get("Yuklamalar"), NotificationImportance.Low)
             {
-                Description = "Torrent yuklanayotganini ko'rsatadi (ekran o'chganda ham yuklash davom etadi)"
+                Description = L.Get("Torrent yuklanayotganini ko'rsatadi (ekran o'chganda ham yuklash davom etadi)")
             };
 
             manager.CreateNotificationChannel(channel);

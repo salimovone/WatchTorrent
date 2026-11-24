@@ -6,4 +6,5 @@
   <Project Path="WatchTorrent.Core/WatchTorrent.Core.csproj" />
   <Project Path="WatchTorrent.EngineTests/WatchTorrent.EngineTests.csproj" />
   <Project Path="WatchTorrent.Libtorrent/WatchTorrent.Libtorrent.csproj" />
+  <Project Path="VoiceConnection/VoiceConnection.csproj" />
 </Solution>

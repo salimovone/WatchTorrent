@@ -5,6 +5,7 @@ using WatchTorrent.Services;
 
 var checks=0;
 void Check(bool ok,string name){if(!ok)throw new Exception(name);checks++;Console.WriteLine("PASS "+name);}
+LocalizationChecks.Run(Check);
 await PlaybackChecks.RunAsync(Check);
 await StreamPlaybackChecks.RunAsync(Check);
 var vlcArgument = Array.IndexOf(args, "--vlc-path");

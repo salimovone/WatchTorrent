@@ -1,3 +1,4 @@
+using L = WatchTorrent.Core.Localization.AppText;
 using System.Diagnostics;
 using System.Reflection;
 using Android.Views;
@@ -47,7 +48,7 @@ namespace WatchTorrent
             }
             catch (Exception ex)
             {
-                Debug.WriteLine($"[DirectVideo] Ulab bo'lmadi: {ex}");
+                Debug.WriteLine(L.F("S259", ex));
 
                 return Task.FromResult(false);
             }

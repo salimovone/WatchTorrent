@@ -1,3 +1,4 @@
+using L = WatchTorrent.Core.Localization.AppText;
 using TorrentReader.Search.Models;
 
 namespace WatchTorrent.Models
@@ -26,8 +27,9 @@ namespace WatchTorrent.Models
         public bool HasDescription => !string.IsNullOrWhiteSpace(DescriptionHtml);
 
         public bool HasComments => Comments.Count > 0;
+        public string DownloadCountText => L.F("DownloadCount", Downloads);
 
-        public string CommentsHeader => $"Izohlar ({Comments.Count})";
+        public string CommentsHeader => L.Get(L.F("S072", Comments.Count));
     }
 
     public record TorrentPageData(SearchResultItem? Source, TorrentInfo Detail, string Title, string Size,

@@ -1,9 +1,10 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <ContentPage
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:loc="clr-namespace:WatchTorrent.Localization"
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
     x:Class="WatchTorrent.Views.CloudflarePage"
-    Title="Xavfsizlik tekshiruvi">
+    Title="{loc:Translate S233}">
     <Grid RowDefinitions="Auto,Auto,*">
         <Grid
             Padding="16,14"
@@ -12,36 +13,36 @@
             ColumnSpacing="12"
             BackgroundColor="{StaticResource Surface}">
             <VerticalStackLayout Spacing="4" VerticalOptions="Center">
-                <Label Text="Xavfsizlik tekshiruvi" FontFamily="OpenSansSemibold" FontSize="16" />
+                <Label Text="{loc:Translate S233}" FontFamily="OpenSansSemibold" FontSize="16" />
                 <Label
-                    Text="Davom etish uchun sayt tekshiruvini bajaring. Tugagach ilovaga avtomatik qaytasiz."
+                    Text="{loc:Translate S030}"
                     Style="{StaticResource Muted}" />
             </VerticalStackLayout>
             <Button
                 Grid.Row="1"
                 HorizontalOptions="Start"
-                Text="Yopish"
+                Text="{loc:Translate S239}"
                 Style="{StaticResource SmallButton}"
                 VerticalOptions="Center"
                 Clicked="OnCancelClicked" />
         </Grid>
         <Border x:Name="HelpPanel" Grid.Row="1" Margin="12,8" Style="{StaticResource Card}" IsVisible="False">
             <VerticalStackLayout Spacing="8">
-                <Label Text="Tekshiruv uzoq davom etyapti" FontFamily="OpenSansSemibold" FontSize="14" />
+                <Label Text="{loc:Translate S188}" FontFamily="OpenSansSemibold" FontSize="14" />
                 <Label
                     Style="{StaticResource Muted}"
-                    Text="Boshqa internet tarmog'ida urinib ko'ring yoki Android System WebView'ni yangilang. Telefon sanasi va vaqti ham to'g'ri bo'lishi kerak." />
+                    Text="{loc:Translate S022}" />
                 <Button
                     Margin="0,6,0,0"
-                    Text="WebView'ni Play Market'da yangilash"
+                    Text="{loc:Translate S229}"
                     Style="{StaticResource SmallButton}"
                     HorizontalOptions="Start"
                     IsVisible="True"
                     Clicked="OnWebViewStoreClicked" />
                 <Label x:Name="EngineLabel" Style="{StaticResource Muted}" IsVisible="False" />
                 <FlexLayout Wrap="Wrap" JustifyContent="End">
-                    <Button Text="Qayta yuklash" Style="{StaticResource SmallButton}" Margin="0,0,8,0" Clicked="OnReloadClicked" />
-                    <Button Text="Tozalab qayta urinish" Style="{StaticResource SmallButton}" Clicked="OnResetClicked" />
+                    <Button Text="{loc:Translate S140}" Style="{StaticResource SmallButton}" Margin="0,0,8,0" Clicked="OnReloadClicked" />
+                    <Button Text="{loc:Translate S205}" Style="{StaticResource SmallButton}" Clicked="OnResetClicked" />
                 </FlexLayout>
             </VerticalStackLayout>
         </Border>

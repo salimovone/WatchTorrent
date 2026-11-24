@@ -1,3 +1,4 @@
+using L = WatchTorrent.Core.Localization.AppText;
 namespace WatchTorrent.Views;
 
 public partial class MovieChoicePage : ContentPage
@@ -10,22 +11,22 @@ public partial class MovieChoicePage : ContentPage
         var info = movie.Details;
         Show(Tags, info?.Tags);
         var facts = new List<string>();
-        if (!string.IsNullOrWhiteSpace(info?.Size) && info.Size != "—") facts.Add($"Torrent hajmi: {info.Size}");
-        if (info?.FileCount > 0) facts.Add($"{info.FileCount} ta fayl");
+        if (!string.IsNullOrWhiteSpace(info?.Size) && info.Size != "—") facts.Add(L.F("S200", info.Size));
+        if (info?.FileCount > 0) facts.Add(L.F("S268", info.FileCount));
         Show(SizeAndFiles, string.Join(" · ", facts));
         Show(Peers, info?.Seeds is int seeds && info.Leeches is int leeches
-            ? $"{(info.CatalogCounts ? "Katalogda" : "Yuboruvchida ulangan")} · {seeds} seed · {leeches} leech" : null);
+            ? L.F("PeerCounts", L.Get(info.CatalogCounts ? "Katalogda" : "Yuboruvchida ulangan"), seeds, leeches) : null);
         var video = info?.SelectedVideo ?? file;
         Show(SelectedFile, video != null && (info?.FileCount > 1 || video != movie.Title)
             ? string.Join(" · ", new[] { video, info?.VideoSize }.Where(s => !string.IsNullOrEmpty(s))) : null);
         _ = LoadPosterAsync(movie);
-        Details.Text = waiting ? "Sherigingizning javobi kutilmoqda…" :
-            local ? "Film bu telefonga yuklangan." : "Birga ko‘rish yoki keyinroq yuklab olishni tanlang.";
+        Details.Text = waiting ? L.Get("Sherigingizning javobi kutilmoqda…") :
+            local ? L.Get("Film bu telefonga yuklangan.") : L.Get("Birga ko‘rish yoki keyinroq yuklab olishni tanlang.");
         Waiting.IsRunning = Waiting.IsVisible = waiting;
         Watch.IsVisible = !waiting;
-        Watch.Text = local ? "Ko‘rish" : "Stream qilib ko‘rish";
+        Watch.Text = local ? L.Get("Ko‘rish") : L.Get("Stream qilib ko‘rish");
         Download.IsVisible = !waiting && !local;
-        Cancel.Text = waiting || local ? "Bekor qilish" : "Rad etish";
+        Cancel.Text = waiting || local ? L.Get("Bekor qilish") : L.Get("Rad etish");
     }
     private static void Show(Label label, string? text)
     {

@@ -1,3 +1,4 @@
+using L = WatchTorrent.Core.Localization.AppText;
 using WatchTorrent.Core;
 using WatchTorrent.Services;
 
@@ -50,8 +51,8 @@ namespace WatchTorrent.ViewModels
             var info = $"{Format} · {Formatting.Bytes(File.Length)}";
 
             Details = bitfield.AllTrue
-                ? $"{info} · yuklab bo'lingan"
-                : $"{info} · {100.0 * bitfield.TrueCount / Math.Max(1, bitfield.Length):0}% yuklangan";
+                ? L.F("S270", info)
+                : L.F("S271", info, L.V(100.0 * bitfield.TrueCount / Math.Max(1, bitfield.Length), "0", 0));
         }
     }
 }

@@ -1,3 +1,4 @@
+using L = WatchTorrent.Core.Localization.AppText;
 using WatchTorrent.Models;
 using System.Net;
 using System.Text.RegularExpressions;
@@ -115,7 +116,7 @@ namespace WatchTorrent.ViewModels
             get => _showTechnicalDetails;
             private set { if (SetProperty(ref _showTechnicalDetails, value)) OnPropertyChanged(nameof(TechnicalDetailsText)); }
         }
-        public string TechnicalDetailsText => ShowTechnicalDetails ? "Texnik ma'lumotni yopish −" : "Texnik ma'lumot +";
+        public string TechnicalDetailsText => L.Get(ShowTechnicalDetails ? "Texnik ma'lumotni yopish −" : "Texnik ma'lumot +");
 
         public bool IsLoaded => Detail != null;
 
@@ -145,11 +146,11 @@ namespace WatchTorrent.ViewModels
             }
         }
 
-        public string FilesHeader => $"Fayllar ({Detail?.Files.Count ?? 0})";
+        public string FilesHeader => L.Get(L.F("S047", Detail?.Files.Count ?? 0));
 
         public bool CanShowAllFiles => !ShowAllFiles && (Detail?.Files.Count ?? 0) > FilesPreviewCount;
 
-        public string ShowAllFilesText => $"Barcha {Detail?.Files.Count ?? 0} ta faylni ko'rsatish";
+        public string ShowAllFilesText => L.Get(L.F("S010", Detail?.Files.Count ?? 0));
 
         public bool IsLoading
         {
@@ -159,7 +160,7 @@ namespace WatchTorrent.ViewModels
 
         public string? ErrorMessage
         {
-            get => _errorMessage;
+            get => L.Get(_errorMessage);
             private set
             {
                 if (SetProperty(ref _errorMessage, value))
@@ -195,13 +196,13 @@ namespace WatchTorrent.ViewModels
             }
         }
 
-        public string DownloadButtonText => IsAddingDownload
+        public string DownloadButtonText => L.Get(IsAddingDownload
             ? "Qo'shilmoqda…"
-            : IsInDownloads ? "Yuklamalarda ko'rish" : "Yuklab olish";
+            : IsInDownloads ? L.Get("Yuklamalarda ko'rish") : L.Get("Yuklab olish"));
 
         public string CopyMagnetText
         {
-            get => _copyMagnetText;
+            get => L.Get(_copyMagnetText);
             private set => SetProperty(ref _copyMagnetText, value);
         }
 
@@ -378,7 +379,7 @@ namespace WatchTorrent.ViewModels
             }
             catch (Exception ex)
             {
-                await Shell.Current.DisplayAlertAsync("Yuklab bo'lmadi", ex.Message, "OK");
+                await Shell.Current.DisplayAlertAsync(L.Get("Yuklab bo'lmadi"), ex.Message, "OK");
             }
             finally
             {
@@ -395,7 +396,7 @@ namespace WatchTorrent.ViewModels
 
             await Clipboard.Default.SetTextAsync(Detail.Magnet);
 
-            CopyMagnetText = "Nusxalandi";
+            CopyMagnetText = L.Get("Nusxalandi");
             await Task.Delay(2000);
             CopyMagnetText = CopyMagnetDefaultText;
         }
@@ -420,7 +421,7 @@ namespace WatchTorrent.ViewModels
 
             if (!opened)
             {
-                await Shell.Current.DisplayAlertAsync("Ilova topilmadi", "Magnet havolani ochadigan torrent ilovasi o'rnatilmagan.", "OK");
+                await Shell.Current.DisplayAlertAsync(L.Get("Ilova topilmadi"), L.Get("Magnet havolani ochadigan torrent ilovasi o'rnatilmagan."), "OK");
             }
         }
 
