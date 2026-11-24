@@ -10,6 +10,14 @@ The **Windows x64** installer will be published on [GitHub Releases](https://git
 - **Watch together in sync.** Invite a friend and keep playback in sync when either of you plays, pauses, or seeks.
 - **Talk while watching.** Use in-app voice calls with a peer-to-peer connection when the network allows it.
 
+## Android screenshots
+
+<p align="center">
+  <img src="docs/screenshots/android-discover.png" width="230" alt="WatchTorrent Discover screen with trending torrents" />
+  <img src="docs/screenshots/android-search.png" width="230" alt="WatchTorrent search results for Big Buck Bunny" />
+  <img src="docs/screenshots/android-connection.png" width="230" alt="WatchTorrent Connection screen with invitation options" />
+</p>
+
 ## Getting started
 
 **Watch on your own.** Open **Discover** or **Search**, select a video torrent, and choose **Watch** to start streaming or **Download** to save it. Open **Downloads** to follow progress or return to a video later. Startup time and buffering depend on how quickly peers can supply the pieces you need.
