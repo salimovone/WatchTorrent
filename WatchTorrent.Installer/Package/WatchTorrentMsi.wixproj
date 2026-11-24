@@ -1,0 +1,10 @@
+<Project Sdk="WixToolset.Sdk/6.0.2">
+  <Import Project="..\Installer.props" />
+  <PropertyGroup>
+    <OutputName>WatchTorrent-$(WatchTorrentVersion)-windows-x64</OutputName>
+  </PropertyGroup>
+  <Target Name="CheckPublishPayload" BeforeTargets="CoreCompile">
+    <Error Condition="!Exists('$(WatchTorrentPublishDir)\WatchTorrent.exe') Or !Exists('$(WatchTorrentPublishDir)\vcruntime140.dll')"
+           Text="The Windows release payload is missing. Run scripts/build.ps1 -Target WindowsInstaller from the repository root." />
+  </Target>
+</Project>

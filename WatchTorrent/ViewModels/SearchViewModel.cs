@@ -1,8 +1,9 @@
 using L = WatchTorrent.Core.Localization.AppText;
 using System.Collections.ObjectModel;
+using System.Collections.Specialized;
+using System.ComponentModel;
 using TorrentReader;
 using TorrentReader.Search;
-using TorrentReader.Search.Models;
 using WatchTorrent.Services;
 
 namespace WatchTorrent.ViewModels
@@ -74,12 +75,8 @@ namespace WatchTorrent.ViewModels
             }
         }
 
-        private ObservableCollection<SearchResultItem> _items = new();
-        public ObservableCollection<SearchResultItem> Items
-        {
-            get => _items;
-            private set => SetProperty(ref _items, value);
-        }
+        private ResultCollection _items = new();
+        public IReadOnlyList<TorrentRow> Items => _items;
 
         public bool IsBusy
         {
@@ -142,7 +139,7 @@ namespace WatchTorrent.ViewModels
             _activeQuery = query;
             _currentPage = 0;
             _totalPages = 0;
-            Items = new();
+            SetProperty(ref _items, new(), nameof(Items));
 
             await LoadPageAsync(1);
         }
@@ -177,17 +174,16 @@ namespace WatchTorrent.ViewModels
             try
             {
                 var result = await _client.SearchAsync(query, page, sort.SortBy, sort.Order);
+                var rows = await Task.Run(() => result.Items.Select(item => new TorrentRow(item)).ToArray());
 
                 if (version != _searchVersion)
                 {
                     return;
                 }
 
-                if (page == 1) Items = new(result.Items);
-                else foreach (var item in result.Items) Items.Add(item);
-
                 _currentPage = page;
                 _totalPages = result.AmountPages;
+                _items.AppendPage(rows);
             }
             catch (Exception ex)
             {
@@ -217,6 +213,25 @@ namespace WatchTorrent.ViewModels
             OnPropertyChanged(nameof(ShowHint));
             OnPropertyChanged(nameof(IsEmpty));
             OnPropertyChanged(nameof(Summary));
+        }
+
+        private sealed class ResultCollection : ObservableCollection<TorrentRow>
+        {
+            public void AppendPage(TorrentRow[] rows)
+            {
+                if (rows.Length == 0) return;
+
+                CheckReentrancy();
+                int start = Count;
+                foreach (var row in rows)
+                {
+                    Items.Add(row);
+                }
+
+                OnPropertyChanged(new PropertyChangedEventArgs(nameof(Count)));
+                OnPropertyChanged(new PropertyChangedEventArgs("Item[]"));
+                OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Add, rows, start));
+            }
         }
     }
 }

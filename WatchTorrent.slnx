@@ -7,4 +7,12 @@
   <Project Path="WatchTorrent.EngineTests/WatchTorrent.EngineTests.csproj" />
   <Project Path="WatchTorrent.Libtorrent/WatchTorrent.Libtorrent.csproj" />
   <Project Path="VoiceConnection/VoiceConnection.csproj" />
+  <Folder Name="/Installer/">
+    <Project Path="WatchTorrent.Installer/Package/WatchTorrentMsi.wixproj">
+      <Build Project="false" />
+    </Project>
+    <Project Path="WatchTorrent.Installer/Bundle/WatchTorrentSetup.wixproj">
+      <Build Project="false" />
+    </Project>
+  </Folder>
 </Solution>

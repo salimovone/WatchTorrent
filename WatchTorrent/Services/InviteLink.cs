@@ -9,9 +9,11 @@ internal static class InviteLink
 {
     public const string Scheme = "watchtorrent";
     public const string Host = "join";
-    public const string WebHost = "watchtorrent-join.convivialbongo1.chatgpt.site";
-    private const string WebPrefix = "https://" + WebHost + "/#";
+    public const string WebHost = "salimovone.github.io";
+    public const string WebPath = "/watchtorrent/join/";
+    private const string WebPrefix = "https://" + WebHost + WebPath + "#";
     private const string ShortPrefix = Scheme + "://" + Host + "/v2/";
+    private const string LegacyWebPrefix = "https://watchtorrent-join.convivialbongo1.chatgpt.site/#";
     private const string Prefix = Scheme + "://" + Host + "/v1/";
 
     internal static string CallId(byte[] secret) =>
@@ -26,7 +28,7 @@ internal static class InviteLink
     public static async Task<string> ReadAsync(string input)
     {
         string link = input.Trim();
-        foreach (var prefix in new[] { WebPrefix, ShortPrefix })
+        foreach (var prefix in new[] { WebPrefix, ShortPrefix, LegacyWebPrefix })
         {
             if (!link.StartsWith(prefix, StringComparison.OrdinalIgnoreCase)) continue;
             string code = link[prefix.Length..];

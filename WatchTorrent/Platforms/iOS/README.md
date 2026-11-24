@@ -28,4 +28,4 @@ xcrun devicectl device install app --device "$DEVICE_ID" WatchTorrent/bin/Debug/
 xcrun devicectl device process launch --device "$DEVICE_ID" uz.salimovone.watchtorrent
 ```
 
-HTTPS taklif Safari’da ochilganda **Ilovada ochish** tugmasini bosing. Mikrofon ruxsati uni birinchi marta yoqqanda so‘raladi. Mahalliy tarmoqdagi peer’lar uchun Local Network ruxsatini bering. Yuklangan kinolar Files → On My iPhone → WatchTorrent ichida saqlanadi.
+HTTPS taklif Safari’da ochilganda **Ilovada ochish** tugmasini bosing yoki havolani ilovadagi **Ulanish → Havolani kiritish** bo‘limiga joylang. Mikrofon ruxsati uni birinchi marta yoqqanda so‘raladi. Mahalliy tarmoqdagi peer’lar uchun Local Network ruxsatini bering. Yuklangan kinolar Files → On My iPhone → WatchTorrent ichida saqlanadi.

@@ -20,8 +20,6 @@ public sealed class TorrentMediaServer : IDisposable
     private readonly string _path = "/" + Guid.NewGuid().ToString("N");
     private CancellationTokenSource? _range;
     private long _readStartedAt;
-    private long? _interruptedPosition;
-    private long _interruptedUntil;
     private int _disposed;
 
     public string Url { get; }
@@ -79,20 +77,6 @@ public sealed class TorrentMediaServer : IDisposable
                 if (!TryRange(rangeHeader, _stream.Length, out long start, out long end))
                 {
                     await HeadersAsync(network, "416 Range Not Satisfiable", 0, $"bytes */{_stream.Length}", lifetime.Token).ConfigureAwait(false);
-                    return;
-                }
-                bool interruptedRetry;
-                lock (_sync)
-                {
-                    interruptedRetry = request[0] == "GET" && _interruptedPosition == start
-                        && Environment.TickCount64 <= _interruptedUntil;
-                    if (request[0] == "GET") _interruptedPosition = null;
-                }
-                if (interruptedRetry)
-                {
-                    // VLC retries a truncated HTTP body once at the old cursor.
-                    // Do not let that recovery read block the queued seek again.
-                    await HeadersAsync(network, "503 Service Unavailable", 0, null, lifetime.Token).ConfigureAwait(false);
                     return;
                 }
                 long length = end - start + 1;
@@ -178,16 +162,13 @@ public sealed class TorrentMediaServer : IDisposable
         _listener.Stop();
     }
 
-    // Queue the VLC seek first, then close a stalled old range so the demux
-    // thread can consume that command instead of waiting for remote peers.
-    public void InterruptRead()
+    public async Task StopAsync()
     {
-        lock (_sync)
-        {
-            _interruptedPosition = Interlocked.Read(ref _readStartedAt) != 0 ? _stream.Position : null;
-            _interruptedUntil = Environment.TickCount64 + 2000;
-            _range?.Cancel();
-        }
+        Cancel();
+        // The replacement input shares the stream cursor. Wait for any old read
+        // to finish before another server seeks on that stream.
+        await _reader.WaitAsync().ConfigureAwait(false);
+        _reader.Release();
     }
 
     public void Dispose()

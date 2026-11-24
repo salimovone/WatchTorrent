@@ -1,0 +1,9 @@
+<Project>
+  <PropertyGroup>
+    <InstallerPlatform>x64</InstallerPlatform>
+    <WatchTorrentVersion Condition="'$(WatchTorrentVersion)' == ''">1.1</WatchTorrentVersion>
+    <WatchTorrentPublishDir Condition="'$(WatchTorrentPublishDir)' == ''">$(MSBuildThisFileDirectory)..\artifacts\windows-installer\payload</WatchTorrentPublishDir>
+    <WatchTorrentIconDir>$(MSBuildThisFileDirectory)..\WatchTorrent\Resources\AppIcon</WatchTorrentIconDir>
+    <DefineConstants>$(DefineConstants);WatchTorrentVersion=$(WatchTorrentVersion);WatchTorrentPublishDir=$(WatchTorrentPublishDir);WatchTorrentIconDir=$(WatchTorrentIconDir)</DefineConstants>
+  </PropertyGroup>
+</Project>

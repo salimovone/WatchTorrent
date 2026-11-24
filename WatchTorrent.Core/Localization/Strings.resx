@@ -957,4 +957,7 @@ Yuklanish foizini Yuklamalar bo‘limida ko‘rishingiz mumkin.</value>
   <data name="SettingsBackgroundHelp" xml:space="preserve">
     <value>Ekran o‘chganda ham yuklash davom etadi.</value>
   </data>
+  <data name="StreamEndedEarly" xml:space="preserve">
+    <value>Qolgan bo‘laklar yuklanmasidan video to‘xtadi.</value>
+  </data>
 </root>

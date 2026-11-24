@@ -29,23 +29,26 @@ namespace WatchTorrent.Services
 
         private static readonly HttpClient Http = CreateHttpClient();
 
-        private readonly ConcurrentDictionary<string, Task<PosterInfo?>> _lookups = new();
+        private readonly ConcurrentDictionary<string, Lazy<Task<PosterInfo?>>> _lookups = new();
         private readonly SemaphoreSlim _throttle = new(MaxConcurrentRequests);
         private readonly object _cacheLock = new();
         private readonly string _cachePath = Path.Combine(FileSystem.CacheDirectory, "posters.json");
         private Dictionary<string, string>? _cache;
         private bool _saveScheduled;
 
-        public Task<PosterInfo?> FindAsync(string torrentName)
-        {
-            var title = TorrentTitle.Parse(torrentName);
+        public Task<PosterInfo?> FindAsync(string torrentName) => FindAsync(TorrentTitle.Parse(torrentName));
 
-            return title == null ? Task.FromResult<PosterInfo?>(null) : _lookups.GetOrAdd(title.Key, _ => LookupAsync(title));
+        internal Task<PosterInfo?> FindAsync(TorrentTitle? title)
+        {
+            if (title is null) return Task.FromResult<PosterInfo?>(null);
+
+            // Start cache I/O and poster matching outside the thread that binds list rows.
+            return _lookups.GetOrAdd(title.Key, key => new(() => Task.Run(() => LookupAsync(title, key)))).Value;
         }
 
-        private async Task<PosterInfo?> LookupAsync(TorrentTitle title)
+        private async Task<PosterInfo?> LookupAsync(TorrentTitle title, string key)
         {
-            if (TryGetCached(title.Key, out var cached))
+            if (TryGetCached(key, out var cached))
             {
                 return cached.Length > 0 ? new PosterInfo(cached) : null;
             }
@@ -63,14 +66,14 @@ namespace WatchTorrent.Services
                 var imageUrl = PosterMatcher.PickBest(document.RootElement, title);
 
                 // Topilmagan natija ham keshlanadi — aks holda har safar qayta so'raladi.
-                Remember(title.Key, imageUrl ?? string.Empty);
+                Remember(key, imageUrl ?? string.Empty);
 
                 return imageUrl != null ? new PosterInfo(imageUrl) : null;
             }
             catch (Exception ex)
             {
                 // Tarmoq xatosi keshlanmaydi: keyingi safar qayta urinib ko'riladi.
-                _lookups.TryRemove(title.Key, out _);
+                _lookups.TryRemove(key, out _);
                 Debug.WriteLine($"[Posters] {title.Query}: {ex.Message}");
 
                 return null;

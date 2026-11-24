@@ -957,4 +957,7 @@ View download progress in Downloads.</value>
   <data name="SettingsBackgroundHelp" xml:space="preserve">
     <value>Keep downloading with the screen off.</value>
   </data>
+  <data name="StreamEndedEarly" xml:space="preserve">
+    <value>The video stopped before the remaining pieces were downloaded.</value>
+  </data>
 </root>

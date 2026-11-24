@@ -10,7 +10,7 @@ internal static class PlaybackNativeChecks
     public static async Task RunAsync(string nativePath, Action<bool, string> check)
     {
         LibVLCSharp.Shared.Core.Initialize(nativePath);
-        using var source = new PartialWave();
+        using var source = new PartialWave { BlockSeekRangesOnly = true };
         using var server = new TorrentMediaServer(source);
         using var vlc = new LibVLC("--aout=dummy", "--vout=dummy");
         using var player = new MediaPlayer(vlc);
@@ -19,21 +19,51 @@ internal static class PlaybackNativeChecks
         try
         {
             player.Play(media);
-            await UntilAsync(() => player.IsPlaying, "VLC did not start");
-            await Task.Delay(800);
-            player.Time = 30000;
-            server.InterruptRead();
-            await UntilAsync(() => source.MissingAt > 2000000,
-                "VLC did not request the missing seek target");
-            player.Time = 1000;
-            server.InterruptRead();
-            // Time setters report the requested value immediately. Require the
-            // real playback clock to advance after returning, not just equal 1000.
-            await UntilAsync(() => player.IsPlaying && player.Time is >= 1400 and < 4500,
-                "VLC remained blocked after seeking back into cached bytes");
-            check(true, "real VLC resumes cached playback while future source bytes stay unavailable");
+            await UntilAsync(() => player.IsPlaying && player.Time >= 700, "VLC did not start");
+            player.Time = 30_000;
+            await UntilAsync(() => server.IsWaiting && source.MissingAt > 2_000_000,
+                "VLC did not wait on the missing seek target");
+
+            var stoppingInput = server.StopAsync();
+            player.Stop();
+            await stoppingInput.WaitAsync(TimeSpan.FromSeconds(2));
+            using var cachedServer = new TorrentMediaServer(source);
+            using var cachedMedia = new Media(vlc, cachedServer.Url, FromType.FromLocation);
+            cachedMedia.AddOption(":network-caching=300");
+            cachedMedia.AddOption(":start-time=1");
+            try
+            {
+                player.Play(cachedMedia);
+                await UntilAsync(() => player.IsPlaying && player.Time is >= 1400 and < 4500,
+                    "VLC remained blocked after reopening at cached bytes");
+                check(!source.AllReady, "real VLC resumes cached playback while the abandoned target is still missing");
+            }
+            finally { cachedServer.Cancel(); player.Stop(); }
         }
         finally { server.Cancel(); player.Stop(); }
+
+        using var forwardSource = new PartialWave { BlockSeekRangesOnly = true };
+        using var forwardServer = new TorrentMediaServer(forwardSource);
+        using var forwardPlayer = new MediaPlayer(vlc);
+        using var forwardMedia = new Media(vlc, forwardServer.Url, FromType.FromLocation);
+        forwardMedia.AddOption(":network-caching=300");
+        try
+        {
+            forwardPlayer.Play(forwardMedia);
+            await UntilAsync(() => forwardPlayer.IsPlaying && forwardPlayer.Time >= 700,
+                "VLC did not start the forward-seek fixture");
+            var forward = forwardPlayer.Time + 10_000;
+            forwardPlayer.Time = forward;
+            await UntilAsync(() => forwardServer.IsWaiting && forwardSource.MissingAt > 900_000,
+                "VLC did not buffer the forward seek");
+            check(forwardPlayer.State is not (VLCState.Ended or VLCState.Error),
+                "a missing +10s target buffers without ending playback");
+            forwardSource.MakeAllReady();
+            await UntilAsync(() => forwardPlayer.IsPlaying && forwardPlayer.Time >= forward + 400,
+                "VLC did not continue at the forward target when its bytes arrived");
+            check(true, "real VLC advances from the +10s target after missing bytes arrive");
+        }
+        finally { forwardServer.Cancel(); forwardPlayer.Stop(); }
 
         using var fullSource = new PartialWave { AllReady = true };
         using var audioServer = new TorrentMediaServer(fullSource);
@@ -61,7 +91,6 @@ internal static class PlaybackNativeChecks
             check(probe.Resets == resetsBefore, "rate transitions do not flush the PCM device");
             int resetsAtSeek = probe.Resets;
             audioPlayer.Time = 2000;
-            audioServer.InterruptRead();
             await UntilAsync(() => probe.Resets > resetsAtSeek && audioPlayer.Time is >= 2400 and < 5000,
                 "PCM output did not recover after seek flush");
             check(continuousAudio.Error == null, "PCM device resets for seek and resumes at the new clock");
@@ -86,9 +115,13 @@ internal static class PlaybackNativeChecks
     private sealed class PartialWave : Stream
     {
         private readonly byte[] _bytes;
+        private readonly TaskCompletionSource _ready = new(TaskCreationOptions.RunContinuationsAsynchronously);
         private long _missingAt;
+        private long _rangeStart;
         public long MissingAt => Interlocked.Read(ref _missingAt);
-        public bool AllReady { get; init; }
+        public bool BlockSeekRangesOnly { get; init; }
+        public void MakeAllReady() => _ready.TrySetResult();
+        public bool AllReady { get => _ready.Task.IsCompleted; init { if (value) MakeAllReady(); } }
         public PartialWave()
         {
             const int size = 48000 * 2 * 60;
@@ -106,18 +139,25 @@ internal static class PlaybackNativeChecks
         public override bool CanRead => true;
         public override bool CanSeek => true;
         public override bool CanWrite => false;
-        public override long Seek(long offset, SeekOrigin origin) => Position = origin switch
-        { SeekOrigin.Begin => offset, SeekOrigin.Current => Position + offset, _ => Length + offset };
+        public override long Seek(long offset, SeekOrigin origin)
+        {
+            _rangeStart = origin switch
+            { SeekOrigin.Begin => offset, SeekOrigin.Current => Position + offset, _ => Length + offset };
+            return Position = _rangeStart;
+        }
         public override async Task<int> ReadAsync(byte[] buffer, int offset, int count, CancellationToken token)
         {
             const int cachedEnd = 44 + 96000 * 5;
-            if (!AllReady && Position >= cachedEnd && Position < 44 + 96000 * 55)
+            var blockRange = !BlockSeekRangesOnly || _rangeStart >= cachedEnd;
+            if (!AllReady && blockRange && Position >= cachedEnd && Position < 44 + 96000 * 55)
             {
                 Interlocked.Exchange(ref _missingAt, Position);
-                await Task.Delay(Timeout.Infinite, token);
+                await _ready.Task.WaitAsync(token);
             }
+            if (BlockSeekRangesOnly && !blockRange && !AllReady)
+                await Task.Delay(160, token);
             int length = (int)Math.Min(count, Length - Position);
-            if (!AllReady && Position < cachedEnd) length = (int)Math.Min(length, cachedEnd - Position);
+            if (!AllReady && blockRange && Position < cachedEnd) length = (int)Math.Min(length, cachedEnd - Position);
             Array.Copy(_bytes, Position, buffer, offset, length);
             Position += length;
             return length;

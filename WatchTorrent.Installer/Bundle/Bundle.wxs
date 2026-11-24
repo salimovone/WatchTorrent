@@ -1,0 +1,15 @@
+<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs"
+     xmlns:bal="http://wixtoolset.org/schemas/v4/wxs/bal">
+  <Bundle Name="WatchTorrent" Manufacturer="WatchTorrent contributors"
+          Version="$(var.WatchTorrentVersion)"
+          UpgradeCode="666B1768-BFB2-4F60-A72F-A34DC0EAB23C"
+          IconSourceFile="$(var.WatchTorrentIconDir)\watchtorrent.ico">
+    <BootstrapperApplication>
+      <bal:WixStandardBootstrapperApplication Theme="hyperlinkLicense" LicenseUrl=""
+          LogoFile="$(var.WatchTorrentIconDir)\appicon.png" SuppressOptionsUI="yes" />
+    </BootstrapperApplication>
+    <Chain>
+      <MsiPackage SourceFile="$(var.WatchTorrentMsi.TargetPath)" Compressed="yes" />
+    </Chain>
+  </Bundle>
+</Wix>

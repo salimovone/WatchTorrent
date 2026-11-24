@@ -1,7 +1,6 @@
 using L = WatchTorrent.Core.Localization.AppText;
 using TorrentReader;
 using TorrentReader.Providers;
-using TorrentReader.Search.Models;
 using WatchTorrent.Services;
 
 namespace WatchTorrent.ViewModels
@@ -11,10 +10,10 @@ namespace WatchTorrent.ViewModels
         private const string EmptyListMessage = "Sayt hozircha ro'yxatni qaytarmadi. Birozdan so'ng qayta urinib ko'ring.";
 
         private readonly TorrentClient _client;
-        private readonly Dictionary<string, IReadOnlyList<SearchResultItem>> _cache = new();
+        private readonly Dictionary<string, IReadOnlyList<TorrentRow>> _cache = new();
         private DiscoverCategory _selectedCategory;
         private RangeOption _selectedRange;
-        private IReadOnlyList<SearchResultItem> _items = Array.Empty<SearchResultItem>();
+        private IReadOnlyList<TorrentRow> _items = Array.Empty<TorrentRow>();
         private bool _isBusy;
         private bool _isRefreshing;
         private string? _errorMessage;
@@ -79,7 +78,7 @@ namespace WatchTorrent.ViewModels
 
         public bool ShowRanges => SelectedCategory.HasRange;
 
-        public IReadOnlyList<SearchResultItem> Items
+        public IReadOnlyList<TorrentRow> Items
         {
             get => _items;
             private set => SetProperty(ref _items, value);
@@ -139,7 +138,7 @@ namespace WatchTorrent.ViewModels
 
             if (!force)
             {
-                Items = Array.Empty<SearchResultItem>();
+                Items = Array.Empty<TorrentRow>();
             }
 
             // Pastga tortib yangilashda RefreshView o'z indikatorini ko'rsatadi.
@@ -147,12 +146,13 @@ namespace WatchTorrent.ViewModels
 
             try
             {
-                var items = await category.Load(_client, range);
+                var results = await category.Load(_client, range);
+                var items = await Task.Run(() => results.Select(item => new TorrentRow(item)).ToArray());
 
                 // Sayt vaqti-vaqti bilan 200 status bilan "Error something went wrong" sahifasini qaytaradi,
                 // kutubxona esa uni bo'sh ro'yxat qilib beradi. Bu ro'yxatlar aslida hech qachon bo'sh bo'lmaydi,
                 // shuning uchun bo'sh natija keshlanmaydi va xato sifatida ko'rsatiladi.
-                if (items.Count > 0)
+                if (items.Length > 0)
                 {
                     _cache[cacheKey] = items;
                 }
@@ -160,14 +160,14 @@ namespace WatchTorrent.ViewModels
                 if (version == _loadVersion)
                 {
                     Items = items;
-                    ErrorMessage = items.Count > 0 ? null : EmptyListMessage;
+                    ErrorMessage = items.Length > 0 ? null : EmptyListMessage;
                 }
             }
             catch (Exception ex)
             {
                 if (version == _loadVersion)
                 {
-                    Items = Array.Empty<SearchResultItem>();
+                    Items = Array.Empty<TorrentRow>();
                     ErrorMessage = Formatting.Error(ex);
                 }
             }

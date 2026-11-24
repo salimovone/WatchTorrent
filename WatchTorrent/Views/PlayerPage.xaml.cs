@@ -487,7 +487,7 @@ namespace WatchTorrent.Views
                     await Task.Delay(ControlsTimeout, hideControls.Token);
 
                     // Pauza, yuklanish va seek paytida boshqaruv ko'rinib turadi.
-                    if (_viewModel.IsPlaying && !_viewModel.IsLoading && !_isDraggingSeek && !_menuOpen)
+                    if (_viewModel.IsPlaying && !_viewModel.IsLoading && !_viewModel.IsBuffering && !_isDraggingSeek && !_menuOpen)
                     {
                         SetControlsVisible(false);
 

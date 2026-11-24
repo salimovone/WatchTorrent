@@ -4,13 +4,10 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
     xmlns:loc="clr-namespace:WatchTorrent.Localization"
     xmlns:vm="clr-namespace:WatchTorrent.ViewModels"
-    xmlns:search="clr-namespace:TorrentReader.Search.Models;assembly=TorrentReader"
     xmlns:controls="clr-namespace:WatchTorrent.Controls"
     xmlns:converters="clr-namespace:WatchTorrent.Converters">
-    <converters:HtmlDecodeConverter x:Key="HtmlDecode" />
     <converters:InvertBoolConverter x:Key="InvertBool" />
-    <converters:TorrentLabelConverter x:Key="TorrentLabel" />
-    <DataTemplate x:Key="TorrentRowTemplate" x:DataType="search:SearchResultItem">
+    <DataTemplate x:Key="TorrentRowTemplate" x:DataType="vm:TorrentRow">
         <Grid
             Padding="20,14,20,0"
             RowDefinitions="Auto,Auto"
@@ -34,34 +31,32 @@
                 BackgroundColor="{StaticResource Surface2}">
                 <Grid>
                     <Image Source="ic_film.png" WidthRequest="24" HeightRequest="24" Opacity="0.3" />
-                    <controls:PosterImage TorrentName="{Binding Name}" Aspect="AspectFill" />
+                    <controls:PosterImage Title="{Binding PosterTitle}" WidthRequest="64" HeightRequest="92" Aspect="AspectFill" />
                 </Grid>
             </Border>
             <VerticalStackLayout Grid.Column="1" Spacing="7" VerticalOptions="Center">
                 <Label
-                    Text="{Binding Name, Converter={StaticResource TorrentLabel}}"
-                    ToolTipProperties.Text="{Binding Name, Converter={StaticResource HtmlDecode}}"
+                    Text="{Binding Title}"
+                    ToolTipProperties.Text="{Binding FullName}"
                     FontFamily="OpenSansSemibold"
                     FontSize="15"
                     MaxLines="2"
                     LineBreakMode="TailTruncation" />
                 <Label
-                    Text="{Binding Name, Converter={StaticResource TorrentLabel}, ConverterParameter=Release}"
+                    Text="{Binding Release}"
                     FontSize="12"
                     TextColor="{StaticResource TextMuted}"
                     MaxLines="1"
                     LineBreakMode="TailTruncation" />
-                <FlexLayout Wrap="Wrap" AlignItems="Center">
-                    <Label Text="{Binding Size}" FontSize="12" TextColor="{StaticResource TextMuted}" Margin="0,0,14,0" />
-                    <Label FontSize="12" TextColor="{StaticResource TextMuted}">
-                        <Label.Text>
-                            <MultiBinding StringFormat="{}{0:N0} {1}">
-                                <Binding Path="AmountSeeders" />
-                                <loc:Translate Key="SeederUnit" />
-                            </MultiBinding>
-                        </Label.Text>
-                    </Label>
-                </FlexLayout>
+                <Label FontSize="12" TextColor="{StaticResource TextMuted}" MaxLines="2" LineBreakMode="TailTruncation">
+                    <Label.Text>
+                        <MultiBinding StringFormat="{}{0}   ·   {1:N0} {2}">
+                            <Binding Path="Item.Size" />
+                            <Binding Path="Item.AmountSeeders" />
+                            <loc:Translate Key="SeederUnit" />
+                        </MultiBinding>
+                    </Label.Text>
+                </Label>
             </VerticalStackLayout>
             <Label Grid.Column="2" Text="›" FontSize="23" TextColor="{StaticResource TextMuted}" VerticalOptions="Center" />
             <BoxView Grid.Row="1" Grid.ColumnSpan="3" Style="{StaticResource Rule}" />

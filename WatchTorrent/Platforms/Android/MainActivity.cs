@@ -15,7 +15,7 @@ namespace WatchTorrent
     [IntentFilter([Intent.ActionView], Categories = [Intent.CategoryDefault, Intent.CategoryBrowsable],
         DataScheme = InviteLink.Scheme, DataHost = InviteLink.Host)]
     [IntentFilter([Intent.ActionView], Categories = [Intent.CategoryDefault, Intent.CategoryBrowsable],
-        DataScheme = "https", DataHost = InviteLink.WebHost, DataPath = "/", AutoVerify = true)]
+        DataScheme = "https", DataHost = InviteLink.WebHost, DataPath = InviteLink.WebPath, AutoVerify = true)]
     [IntentFilter([Intent.ActionView], Categories = [Intent.CategoryDefault], DataMimeType = VoiceCall.InviteMime, DataScheme = "content")]
     // Download managers often use numeric content URIs and a generic MIME type.
     [IntentFilter([Intent.ActionView], Categories = [Intent.CategoryDefault], DataMimeType = "application/octet-stream", DataScheme = "content")]
@@ -83,8 +83,8 @@ namespace WatchTorrent
 
         private void ReadInvitation(Intent? intent)
         {
-            if (intent?.Action == Intent.ActionView && (intent.Data?.Scheme == InviteLink.Scheme ||
-                intent.Data is { Scheme: "https", Host: InviteLink.WebHost }))
+            if (intent?.Action == Intent.ActionView && (intent.Data is { Scheme: InviteLink.Scheme, Host: InviteLink.Host } or
+                { Scheme: "https", Host: InviteLink.WebHost, Path: InviteLink.WebPath }))
             {
                 invitation = intent;
                 return;

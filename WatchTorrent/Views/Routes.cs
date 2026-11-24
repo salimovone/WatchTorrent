@@ -1,5 +1,5 @@
-using TorrentReader.Search.Models;
 using WatchTorrent.Services;
+using WatchTorrent.ViewModels;
 
 namespace WatchTorrent.Views
 {
@@ -13,7 +13,7 @@ namespace WatchTorrent.Views
         /// <summary>Ro'yxatda tanlangan torrentni ochadi va tanlovni bekor qiladi (shu elementni qayta bosish mumkin bo'lsin).</summary>
         public static async Task OpenTorrentAsync(object? sender, SelectionChangedEventArgs e)
         {
-            if (sender is not CollectionView list || e.CurrentSelection.FirstOrDefault() is not SearchResultItem item)
+            if (sender is not CollectionView list || e.CurrentSelection.FirstOrDefault() is not TorrentRow row)
             {
                 return;
             }
@@ -22,7 +22,7 @@ namespace WatchTorrent.Views
 
             await Shell.Current.GoToAsync(nameof(TorrentDetailPage), new ShellNavigationQueryParameters
             {
-                ["Item"] = item
+                ["Item"] = row.Item
             });
         }
 

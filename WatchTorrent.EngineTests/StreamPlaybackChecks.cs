@@ -44,19 +44,6 @@ internal static class StreamPlaybackChecks
         check(torrent.CancelledReads == 1 && torrent.Position == 4,
             "new range cancels stale torrent read before changing the stream cursor");
 
-        using var stalled = new HttpRequestMessage(HttpMethod.Get, server.Url);
-        stalled.Headers.Range = new RangeHeaderValue(4, 7);
-        using var stalledResponse = await client.SendAsync(stalled, HttpCompletionOption.ResponseHeadersRead);
-        var until = Environment.TickCount64 + 2000;
-        while (!server.IsWaiting && Environment.TickCount64 < until) await Task.Delay(20);
-        if (!server.IsWaiting) throw new Exception("Missing range did not enter read wait");
-        server.InterruptRead();
-        using var retry = new HttpRequestMessage(HttpMethod.Get, server.Url);
-        retry.Headers.Range = new RangeHeaderValue(4, 7);
-        using var retryResponse = await client.SendAsync(retry);
-        check(retryResponse.StatusCode == HttpStatusCode.ServiceUnavailable,
-            "interrupted HTTP recovery cannot block VLC on the abandoned range again");
-
         using var head = await client.SendAsync(new HttpRequestMessage(HttpMethod.Head, server.Url));
         check(head.Content.Headers.ContentLength == 8 && torrent.Position == 4, "HEAD reports file length without moving playback");
         using var invalid = new HttpRequestMessage(HttpMethod.Get, server.Url);

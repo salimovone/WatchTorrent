@@ -1,5 +1,6 @@
 ﻿using LibVLCSharp.MAUI;
 using Microsoft.Extensions.Logging;
+using Microsoft.Maui.LifecycleEvents;
 using TorrentReader;
 using WatchTorrent.Services;
 using WatchTorrent.ViewModels;
@@ -24,6 +25,9 @@ namespace WatchTorrent
                 .UseLibVLCSharp()
 #if ANDROID
                 .ConfigureMauiHandlers(handlers => handlers.AddHandler<Controls.SubtitleSurface, Controls.SubtitleSurfaceHandler>())
+#elif WINDOWS
+                .ConfigureLifecycleEvents(events => events.AddWindows(windows => windows.OnWindowCreated(window =>
+                    window.AppWindow.SetIcon(Path.Combine(AppContext.BaseDirectory, "watchtorrent.ico")))))
 #endif
                 .ConfigureFonts(fonts =>
                 {

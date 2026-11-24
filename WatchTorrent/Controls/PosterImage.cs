@@ -4,48 +4,52 @@ using WatchTorrent.Services;
 namespace WatchTorrent.Controls
 {
     /// <summary>
-    /// Torrent nomi bo'yicha posterni o'zi topib ko'rsatadigan rasm. CollectionView qatorlari qayta ishlatilganda
-    /// (virtualizatsiya) eski so'rov natijasi yangi qatorga tushib qolmasligi tekshiriladi.
+    /// Loads the poster for the current row and drops results from rows that have been recycled.
     /// </summary>
     public class PosterImage : Image
     {
-        public static readonly BindableProperty TorrentNameProperty = BindableProperty.Create(
-            nameof(TorrentName),
-            typeof(string),
+        public static readonly BindableProperty TitleProperty = BindableProperty.Create(
+            nameof(Title),
+            typeof(TorrentTitle),
             typeof(PosterImage),
-            propertyChanged: (bindable, _, newValue) => ((PosterImage)bindable).OnTorrentNameChanged(newValue as string));
+            propertyChanged: (bindable, _, newValue) => ((PosterImage)bindable).OnTitleChanged(newValue as TorrentTitle));
 
-        public string? TorrentName
+        public TorrentTitle? Title
         {
-            get => (string?)GetValue(TorrentNameProperty);
-            set => SetValue(TorrentNameProperty, value);
+            get => (TorrentTitle?)GetValue(TitleProperty);
+            set => SetValue(TitleProperty, value);
         }
 
         /// <summary>Yuklanadigan rasm kengligi (px) — ro'yxatda kichik, katta joylarda kattaroq.</summary>
         public int PosterWidth { get; set; } = 240;
 
-        private async void OnTorrentNameChanged(string? torrentName)
+        private async void OnTitleChanged(TorrentTitle? title)
         {
-            Source = null;
-
-            if (string.IsNullOrWhiteSpace(torrentName)
+            if (title is null
                 || IPlatformApplication.Current?.Services.GetService<PosterService>() is not { } posters)
             {
+                Source = null;
                 return;
             }
 
             try
             {
-                var poster = await posters.FindAsync(torrentName);
-
-                if (poster != null && TorrentName == torrentName)
+                var lookup = posters.FindAsync(title);
+                if (!lookup.IsCompletedSuccessfully)
                 {
-                    Source = ImageSource.FromUri(new Uri(poster.Sized(PosterWidth)));
+                    Source = null;
+                }
+
+                var poster = await lookup;
+                if (Title == title)
+                {
+                    Source = poster is null ? null : ImageSource.FromUri(new Uri(poster.Sized(PosterWidth)));
                 }
             }
             catch (Exception ex)
             {
-                Debug.WriteLine($"[Posters] {torrentName}: {ex.Message}");
+                if (Title == title) Source = null;
+                Debug.WriteLine($"[Posters] {title.Title}: {ex.Message}");
             }
         }
     }

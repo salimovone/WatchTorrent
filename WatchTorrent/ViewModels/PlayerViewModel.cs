@@ -87,8 +87,7 @@ namespace WatchTorrent.ViewModels
         {
             if (Player is { IsSeekable: true, Length: > 0 } player)
             {
-                player.Time = Math.Clamp(time, 0, player.Length);
-                _input?.InterruptRead();
+                RequestSeek(player, Math.Clamp(time, 0, player.Length));
             }
         }
         internal void ApplyShared(long position, bool play)
@@ -123,6 +122,11 @@ namespace WatchTorrent.ViewModels
         private Media? _media;
         private bool _hasStartedPlaying;
         private bool _isSeeking;
+        private long? _queuedStreamSeek;
+        private long _streamSeekQueuedAt;
+        private long? _streamSeekTarget;
+        private bool _retriedStreamSeek;
+        private bool _streamSeekWasBackward;
         private bool _isClosed;
         private long _lastResumeSaveAt;
         private PlaybackRateTransition? _rateTransition;
@@ -248,7 +252,7 @@ namespace WatchTorrent.ViewModels
 
         public bool ShowSpinner => (IsLoading || IsBuffering) && !HasError;
 
-        public bool ShowTransport => !IsLoading && !HasError;
+        public bool ShowTransport => (!IsLoading || _streamSeekTarget != null) && !HasError;
 
         public bool IsPlaying
         {
@@ -402,6 +406,12 @@ namespace WatchTorrent.ViewModels
                 EnableKeyInput = false,
                 EnableMouseInput = false
             };
+#if ANDROID
+            // Android 9 can detach a VLC-owned JNI thread during managed audio
+            // callbacks. VLC then aborts in its thread destructor on input stop.
+            // Use the native OpenSL ES sink on this API level instead of amem.
+            if (!OperatingSystem.IsAndroidVersionAtLeast(29)) return player;
+#endif
             _audioOutput = new PlayerAudioOutput(player, libVLC);
             return player;
         }
@@ -499,9 +509,10 @@ namespace WatchTorrent.ViewModels
             if (!_isSwitching)
             {
                 HandlePlayerState(player.State);
+                if (!_isSwitching && !HasError) ApplyQueuedStreamSeek(player);
             }
 
-            if (!_hasStartedPlaying)
+            if (!_hasStartedPlaying || _isSwitching)
             {
                 Session?.Tick(false);
                 return;
@@ -519,7 +530,8 @@ namespace WatchTorrent.ViewModels
             // Read-ahead can wait while cached audio/video keeps playing. Let VLC
             // buffer naturally; never pause the decoder based on the read cursor.
             IsBuffering = player.State == VLCState.Buffering
-                || IsPlaying && _input?.IsWaiting == true && Environment.TickCount64 - _lastProgressAt > 1200;
+                || _input?.IsWaiting == true && (_queuedStreamSeek != null
+                    || (IsPlaying || _streamSeekTarget != null) && Environment.TickCount64 - _lastProgressAt > 1200);
             Session?.Tick(!IsBuffering && !IsLoading && !HasError && !_isSwitching);
 
             var length = player.Length;
@@ -532,7 +544,7 @@ namespace WatchTorrent.ViewModels
 
             if (!_isSeeking)
             {
-                var time = Math.Max(0, player.Time);
+                var time = _queuedStreamSeek ?? _streamSeekTarget ?? Math.Max(0, player.Time);
 
                 PositionSeconds = time / 1000.0;
                 PositionText = FormatTime(time);
@@ -643,12 +655,14 @@ namespace WatchTorrent.ViewModels
 
         public void SeekBy(double seconds)
         {
-            SeekTo(PositionSeconds + seconds);
+            var position = (_queuedStreamSeek ?? _streamSeekTarget) is { } target ? target / 1000.0 : PositionSeconds;
+            SeekTo(position + seconds);
         }
 
         public void SeekTo(double seconds)
         {
-            if (Player == null || !_hasStartedPlaying)
+            if (_isClosed || HasError || Player is not { } player
+                || (_streamSeekTarget == null && (!player.IsSeekable || !_hasStartedPlaying || _isSwitching)))
             {
                 return;
             }
@@ -656,11 +670,62 @@ namespace WatchTorrent.ViewModels
             seconds = Math.Clamp(seconds, 0, DurationSeconds);
             if (Session != null) { Session.Command("seek", (long)(seconds * 1000)); return; }
 
-            Player.Time = (long)(seconds * 1000);
-            _input?.InterruptRead();
-            _lastPlaybackTime = -1;
+            RequestSeek(player, (long)(seconds * 1000));
             PositionSeconds = seconds;
             PositionText = FormatTime((long)(seconds * 1000));
+        }
+
+        private void RequestSeek(LibVLCSharp.Shared.MediaPlayer player, long time)
+        {
+            if (_stream != null)
+            {
+                // Coalesce taps during buffering. VLC maps the time to a byte range;
+                // closing the current response on a forward seek can be read as EOF.
+                if (_queuedStreamSeek == null) _streamSeekQueuedAt = Environment.TickCount64;
+                _queuedStreamSeek = time;
+                return;
+            }
+
+            player.Time = time;
+            _lastPlaybackTime = -1;
+        }
+
+        private void ApplyQueuedStreamSeek(LibVLCSharp.Shared.MediaPlayer player)
+        {
+            if (_input is not { } input) return;
+
+            var time = player.Time;
+            // Prefetch can wait for a later piece while the cached target plays.
+            // Clear the seek from the playback clock when it starts advancing.
+            if (_streamSeekTarget is { } target && player.IsPlaying && time > target + 500)
+            {
+                _streamSeekTarget = null;
+                _retriedStreamSeek = false;
+            }
+
+            if (_queuedStreamSeek is not { } queued)
+            {
+                // The old read may have stalled just after a rewind was queued
+                // inside VLC. Retry from a fresh input if it still cannot run.
+                if (_streamSeekWasBackward && input.IsWaiting && Environment.TickCount64 - _lastProgressAt > 1200)
+                    TryRecoverStreamSeek();
+                return;
+            }
+            bool backward = queued < (_streamSeekTarget ?? time);
+            if (input.IsWaiting || !_hasStartedPlaying || !player.IsSeekable)
+            {
+                // Reopen immediately when the viewer backs out of a stalled
+                // seek. The new input can read without the abandoned range.
+                if ((backward && input.IsWaiting) || Environment.TickCount64 - _streamSeekQueuedAt >= 4000)
+                    TryRecoverStreamSeek(allowNewRequest: true);
+                return;
+            }
+
+            _queuedStreamSeek = null;
+            _streamSeekTarget = queued;
+            _retriedStreamSeek = false;
+            _streamSeekWasBackward = backward;
+            player.Time = queued;
         }
 
         public void RestartFromBeginning()
@@ -1235,11 +1300,11 @@ namespace WatchTorrent.ViewModels
         }
 
         /// <summary>Joriy faylni boshqa chiqish yo'li (HDR/SDR) bilan, to'xtagan joyidan qayta ochadi.</summary>
-        private async Task ReopenAsync()
+        private async Task ReopenAsync(long? streamSeek = null)
         {
             var output = RequiredOutput;
 
-            if (_isClosed || _isSwitching || output == _output || Player is not { } player || _file == null)
+            if (_isClosed || _isSwitching || (streamSeek == null && output == _output) || Player is not { } player || _file == null)
             {
                 OnHdrChanged();
 
@@ -1250,13 +1315,17 @@ namespace WatchTorrent.ViewModels
 
             try
             {
-                var startMs = _hasStartedPlaying ? Math.Max(0, player.Time) : _resumeMs;
-                _pauseWhenStarted = _hasStartedPlaying && !IsPlaying;
+                var startMs = streamSeek ?? (_hasStartedPlaying ? Math.Max(0, player.Time) : _resumeMs);
+                _pauseWhenStarted = streamSeek != null
+                    ? !(Session?.WantsPlay ?? (player.State != VLCState.Paused))
+                    : _hasStartedPlaying && !IsPlaying;
+                _queuedStreamSeek = null;
+                if (streamSeek == null) _streamSeekTarget = null;
                 RememberCurrentTracks(player);
 
-                _input?.Cancel();
+                var stoppedInput = _input?.StopAsync() ?? Task.CompletedTask;
                 _audioOutput?.Cancel();
-                await Task.Run(player.Stop);
+                await Task.WhenAll(Task.Run(player.Stop), stoppedInput);
 
                 if (_isClosed)
                 {
@@ -1269,6 +1338,7 @@ namespace WatchTorrent.ViewModels
                 _input = null;
 
                 _hasStartedPlaying = false;
+                _lastPlaybackTime = -1;
 
                 _resumeMs = 0;
                 ResumeNotice = null;
@@ -1285,6 +1355,14 @@ namespace WatchTorrent.ViewModels
                 if (_isClosed)
                 {
                     return;
+                }
+
+                // The slider stays live while we stop and reopen the stream.
+                if (streamSeek != null && _queuedStreamSeek is { } latest)
+                {
+                    startMs = latest;
+                    _streamSeekTarget = latest;
+                    _queuedStreamSeek = null;
                 }
 
                 StartMedia(startMs);
@@ -1339,6 +1417,10 @@ namespace WatchTorrent.ViewModels
             _rateTransition?.Cancel();
             _rateTransition = null;
             _lastPlaybackTime = -1;
+            _queuedStreamSeek = null;
+            _streamSeekTarget = null;
+            _retriedStreamSeek = false;
+            _streamSeekWasBackward = false;
             _resumeMs = 0;
 
             ResumeNotice = null;
@@ -1370,9 +1452,10 @@ namespace WatchTorrent.ViewModels
                     OnPlaying();
                     break;
                 case VLCState.Error when !HasError:
+                    if (TryRecoverStreamSeek()) break;
                     ErrorMessage = L.Get("Videoni o'ynatib bo'lmadi: fayl buzilgan yoki format qo'llab-quvvatlanmaydi.");
                     break;
-                case VLCState.Ended when _hasStartedPlaying:
+                case VLCState.Ended when _hasStartedPlaying && !HasError:
                     OnEndReached();
                     break;
             }
@@ -1422,6 +1505,13 @@ namespace WatchTorrent.ViewModels
                 return;
             }
 
+            if (_input != null && _file?.BitField.AllTrue == false && DurationSeconds > 1
+                && _lastPlaybackTime < (DurationSeconds - 2) * 1000)
+            {
+                if (!TryRecoverStreamSeek()) ErrorMessage = L.Instance["StreamEndedEarly"];
+                return;
+            }
+
             Preferences.Default.Remove(ResumeKey);
             if (Session is { Host: false }) return;
 
@@ -1434,6 +1524,18 @@ namespace WatchTorrent.ViewModels
             }
 
             CloseRequested?.Invoke(this, EventArgs.Empty);
+        }
+
+        private bool TryRecoverStreamSeek(bool allowNewRequest = false)
+        {
+            if (_input == null || (_retriedStreamSeek && !allowNewRequest)
+                || (_queuedStreamSeek ?? _streamSeekTarget) is not { } target)
+                return false;
+
+            _retriedStreamSeek = true;
+            _streamSeekTarget = target;
+            _ = ReopenAsync(target);
+            return true;
         }
 
         private async Task HideResumeNoticeAsync()
